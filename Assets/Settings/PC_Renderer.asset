@@ -16,25 +16,25 @@ MonoBehaviour:
   ProfilingName: Layer Blur
   BlurMaterial: {fileID: 2100000, guid: 1d74abb2827c4907a5b85613d49ac6b0, type: 2}
   BlurLayerSettings:
-  - Enabled: 1
+  - Enabled: 0
     Name: Blur Layer
     RenderPassEvent: 500
     MaskTextureName: _LayerBlurMaskF
     Downsample: 2
-    Iterations: 2
-    BlurRadius: 1.67
+    Iterations: 1
+    BlurRadius: 3.65
     MaskThreshold: 0.387
-    MaskSoftness: 0.07
+    MaskSoftness: 0.178
     Opacity: 1
-  - Enabled: 0
+  - Enabled: 1
     Name: Blur Layer
     RenderPassEvent: 500
     MaskTextureName: _LayerBlurMaskM
-    Downsample: 4
-    Iterations: 4
-    BlurRadius: 3.82
+    Downsample: 1
+    Iterations: 1
+    BlurRadius: 0
     MaskThreshold: 0
-    MaskSoftness: 0.07
+    MaskSoftness: 0
     Opacity: 1
   _legacyBlurSettings:
     Enabled: 1
@@ -189,7 +189,7 @@ MonoBehaviour:
     SortingCriteria: 59
     LayerMask:
       serializedVersion: 2
-      m_Bits: 16
+      m_Bits: 64
     RenderLayerMask:
       serializedVersion: 0
       m_Bits: 1
@@ -219,7 +219,7 @@ MonoBehaviour:
     SortingCriteria: 59
     LayerMask:
       serializedVersion: 2
-      m_Bits: 32
+      m_Bits: 128
     RenderLayerMask:
       serializedVersion: 0
       m_Bits: 1
