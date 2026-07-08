@@ -1,5 +1,76 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5534036977718953681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7edd5c4d36e74842a7bd9aebd1e4d434, type: 3}
+  m_Name: LayerBlurFeature
+  m_EditorClassIdentifier: Assembly-CSharp::LayerBlurFeature
+  m_Active: 1
+  ProfilingName: Layer Blur
+  BlurMaterial: {fileID: 2100000, guid: 1d74abb2827c4907a5b85613d49ac6b0, type: 2}
+  BlurLayerSettings:
+  - Enabled: 1
+    Name: Blur Layer
+    RenderPassEvent: 500
+    MaskTextureName: _LayerBlurMaskF
+    Downsample: 2
+    Iterations: 2
+    BlurRadius: 1.67
+    MaskThreshold: 0.387
+    MaskSoftness: 0.07
+    Opacity: 1
+  - Enabled: 0
+    Name: Blur Layer
+    RenderPassEvent: 500
+    MaskTextureName: _LayerBlurMaskM
+    Downsample: 4
+    Iterations: 4
+    BlurRadius: 3.82
+    MaskThreshold: 0
+    MaskSoftness: 0.07
+    Opacity: 1
+  _legacyBlurSettings:
+    Enabled: 1
+    Name: Blur Layer
+    RenderPassEvent: 500
+    MaskTextureName: _LayerBlurMask
+    Downsample: 2
+    Iterations: 2
+    BlurRadius: 2
+    MaskThreshold: 0.5
+    MaskSoftness: 0.05
+    Opacity: 1
+  _legacySettingsMigrated: 0
+--- !u!114 &-5208220755271931137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f82c2ab9370a440384491b2d3d13b04d, type: 3}
+  m_Name: SelectionOutlineFeature
+  m_EditorClassIdentifier: Assembly-CSharp::SelectionOutlineFeature
+  m_Active: 1
+  ProfilingName: Selection Outline
+  CompositeMaterial: {fileID: 2100000, guid: a992fa90e5ff44c690e888fc57007286, type: 2}
+  OutlineSettings:
+    RenderPassEvent: 500
+    MaskTextureName: _SelectionOutlineMask
+    OutlineColor: {r: 1, g: 0.82, b: 0, a: 1}
+    OutlineWidth: 8.22
+    OutlineIntensity: 0.44
+    MaskThreshold: 0.204
+    OutsideOnly: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26,7 +97,10 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
-  m_RendererFeatureMap: ad6b866f10d7b46c
+  - {fileID: 6018888855869579118}
+  - {fileID: -5208220755271931137}
+  - {fileID: -5534036977718953681}
+  m_RendererFeatureMap: ad6b866f10d7b46c6edfa96486638753ff2a3342d1aeb8b72f792f79b02633b3
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -55,6 +129,111 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
+--- !u!114 &6018888855869579118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dc8418175ec7794aac340c895bf30f8, type: 3}
+  m_Name: RenderObjectsToTextureFeature
+  m_EditorClassIdentifier: Assembly-CSharp::RenderObjectsToTextureFeature
+  m_Active: 1
+  ProfilingName: Render To Texture
+  RenderTextureOutputSettings:
+  - Material: {fileID: 2100000, guid: 8268069b5f5e4a00994dcfff14cc9778, type: 2}
+    MaterialPassIndex: -1
+    RenderPassEvent: 300
+    RenderPassInput: 0
+    RenderQueueLowerBound: 0
+    RenderQueueUpperBound: 2499
+    ColorFormat: 0
+    TextureSizeMode: 0
+    CameraSizeMultiplier: 1
+    TextureSize: {x: 384, y: 216}
+    FilterMode: 0
+    WrapMode: 1
+    SortingCriteria: 59
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    RenderLayerMask:
+      serializedVersion: 0
+      m_Bits: 1
+    TextureName: _SelectionOutlineMask
+    LightMode: 15
+    GlobalShaderKeywords: []
+    ShaderTags: []
+    Depth: 0
+    WriteDepth: 0
+    DepthCompare: 4
+    DebugView: 0
+    DebugDisplayMode: 1
+    DebugColor: {r: 1, g: 1, b: 1, a: 1}
+    DebugRenderPassEvent: 500
+  - Material: {fileID: 2100000, guid: 86f7c9000d994937a801ed7a586fa9cd, type: 2}
+    MaterialPassIndex: -1
+    RenderPassEvent: 300
+    RenderPassInput: 0
+    RenderQueueLowerBound: 0
+    RenderQueueUpperBound: 2499
+    ColorFormat: 0
+    TextureSizeMode: 0
+    CameraSizeMultiplier: 1
+    TextureSize: {x: 76, y: 43}
+    FilterMode: 0
+    WrapMode: 1
+    SortingCriteria: 59
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 16
+    RenderLayerMask:
+      serializedVersion: 0
+      m_Bits: 1
+    TextureName: _LayerBlurMaskF
+    LightMode: 15
+    GlobalShaderKeywords: []
+    ShaderTags: []
+    Depth: 0
+    WriteDepth: 0
+    DepthCompare: 4
+    DebugView: 0
+    DebugDisplayMode: 1
+    DebugColor: {r: 1, g: 1, b: 1, a: 1}
+    DebugRenderPassEvent: 500
+  - Material: {fileID: 2100000, guid: 86f7c9000d994937a801ed7a586fa9cd, type: 2}
+    MaterialPassIndex: -1
+    RenderPassEvent: 300
+    RenderPassInput: 0
+    RenderQueueLowerBound: 0
+    RenderQueueUpperBound: 2499
+    ColorFormat: 0
+    TextureSizeMode: 0
+    CameraSizeMultiplier: 1
+    TextureSize: {x: 76, y: 43}
+    FilterMode: 0
+    WrapMode: 1
+    SortingCriteria: 59
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 32
+    RenderLayerMask:
+      serializedVersion: 0
+      m_Bits: 1
+    TextureName: _LayerBlurMaskM
+    LightMode: 15
+    GlobalShaderKeywords: []
+    ShaderTags: []
+    Depth: 0
+    WriteDepth: 0
+    DepthCompare: 4
+    DebugView: 0
+    DebugDisplayMode: 1
+    DebugColor: {r: 1, g: 1, b: 1, a: 1}
+    DebugRenderPassEvent: 500
 --- !u!114 &7833122117494664109
 MonoBehaviour:
   m_ObjectHideFlags: 0

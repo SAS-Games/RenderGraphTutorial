@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_URPCustomTagMultiPass
-  m_Shader: {fileID: 4800000, guid: 5ed937ecf955b1f4fb891e238d9209dc, type: 3}
+  m_Name: Custom_URPMultiPassOutline
+  m_Shader: {fileID: 4800000, guid: a72d1b58a6c09524eab6694cf399f7ee, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -29,9 +29,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.0243
     m_Colors:
-    - _BaseColor: {r: 0.1653415, g: 0.55345905, b: 0.55345905, a: 1}
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

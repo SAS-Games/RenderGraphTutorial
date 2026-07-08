@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
@@ -9,23 +10,47 @@ public partial class RenderTexturePass  : ScriptableRenderPass
 {
     public class CustomTextureData : ContextItem
     {
-        public TextureHandle Texture;
+        private readonly Dictionary<int, TextureHandle> _textures = new();
+        private readonly Dictionary<int, Vector4> _texelSizes = new();
+
+        public TextureHandle Texture { get; private set; }
+        public Vector4 TexelSize { get; private set; }
 
         public override void Reset()
         {
+            _textures.Clear();
+            _texelSizes.Clear();
             Texture = TextureHandle.nullHandle;
+            TexelSize = Vector4.zero;
+        }
+
+        public void SetTexture(int texturePropertyId, TextureHandle texture, Vector4 texelSize)
+        {
+            _textures[texturePropertyId] = texture;
+            _texelSizes[texturePropertyId] = texelSize;
+            Texture = texture;
+            TexelSize = texelSize;
+        }
+
+        public bool TryGetTexture(int texturePropertyId, out TextureHandle texture, out Vector4 texelSize)
+        {
+            bool hasTexture = _textures.TryGetValue(texturePropertyId, out texture);
+            bool hasTexelSize = _texelSizes.TryGetValue(texturePropertyId, out texelSize);
+            return hasTexture && hasTexelSize;
         }
     }
     
     private Settings _settings;
-    private RenderTextureDescriptor _descriptor;
-
     private RenderStateBlock _renderStateBlock;
+    private bool _loggedSkippedDepthAttachment;
 
     private class PassData
     {
         public RendererListHandle RendererListHandle;
         public Settings.GlobalKeyword[] GlobalKeywords;
+        public int TexturePropertyId;
+        public int TexelSizePropertyId;
+        public Vector4 TexelSize;
     }
 
     public void Setup(string profilingName, Settings settings)
@@ -56,20 +81,29 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         // Initialize the pass data
         InitPassData(renderGraph, frameData, ref passData);
         // Create the destination texture
-        TextureHandle destination = CreateDestinationTexture(renderGraph, frameData);
+        TextureHandle destination = CreateDestinationTexture(
+            renderGraph,
+            frameData,
+            out RenderTextureDescriptor destinationDescriptor,
+            out RenderTextureDescriptor cameraDescriptor
+        );
+        passData.TexturePropertyId = Shader.PropertyToID(_settings.TextureName);
+        passData.TexelSizePropertyId = Shader.PropertyToID($"{_settings.TextureName}_TexelSize");
+        passData.TexelSize = CreateTexelSize(destinationDescriptor.width, destinationDescriptor.height);
         // Make sure the renderer list is valid
         if (!passData.RendererListHandle.IsValid())
             return;
 
-        var customData = frameData.Create<CustomTextureData>();
-        customData.Texture = destination;
+        var customData = frameData.GetOrCreate<CustomTextureData>();
+        customData.SetTexture(passData.TexturePropertyId, destination, passData.TexelSize);
 
         // We declare the RendererList we just created as an input dependency to this pass, via UseRendererList()
         builder.UseRendererList(passData.RendererListHandle);
 
         // Setup as a render target via UseTextureFragment, which is the equivalent of using the old cmd.SetRenderTarget
         builder.SetRenderAttachment(destination, 0);
-        builder.SetGlobalTextureAfterPass(destination, Shader.PropertyToID(_settings.TextureName));
+        SetDepthAttachment(builder, frameData, destinationDescriptor, cameraDescriptor);
+        builder.SetGlobalTextureAfterPass(destination, passData.TexturePropertyId);
 
         // Shader keyword changes are considered as global state modifications
         builder.AllowGlobalStateModification(true);
@@ -84,7 +118,8 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     {
         UpdateKeywordsBeforeRender(data, context.cmd);
 
-        context.cmd.ClearRenderTarget(RTClearFlags.ColorDepth, Color.black, 0, 0);
+        context.cmd.SetGlobalVector(data.TexelSizePropertyId, data.TexelSize);
+        context.cmd.ClearRenderTarget(RTClearFlags.Color, Color.black, 0, 0);
 
         context.cmd.DrawRendererList(data.RendererListHandle);
 
@@ -177,14 +212,107 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         passData.GlobalKeywords = _settings.GlobalShaderKeywords;
     }
 
-    private TextureHandle CreateDestinationTexture(RenderGraph renderGraph, ContextContainer frameData)
+    private TextureHandle CreateDestinationTexture(
+        RenderGraph renderGraph,
+        ContextContainer frameData,
+        out RenderTextureDescriptor desc,
+        out RenderTextureDescriptor cameraDescriptor
+    )
     {
         var cameraData = frameData.Get<UniversalCameraData>();
-        RenderTextureDescriptor desc = cameraData.cameraTargetDescriptor;
+        cameraDescriptor = cameraData.cameraTargetDescriptor;
+        desc = cameraDescriptor;
         desc.colorFormat = _settings.ColorFormat;
         desc.depthBufferBits = 0;
         desc.msaaSamples = 1;
-        TextureHandle destination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, _settings.TextureName, false);
+        ApplyTextureSize(ref desc);
+        TextureHandle destination = UniversalRenderer.CreateRenderGraphTexture(renderGraph, desc, _settings.TextureName, false, _settings.FilterMode, _settings.WrapMode);
         return destination;
+    }
+
+    private void SetDepthAttachment(
+        IRasterRenderGraphBuilder builder,
+        ContextContainer frameData,
+        RenderTextureDescriptor destinationDescriptor,
+        RenderTextureDescriptor cameraDescriptor
+    )
+    {
+        if (!_settings.Depth)
+        {
+            return;
+        }
+
+        if (!CanUseCameraDepthAttachment(destinationDescriptor, cameraDescriptor))
+        {
+            LogSkippedDepthAttachmentOnce(destinationDescriptor, cameraDescriptor);
+            return;
+        }
+
+        var resourceData = frameData.Get<UniversalResourceData>();
+        AccessFlags depthAccess = _settings.WriteDepth ? AccessFlags.ReadWrite : AccessFlags.Read;
+        builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, depthAccess);
+    }
+
+    private bool CanUseCameraDepthAttachment(RenderTextureDescriptor destinationDescriptor, RenderTextureDescriptor cameraDescriptor)
+    {
+        return _settings.TextureSizeMode == Settings.SizeMode.Camera
+            && destinationDescriptor.width == cameraDescriptor.width
+            && destinationDescriptor.height == cameraDescriptor.height
+            && destinationDescriptor.volumeDepth == cameraDescriptor.volumeDepth;
+    }
+
+    private void LogSkippedDepthAttachmentOnce(RenderTextureDescriptor destinationDescriptor, RenderTextureDescriptor cameraDescriptor)
+    {
+        if (_loggedSkippedDepthAttachment)
+        {
+            return;
+        }
+
+        Debug.LogWarning(
+            $"{nameof(RenderTexturePass)} skipped camera depth attachment for '{_settings.TextureName}' because the output size " +
+            $"{destinationDescriptor.width}x{destinationDescriptor.height} does not match the camera depth size " +
+            $"{cameraDescriptor.width}x{cameraDescriptor.height}. Use Camera Size Multiplier 1, or disable Depth, when this output must share the active camera depth texture."
+        );
+        _loggedSkippedDepthAttachment = true;
+    }
+
+    private void ApplyTextureSize(ref RenderTextureDescriptor desc)
+    {
+        switch (_settings.TextureSizeMode)
+        {
+            case Settings.SizeMode.Camera:
+                ApplyCameraTextureSize(ref desc);
+                break;
+            case Settings.SizeMode.Custom:
+                ApplyCustomTextureSize(ref desc);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    private void ApplyCameraTextureSize(ref RenderTextureDescriptor desc)
+    {
+        float sizeMultiplier = Mathf.Clamp(_settings.CameraSizeMultiplier, 0.0f, 2.0f);
+        if (Mathf.Approximately(sizeMultiplier, 1.0f))
+        {
+            return;
+        }
+
+        desc.width = Mathf.Max(1, Mathf.RoundToInt(desc.width * sizeMultiplier));
+        desc.height = Mathf.Max(1, Mathf.RoundToInt(desc.height * sizeMultiplier));
+    }
+
+    private void ApplyCustomTextureSize(ref RenderTextureDescriptor desc)
+    {
+        desc.width = Mathf.Max(1, _settings.TextureSize.x);
+        desc.height = Mathf.Max(1, _settings.TextureSize.y);
+        desc.useDynamicScale = false;
+        desc.useDynamicScaleExplicit = false;
+    }
+
+    private static Vector4 CreateTexelSize(int width, int height)
+    {
+        return new Vector4(1.0f / width, 1.0f / height, width, height);
     }
 }

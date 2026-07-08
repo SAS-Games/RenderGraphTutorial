@@ -51,7 +51,7 @@ Shader "Custom/URPCustomTagMultiPass"
         Pass
         {
             Name "CustomOutlinePass"
-            //Tags { "LightMode" = "CustomOutlineTag" } // Your completely custom identifier
+            Tags { "LightMode" = "CustomOutlineTag" } // Your completely custom identifier
             
             Cull Front
             ZTest Always
