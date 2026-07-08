@@ -16,6 +16,8 @@ Use this for frosted glass zones, magic blur fields, stealth shimmer areas, in-w
 - `LayerBlur.mat`: material assigned to `LayerBlurFeature`.
 - `LayerBlurMask.shader`: flat white mask shader for blur areas.
 - `LayerBlurMask.mat`: material assigned to mask outputs in `ObjectsToRenderTextureFeature`.
+- `LayerBlurInvisibleProxy.shader`: invisible camera material for proxy meshes that should create blur masks without being seen directly.
+- `LayerBlurInvisibleProxy.mat`: material assigned to invisible blur proxy renderers.
 - `LayerBlurEffectRecipes.md`: practical setup recipes with recommended starting values for common blur effects.
 
 ## How Multi-Layer Blur Works

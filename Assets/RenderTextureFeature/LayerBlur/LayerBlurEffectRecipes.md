@@ -107,12 +107,48 @@ If blur appears on the wrong object, the issue is usually the mask output layer/
 
 Use for windows, glass panels, frosted doors, cockpit glass, or blurred UI glass in world space.
 
+The easiest way to understand this setup is to split the window into two jobs:
+
+| Object | What the player sees | What the blur system sees |
+| --- | --- | --- |
+| Visible window mesh | The actual transparent glass/window art. | Usually ignored by the blur mask. |
+| Blur proxy mesh | Invisible in the final camera. | Rendered white into `_FrostedGlassBlurMask`. |
+
+The blur proxy is just a shape. It says: "blur the screen area covered by this shape."
+
+When the window is closed:
+
+```text
+Blur proxy enabled -> mask is white over the window -> blur visible through the window
+```
+
+When the window is open:
+
+```text
+Blur proxy disabled or moved away with the window -> mask is black -> view is normal
+```
+
+Do not assign `LayerBlurMask` directly to the visible window mesh. `LayerBlurMask` is the override material used by `ObjectsToRenderTextureFeature` when it creates the offscreen mask. The visible window should keep its normal glass material.
+
 Setup steps:
 
 1. Create a Unity layer named `FrostedGlassBlur`.
-2. Put the glass mesh or an invisible proxy mesh on `FrostedGlassBlur`.
-3. Add a mask output in `ObjectsToRenderTextureFeature`.
-4. Add one blur entry in `LayerBlurFeature`.
+2. Keep your visible window mesh on its normal layer and keep its normal transparent glass material.
+3. Create a second mesh or quad that matches the glass shape. Name it `FrostedGlassBlurProxy`.
+4. Put `FrostedGlassBlurProxy` on the `FrostedGlassBlur` layer.
+5. Assign `LayerBlurInvisibleProxy` to the proxy mesh renderer.
+6. Make sure the main camera culling mask includes the `FrostedGlassBlur` layer. The proxy material is invisible, so the player still will not see it.
+7. Add a mask output in `ObjectsToRenderTextureFeature`.
+8. Add one blur entry in `LayerBlurFeature`.
+
+Scene object setup:
+
+| GameObject | Layer | Mesh Renderer Material | Enabled when window is closed | Enabled when window is open |
+| --- | --- | --- | --- | --- |
+| `Window_Glass` | Your normal window layer | Your normal glass material | Yes | Usually yes, or animated open |
+| `FrostedGlassBlurProxy` | `FrostedGlassBlur` | `LayerBlurInvisibleProxy` | Yes | No, or animated open with the window |
+
+If the window rotates or slides open, make the proxy a child of the moving window object. Then either let it move with the window, or disable the proxy when the window reaches the open state.
 
 Mask output values:
 
@@ -120,7 +156,9 @@ Mask output values:
 | --- | --- |
 | `Texture Name` | `_FrostedGlassBlurMask` |
 | `Layer Mask` | `FrostedGlassBlur` |
-| `Render Queue Upper Bound` | `5000` if the glass material is transparent, otherwise `2499` |
+| `Material` | `LayerBlurMask` |
+| `Render Queue Upper Bound` | `5000` |
+| `Sorting Criteria` | `CommonTransparent` |
 | `Filter Mode` | `Bilinear` |
 | `Depth` | Enabled |
 
@@ -137,11 +175,23 @@ Blur entry values:
 | `Mask Softness` | `0.08` |
 | `Opacity` | `0.85` |
 
+Testing:
+
+1. Enable `Debug View` on the `_FrostedGlassBlurMask` output.
+2. Close the window.
+3. You should see a white shape exactly where the glass/proxy is.
+4. Open the window or disable `FrostedGlassBlurProxy`.
+5. The debug mask should become black where the window used to be.
+6. Disable `Debug View`.
+7. Look through the closed window. The scene behind it should blur.
+8. Open the window. The scene should look normal.
+
 Tuning:
 
 - Increase `Blur Radius` to `4-5` for stronger frosted glass.
 - Lower `Opacity` to `0.6-0.75` if the glass should stay clearer.
-- Use a proxy mesh if the visible glass material has unusual transparency sorting.
+- If the proxy itself becomes visible in the camera, check that its Mesh Renderer material is `LayerBlurInvisibleProxy`, not `LayerBlurMask`.
+- If no blur appears, check that `_FrostedGlassBlurMask` is used both as the mask output `Texture Name` and the blur entry `Mask Texture Name`.
 
 ## Recipe 2: Magic Shield
 
