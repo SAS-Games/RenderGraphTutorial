@@ -11,10 +11,10 @@ TagManager:
   - 
   - Water
   - UI
-  - foreground
-  - Midground
-  - 
-  - 
+  - ForegroundLightBlur
+  - BackgroundHeavyBlur
+  - FrostedGlassBlur
+  - CharacterHalo
   - 
   - 
   - 

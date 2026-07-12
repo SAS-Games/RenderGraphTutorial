@@ -9,6 +9,15 @@ public partial class RenderTexturePass
     [Serializable]
     public class Settings
     {
+        [NonSerialized]
+        private LightModeTags _cachedLightMode = (LightModeTags)(-1);
+
+        [NonSerialized]
+        private string[] _cachedCustomShaderTags = Array.Empty<string>();
+
+        [NonSerialized]
+        private List<ShaderTagId> _cachedLightModeShaderTags;
+
         [Flags]
         public enum LightModeTags
         {
@@ -36,6 +45,8 @@ public partial class RenderTexturePass
             Fullscreen,
             Overlay,
         }
+        [Tooltip("Global shader texture property name set after this pass, for example _ObjectMask. Any effect that reads this texture must use the exact same name.")]
+        public string TextureName = "_MyTexture";
 
         [Tooltip("Optional override material used to render matching objects into this output texture. Use a flat mask, id, normal, or custom effect material when another pass will read this texture; leave empty to render objects with their own materials.")]
         public Material Material;
@@ -61,8 +72,8 @@ public partial class RenderTexturePass
         [Range(0, 5000)]
         public int RenderQueueUpperBound = 2499;
 
-        [Tooltip("Graphics format used by the output render texture. ARGB32 is a good default for masks and colors; choose another format only when you need more precision or different channel layout.")]
-        public RenderTextureFormat ColorFormat = RenderTextureFormat.ARGB32;
+        [Tooltip("Graphics format used by the output render texture. R8 is recommended for masks because it stores one channel and uses less memory and bandwidth. Use ARGB32 or another multi-channel format only for color, normal, or packed-data outputs.")]
+        public RenderTextureFormat ColorFormat = RenderTextureFormat.R8;
 
         [Tooltip("How the output texture size is chosen. Camera uses the active camera size scaled by Camera Size Multiplier; Custom uses Texture Size.")]
         public SizeMode TextureSizeMode = SizeMode.Camera;
@@ -89,8 +100,6 @@ public partial class RenderTexturePass
         [Tooltip("URP Rendering Layers included in this output. Use this when effect membership should be controlled independently from Unity GameObject layers.")]
         public RenderingLayerMask RenderLayerMask = RenderingLayerMask.defaultRenderingLayerMask;
 
-        [Tooltip("Global shader texture property name set after this pass, for example _ObjectMask. Any effect that reads this texture must use the exact same name.")]
-        public string TextureName = "_MyTexture";
 
         [Tooltip("Built-in shader LightMode tags this output will draw. Standard covers common URP forward and unlit passes; add custom Shader Tags below for custom shaders.")]
         public LightModeTags LightMode = LightModeTags.Standard;
@@ -152,36 +161,77 @@ public partial class RenderTexturePass
         {
             get
             {
-                var tags = new List<ShaderTagId>();
-                if (LightMode.HasFlag(LightModeTags.SRPDefaultUnlit))
-                    tags.Add(new ShaderTagId("SRPDefaultUnlit"));
-                
-                if (LightMode.HasFlag(LightModeTags.UniversalForward))
-                    tags.Add(new ShaderTagId("UniversalForward"));
-                
-                if (LightMode.HasFlag(LightModeTags.UniversalForwardOnly))
-                    tags.Add(new ShaderTagId("UniversalForwardOnly"));
-                
-                if (LightMode.HasFlag(LightModeTags.LightweightForward))
-                    tags.Add(new ShaderTagId("LightweightForward"));
-                
-                if (LightMode.HasFlag(LightModeTags.DepthNormals))
-                    tags.Add(new ShaderTagId("DepthNormals"));
-                
-                if (LightMode.HasFlag(LightModeTags.DepthNormalsOnly))
-                    tags.Add(new ShaderTagId("DepthNormalsOnly"));
-                
-                if (LightMode.HasFlag(LightModeTags.DepthOnly))
-                    tags.Add(new ShaderTagId("DepthOnly"));
-               
-                if (ShaderTags != null)
+                if (!IsShaderTagCacheValid())
                 {
-                    foreach (string tag in ShaderTags)
-                    {
-                        tags.Add(new ShaderTagId(tag));
-                    }
+                    RebuildShaderTagCache();
                 }
-                return tags;
+
+                return _cachedLightModeShaderTags;
+            }
+        }
+
+        private bool IsShaderTagCacheValid()
+        {
+            if (_cachedLightModeShaderTags == null || _cachedLightMode != LightMode)
+            {
+                return false;
+            }
+
+            int customTagCount = ShaderTags?.Count ?? 0;
+            if (_cachedCustomShaderTags.Length != customTagCount)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < customTagCount; i++)
+            {
+                if (!string.Equals(
+                        _cachedCustomShaderTags[i],
+                        ShaderTags[i],
+                        StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void RebuildShaderTagCache()
+        {
+            _cachedLightMode = LightMode;
+            _cachedLightModeShaderTags ??= new List<ShaderTagId>();
+            _cachedLightModeShaderTags.Clear();
+
+            AddBuiltInTag(LightModeTags.SRPDefaultUnlit, "SRPDefaultUnlit");
+            AddBuiltInTag(LightModeTags.UniversalForward, "UniversalForward");
+            AddBuiltInTag(LightModeTags.UniversalForwardOnly, "UniversalForwardOnly");
+            AddBuiltInTag(LightModeTags.LightweightForward, "LightweightForward");
+            AddBuiltInTag(LightModeTags.DepthNormals, "DepthNormals");
+            AddBuiltInTag(LightModeTags.DepthNormalsOnly, "DepthNormalsOnly");
+            AddBuiltInTag(LightModeTags.DepthOnly, "DepthOnly");
+
+            int customTagCount = ShaderTags?.Count ?? 0;
+            _cachedCustomShaderTags = customTagCount == 0
+                ? Array.Empty<string>()
+                : new string[customTagCount];
+
+            for (int i = 0; i < customTagCount; i++)
+            {
+                string tag = ShaderTags[i];
+                _cachedCustomShaderTags[i] = tag;
+                if (!string.IsNullOrWhiteSpace(tag))
+                {
+                    _cachedLightModeShaderTags.Add(new ShaderTagId(tag));
+                }
+            }
+        }
+
+        private void AddBuiltInTag(LightModeTags tag, string shaderTagName)
+        {
+            if ((LightMode & tag) != 0)
+            {
+                _cachedLightModeShaderTags.Add(new ShaderTagId(shaderTagName));
             }
         }
     }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
@@ -8,39 +7,35 @@ using UnityEngine.Rendering.Universal;
 
 public partial class RenderTexturePass  : ScriptableRenderPass
 {
-    public class CustomTextureData : ContextItem
+    // Compatibility alias for older consumers. New code should use FrameTextureRegistry.
+    public sealed class CustomTextureData : FrameTextureRegistry
     {
-        private readonly Dictionary<int, TextureHandle> _textures = new();
-        private readonly Dictionary<int, Vector4> _texelSizes = new();
-
         public TextureHandle Texture { get; private set; }
         public Vector4 TexelSize { get; private set; }
 
         public override void Reset()
         {
-            _textures.Clear();
-            _texelSizes.Clear();
+            base.Reset();
             Texture = TextureHandle.nullHandle;
             TexelSize = Vector4.zero;
         }
 
-        public void SetTexture(int texturePropertyId, TextureHandle texture, Vector4 texelSize)
+        public override void SetTexture(
+            int texturePropertyId,
+            TextureHandle texture,
+            Vector4 texelSize)
         {
-            _textures[texturePropertyId] = texture;
-            _texelSizes[texturePropertyId] = texelSize;
+            base.SetTexture(texturePropertyId, texture, texelSize);
             Texture = texture;
             TexelSize = texelSize;
         }
-
-        public bool TryGetTexture(int texturePropertyId, out TextureHandle texture, out Vector4 texelSize)
-        {
-            bool hasTexture = _textures.TryGetValue(texturePropertyId, out texture);
-            bool hasTexelSize = _texelSizes.TryGetValue(texturePropertyId, out texelSize);
-            return hasTexture && hasTexelSize;
-        }
     }
-    
+
     private Settings _settings;
+    private string _profilingName;
+    private string _textureName;
+    private int _texturePropertyId;
+    private int _texelSizePropertyId;
     private RenderStateBlock _renderStateBlock;
     private bool _loggedSkippedDepthAttachment;
 
@@ -56,8 +51,17 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     public void Setup(string profilingName, Settings settings)
     {
         _settings = settings;
+        if (_textureName != settings.TextureName)
+        {
+            _textureName = settings.TextureName;
+            _texturePropertyId = Shader.PropertyToID(settings.TextureName);
+            _texelSizePropertyId = Shader.PropertyToID($"{settings.TextureName}_TexelSize");
+        }
         renderPassEvent = _settings.RenderPassEvent;
-        profilingSampler = new ProfilingSampler(profilingName);
+        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(
+            profilingName,
+            ref _profilingName,
+            profilingSampler);
         _renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
         // Debug.Log($"RenderTexturePass: depth? {_settings.Depth}");
         if (_settings.Depth)
@@ -87,14 +91,14 @@ public partial class RenderTexturePass  : ScriptableRenderPass
             out RenderTextureDescriptor destinationDescriptor,
             out RenderTextureDescriptor cameraDescriptor
         );
-        passData.TexturePropertyId = Shader.PropertyToID(_settings.TextureName);
-        passData.TexelSizePropertyId = Shader.PropertyToID($"{_settings.TextureName}_TexelSize");
+        passData.TexturePropertyId = _texturePropertyId;
+        passData.TexelSizePropertyId = _texelSizePropertyId;
         passData.TexelSize = CreateTexelSize(destinationDescriptor.width, destinationDescriptor.height);
         // Make sure the renderer list is valid
         if (!passData.RendererListHandle.IsValid())
             return;
 
-        var customData = frameData.GetOrCreate<CustomTextureData>();
+        FrameTextureRegistry customData = FrameTextureRegistry.GetOrCreate(frameData);
         customData.SetTexture(passData.TexturePropertyId, destination, passData.TexelSize);
 
         // We declare the RendererList we just created as an input dependency to this pass, via UseRendererList()

@@ -5,17 +5,30 @@ This folder contains a self-contained mask-based outline effect for URP Render G
 The effect has two parts:
 
 1. `ObjectsToRenderTextureFeature` renders any chosen object group into a mask texture.
-2. `MaskOutlineFeature` reads that mask, expands it in screen space, and composites an outside outline over the camera color.
+2. `MaskOutlineFeature` reads that mask, expands and erodes it with a separable morphology filter, and composites the selected edge over the camera color.
 
 This is intentionally generic. It can outline hovered objects, enemies, interactables, targets, loot, objectives, or any other group that you can render into a mask.
 
 ## Included Assets
 
-- `MaskOutlineFeature.cs`: renderer feature that draws the final outline.
+- `MaskOutlineFeature.cs`: renderer-feature settings and orchestration.
+- `MaskOutlinePass.cs`: Render Graph morphology and composite implementation.
 - `MaskOutlineComposite.shader`: hidden fullscreen shader used by the feature.
 - `MaskOutlineComposite.mat`: material assigned to `MaskOutlineFeature`.
 - `MaskOutlineMask.shader`: flat white mask shader for objects that should be outlined.
 - `MaskOutlineMask.mat`: material assigned to the mask output in `ObjectsToRenderTextureFeature`.
+
+## How It Works
+
+```text
+Mask
+  -> horizontal expansion and erosion
+  -> vertical expansion and erosion
+  -> outside, inside, or both edge selection
+  -> alpha composite over camera color
+```
+
+Expansion is stored in the red channel and erosion in the green channel of two temporary `RG8` textures. This allows every outline mode to share the same filtering work.
 
 ## Full Setup
 
@@ -98,7 +111,7 @@ Use these values:
 - `Outline Width`: start with `3`
 - `Outline Intensity`: start with `1`
 - `Mask Threshold`: start with `0.5`
-- `Outside Only`: enabled
+- `Mode`: `Outside`
 
 The `Mask Texture Name` must exactly match the mask output texture name from `ObjectsToRenderTextureFeature`.
 
@@ -123,12 +136,27 @@ Common runtime options:
 
 ## Tuning
 
-- `Outline Width`: larger values create a thicker outline. Higher values cost more shader samples.
+- `Outline Width`: larger values create a thicker outline. Cost now grows linearly with width.
 - `Outline Intensity`: increases brightness and alpha strength.
 - `Outline Color`: final composited outline color.
 - `Mask Threshold`: increase if the mask has soft or noisy edges.
-- `Outside Only`: keeps the outline outside the masked object silhouette. Disable it to tint the full expanded mask.
+- `Mode`: chooses an outside outline, inside outline, or both sides of the silhouette.
 - `Camera Size Multiplier`: lower values on the mask output can make the outline cheaper but less precise.
+
+## Performance
+
+The previous shader searched a circular two-dimensional neighborhood in one pass. Its sample count grew approximately with `pi * width * width`.
+
+The optimized implementation uses a horizontal filter followed by a vertical filter:
+
+```text
+Approximate samples per pixel = 2 * (2 * Outline Width + 1)
+Total passes = 2 morphology passes + 1 composite
+```
+
+At width `7`, the old circular search used roughly 154 samples per pixel. The separable filter uses about 30. At width `16`, the reduction is approximately 804 samples to 66.
+
+The tradeoff is kernel shape. A separable max/min filter produces a slightly squarer expansion around sharp corners than a circular search. On normal character and object silhouettes this is usually subtle; use moderate widths when a perfectly round corner is important.
 
 ## Troubleshooting
 
@@ -139,7 +167,7 @@ Common runtime options:
   - Enable `Debug View` on the mask output and check whether the object is visible in the mask.
 
 - The whole object is filled instead of only outlined:
-  - Make sure `Outside Only` is enabled.
+  - Set `Mode` to `Outside`.
 
 - The object is missing from the mask:
   - Check the object layer.

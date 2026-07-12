@@ -77,7 +77,7 @@ Then `RenderTexturePass` does this inside Render Graph:
 4. Builds a renderer list from the selected filters.
 5. Clears the destination texture to black.
 6. Draws matching renderers into the destination texture.
-7. Stores the texture handle in `CustomTextureData`.
+7. Stores the texture handle in `FrameTextureRegistry`.
 8. Exposes the texture globally using `Texture Name`.
 9. Sets a matching texel-size vector.
 
@@ -125,7 +125,7 @@ This is useful for screen-space pixel offsets, edge sampling, blur kernels, dila
 
 Render Graph passes should prefer explicit texture handles when possible.
 
-`RenderTexturePass.CustomTextureData` stores textures by shader property id:
+`FrameTextureRegistry` stores textures by shader property id:
 
 ```csharp
 TryGetTexture(int texturePropertyId, out TextureHandle texture, out Vector4 texelSize)
@@ -134,7 +134,7 @@ TryGetTexture(int texturePropertyId, out TextureHandle texture, out Vector4 texe
 A consumer pass can:
 
 1. Convert the same texture name to a property id with `Shader.PropertyToID`.
-2. Ask `CustomTextureData` for the texture handle.
+2. Ask `FrameTextureRegistry` for the texture handle.
 3. Declare it with `builder.UseTexture`.
 4. Sample it in the consuming pass.
 
@@ -606,20 +606,19 @@ Use a late event when you want the debug view visible over the final camera colo
 
 ## RenderTexturePass Internals
 
-### `CustomTextureData`
+### `FrameTextureRegistry`
 
-`CustomTextureData` is a Render Graph `ContextItem`.
+`FrameTextureRegistry` is a Render Graph `ContextItem` shared by texture producers and consumers.
 
 It is frame-local storage for generated texture handles.
 
 It stores:
 
-- a map from texture property id to `TextureHandle`
-- a map from texture property id to texel size
-- the most recently written texture
-- the most recently written texel size
+- a map from texture property id to a `TextureHandle` and its texel size
 
-The maps are the important production path because this feature can generate multiple textures in one frame.
+Every lookup is keyed. There is no ambiguous "last generated texture" in the production API, so the registry can safely hold multiple masks, distance fields, and internal color snapshots in one frame.
+
+`RenderTexturePass.CustomTextureData` remains as a compatibility alias for older consumer scripts. New code should use `FrameTextureRegistry` or `FrameTextureResolver`.
 
 Use:
 
@@ -743,7 +742,7 @@ The clear-to-black behavior is important. It means the absence of drawn objects 
 
 It:
 
-1. looks up the texture from `CustomTextureData`
+1. looks up the texture from `FrameTextureRegistry`
 2. reads that texture
 3. writes to the active camera color texture
 4. uses `RenderTextureDebug.shader`
@@ -780,7 +779,7 @@ A consumer pass must know:
 
 - the texture name
 - when the producer runs
-- whether the texture is available through `CustomTextureData`
+- whether the texture is available through `FrameTextureRegistry`
 - what data the texture contains
 - what resolution/filtering to expect
 
@@ -855,7 +854,7 @@ Check:
 - producer and consumer use the exact same texture name
 - the producer pass event is before the consumer pass event
 - the renderer feature order puts the producer before the consumer when needed
-- the consumer asks `CustomTextureData` for the correct property id
+- the consumer asks `FrameTextureRegistry` for the correct property id
 
 ### Depth Does Not Behave As Expected
 

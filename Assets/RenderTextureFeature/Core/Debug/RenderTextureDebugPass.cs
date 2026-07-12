@@ -9,6 +9,8 @@ public class RenderTextureDebugPass : ScriptableRenderPass
 
     private RenderTexturePass.Settings _settings;
     private Material _material;
+    private string _profilingName;
+    private string _sourceTextureName;
     private int _sourceTexturePropertyId;
 
     private class PassData
@@ -23,19 +25,25 @@ public class RenderTextureDebugPass : ScriptableRenderPass
     {
         _settings = settings;
         _material = material;
-        _sourceTexturePropertyId = Shader.PropertyToID(settings.TextureName);
+        if (_sourceTextureName != settings.TextureName)
+        {
+            _sourceTextureName = settings.TextureName;
+            _sourceTexturePropertyId = Shader.PropertyToID(settings.TextureName);
+        }
         renderPassEvent = settings.DebugRenderPassEvent;
-        profilingSampler = new ProfilingSampler(profilingName);
+        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(
+            profilingName,
+            ref _profilingName,
+            profilingSampler);
     }
 
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
     {
-        if (_material == null || !frameData.Contains<RenderTexturePass.CustomTextureData>())
+        if (_material == null ||
+            !FrameTextureRegistry.TryGet(frameData, out FrameTextureRegistry textureData))
         {
             return;
         }
-
-        RenderTexturePass.CustomTextureData textureData = frameData.Get<RenderTexturePass.CustomTextureData>();
         if (!textureData.TryGetTexture(_sourceTexturePropertyId, out TextureHandle source, out _))
         {
             return;

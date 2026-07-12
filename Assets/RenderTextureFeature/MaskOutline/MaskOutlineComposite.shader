@@ -6,7 +6,7 @@ Shader "Hidden/RenderTextureFeature/MaskOutline/Composite"
         _OutlineWidth("Outline Width", Range(1, 16)) = 3
         _OutlineIntensity("Outline Intensity", Range(0, 5)) = 1
         _MaskThreshold("Mask Threshold", Range(0, 1)) = 0.5
-        _OutsideOnly("Outside Only", Float) = 1
+        _OutlineMode("Outline Mode", Float) = 0
     }
 
     SubShader
@@ -16,70 +16,135 @@ Shader "Hidden/RenderTextureFeature/MaskOutline/Composite"
         ZWrite Off
         Cull Off
 
+        HLSLINCLUDE
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+
+        #define MAX_OUTLINE_RADIUS 16
+
+        TEXTURE2D_X(_MorphologyTexture);
+
+        CBUFFER_START(UnityPerMaterial)
+            float4 _OutlineColor;
+            float4 _MaskTexelSize;
+            float _OutlineWidth;
+            float _OutlineIntensity;
+            float _MaskThreshold;
+            float _OutlineMode;
+        CBUFFER_END
+
+        half SampleBinaryMask(float2 uv)
+        {
+            half mask = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_PointClamp, uv).r;
+            return step(_MaskThreshold, mask);
+        }
+
+        half4 HorizontalMorphologyFragment(Varyings input) : SV_Target
+        {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+            float2 uv = input.texcoord;
+            int radius = clamp((int)round(_OutlineWidth), 1, MAX_OUTLINE_RADIUS);
+            half expanded = 0.0h;
+            half eroded = 1.0h;
+
+            [loop]
+            for (int x = -radius; x <= radius; x++)
+            {
+                half mask = SampleBinaryMask(uv + float2(x * _MaskTexelSize.x, 0.0));
+                expanded = max(expanded, mask);
+                eroded = min(eroded, mask);
+            }
+
+            return half4(expanded, eroded, 0.0h, 1.0h);
+        }
+
+        half4 VerticalMorphologyFragment(Varyings input) : SV_Target
+        {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+            float2 uv = input.texcoord;
+            int radius = clamp((int)round(_OutlineWidth), 1, MAX_OUTLINE_RADIUS);
+            half expanded = 0.0h;
+            half eroded = 1.0h;
+
+            [loop]
+            for (int y = -radius; y <= radius; y++)
+            {
+                half2 morphology = SAMPLE_TEXTURE2D_X(
+                    _BlitTexture,
+                    sampler_PointClamp,
+                    uv + float2(0.0, y * _MaskTexelSize.y)).rg;
+
+                expanded = max(expanded, morphology.r);
+                eroded = min(eroded, morphology.g);
+            }
+
+            return half4(expanded, eroded, 0.0h, 1.0h);
+        }
+
+        half4 CompositeFragment(Varyings input) : SV_Target
+        {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+            float2 uv = input.texcoord;
+            half center = SampleBinaryMask(uv);
+            half2 morphology = SAMPLE_TEXTURE2D_X(
+                _MorphologyTexture,
+                sampler_PointClamp,
+                uv).rg;
+
+            half outsideEdge = saturate(morphology.r - center);
+            half insideEdge = saturate(center - morphology.g);
+            half edge = outsideEdge;
+
+            if (_OutlineMode >= 1.5)
+            {
+                edge = max(outsideEdge, insideEdge);
+            }
+            else if (_OutlineMode >= 0.5)
+            {
+                edge = insideEdge;
+            }
+
+            half alpha = saturate(edge * _OutlineColor.a * _OutlineIntensity);
+            return half4(_OutlineColor.rgb * _OutlineIntensity, alpha);
+        }
+        ENDHLSL
+
         Pass
         {
-            Name "MaskOutline"
-            Blend SrcAlpha OneMinusSrcAlpha
+            Name "HorizontalMorphology"
+            Blend Off
+            ColorMask RG
 
             HLSLPROGRAM
             #pragma vertex Vert
-            #pragma fragment frag
+            #pragma fragment HorizontalMorphologyFragment
+            ENDHLSL
+        }
 
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+        Pass
+        {
+            Name "VerticalMorphology"
+            Blend Off
+            ColorMask RG
 
-            #define MAX_OUTLINE_RADIUS 16
+            HLSLPROGRAM
+            #pragma vertex Vert
+            #pragma fragment VerticalMorphologyFragment
+            ENDHLSL
+        }
 
-            CBUFFER_START(UnityPerMaterial)
-                float4 _OutlineColor;
-                float _OutlineWidth;
-                float _OutlineIntensity;
-                float4 _MaskTexelSize;
-                float _MaskThreshold;
-                float _OutsideOnly;
-            CBUFFER_END
+        Pass
+        {
+            Name "OutlineComposite"
+            Blend SrcAlpha OneMinusSrcAlpha
+            ColorMask RGB
 
-            half SampleMask(float2 uv)
-            {
-                half mask = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).r;
-                return step(_MaskThreshold, mask);
-            }
-
-            half4 frag(Varyings input) : SV_Target
-            {
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-
-                float2 uv = input.texcoord;
-                float2 texelSize = _MaskTexelSize.xy;
-                float radius = clamp(_OutlineWidth, 1.0, 16.0);
-                float radiusSquared = radius * radius;
-                int sampleRadius = min((int)ceil(radius), MAX_OUTLINE_RADIUS);
-
-                half center = SampleMask(uv);
-                half expanded = center;
-
-                [loop]
-                for (int y = -sampleRadius; y <= sampleRadius; y++)
-                {
-                    [loop]
-                    for (int x = -sampleRadius; x <= sampleRadius; x++)
-                    {
-                        float2 offset = float2(x, y);
-                        if (dot(offset, offset) > radiusSquared)
-                        {
-                            continue;
-                        }
-
-                        expanded = max(expanded, SampleMask(uv + offset * texelSize));
-                    }
-                }
-
-                half outsideEdge = saturate(expanded - center);
-                half edge = lerp(expanded, outsideEdge, step(0.5, _OutsideOnly));
-                half alpha = saturate(edge * _OutlineColor.a * _OutlineIntensity);
-
-                return half4(_OutlineColor.rgb * _OutlineIntensity, alpha);
-            }
+            HLSLPROGRAM
+            #pragma vertex Vert
+            #pragma fragment CompositeFragment
             ENDHLSL
         }
     }

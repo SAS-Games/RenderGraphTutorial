@@ -20,7 +20,7 @@ Shader "Hidden/RenderTextureFeature/LayerBlur/BlurComposite"
         #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
         TEXTURE2D_X(_LayerBlurredTexture);
-
+        TEXTURE2D_X(_LayerBlurSourceTexture);
         CBUFFER_START(UnityPerMaterial)
             float4 _BlurDirection;
             float4 _BlurTexelSize;
@@ -30,6 +30,19 @@ Shader "Hidden/RenderTextureFeature/LayerBlur/BlurComposite"
             float _Opacity;
         CBUFFER_END
 
+        half EvaluateMaskCoverage(half mask)
+        {
+            float threshold = saturate(_MaskThreshold);
+            float softness = saturate(_MaskSoftness);
+
+            if (softness > 0.0001 && threshold < 0.9999)
+            {
+                return smoothstep(threshold, min(threshold + softness, 1.0), mask);
+            }
+
+            return step(threshold, mask);
+        }
+
         half4 BlurFragment(Varyings input) : SV_Target
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -37,16 +50,15 @@ Shader "Hidden/RenderTextureFeature/LayerBlur/BlurComposite"
             float2 uv = input.texcoord;
             float2 sampleStep = _BlurDirection.xy * _BlurTexelSize.xy * max(_BlurRadius, 0.0);
 
-            half4 color = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv) * 0.2270270270;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 1.0) * 0.1945945946;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 1.0) * 0.1945945946;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 2.0) * 0.1216216216;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 2.0) * 0.1216216216;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 3.0) * 0.0540540541;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 3.0) * 0.0540540541;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 4.0) * 0.0162162162;
-            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 4.0) * 0.0162162162;
-
+            half4 color = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv) * 0.2270270270h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 1.0) * 0.1945945946h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 1.0) * 0.1945945946h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 2.0) * 0.1216216216h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 2.0) * 0.1216216216h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 3.0) * 0.0540540541h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 3.0) * 0.0540540541h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + sampleStep * 4.0) * 0.0162162162h;
+            color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - sampleStep * 4.0) * 0.0162162162h;
             return color;
         }
 
@@ -56,19 +68,15 @@ Shader "Hidden/RenderTextureFeature/LayerBlur/BlurComposite"
 
             float2 uv = input.texcoord;
             half mask = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).r;
-            float threshold = saturate(_MaskThreshold);
-            float softness = saturate(_MaskSoftness);
-            half coverage = mask > threshold ? 1.0h : 0.0h;
+            half coverage = EvaluateMaskCoverage(mask);
 
-            if (softness > 0.0001 && threshold < 0.9999)
-            {
-                coverage = smoothstep(threshold, min(threshold + softness, 1.0), mask);
-            }
+            coverage *= mask > 0.0001h ? 1.0h : 0.0h;
 
-            coverage *= mask > 0.0001 ? 1.0h : 0.0h;
+            half4 sourceColor = SAMPLE_TEXTURE2D_X(_LayerBlurSourceTexture, sampler_LinearClamp, uv);
             half4 blurredColor = SAMPLE_TEXTURE2D_X(_LayerBlurredTexture, sampler_LinearClamp, uv);
+            half3 finalColor = lerp(sourceColor.rgb, blurredColor.rgb, saturate(_Opacity));
 
-            return half4(blurredColor.rgb, saturate(coverage * _Opacity));
+            return half4(finalColor, saturate(coverage));
         }
         ENDHLSL
 
@@ -98,6 +106,7 @@ Shader "Hidden/RenderTextureFeature/LayerBlur/BlurComposite"
         {
             Name "Composite"
             Blend SrcAlpha OneMinusSrcAlpha
+            ColorMask RGB
 
             HLSLPROGRAM
             #pragma vertex Vert

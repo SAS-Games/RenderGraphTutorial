@@ -11,7 +11,8 @@ Use this for frosted glass zones, magic blur fields, stealth shimmer areas, in-w
 
 ## Included Assets
 
-- `LayerBlurFeature.cs`: renderer feature that creates the blur and composites it through one or more masks.
+- `LayerBlurFeature.cs`: concise renderer-feature setup and per-layer orchestration.
+- `LayerBlurPass.cs`: Render Graph blur and composite implementation.
 - `LayerBlur.shader`: hidden blur/composite shader used by the feature.
 - `LayerBlur.mat`: material assigned to `LayerBlurFeature`.
 - `LayerBlurMask.shader`: flat white mask shader for blur areas.
@@ -21,6 +22,24 @@ Use this for frosted glass zones, magic blur fields, stealth shimmer areas, in-w
 - `LayerBlurEffectRecipes.md`: practical setup recipes with recommended starting values for common blur effects.
 
 ## How Multi-Layer Blur Works
+
+Use this mental model:
+
+```text
+Scene objects
+    -> ObjectsToRenderTextureFeature
+    -> named black/white masks
+
+Camera color
+    -> one clean source copy per Render Pass Event
+    -> one blur chain per unique Downsample + Blur Radius pair
+    -> retained iteration levels shared by matching entries
+
+Blurred version + matching mask
+    -> composite into the camera color in list order
+```
+
+The mask does not contain blur strength and is not itself blurred. It only answers "which screen pixels use this entry?" `Downsample` and `Blur Radius` select a shared chain, `Iterations` selects a retained level from that chain, and `Opacity` controls the final blend.
 
 `LayerBlurFeature` now has a list:
 
@@ -42,7 +61,17 @@ _HeavyBlurMask -> Blur Radius 6
 
 To feed those masks, add multiple `RenderTextureOutputSettings` entries in `ObjectsToRenderTextureFeature`.
 
-The list order in `Blur Layer Settings` is the composite order. Later entries draw over earlier entries when masks overlap, but each entry still builds its blurred texture from the same clean source color.
+Entries are composited in list order. A later entry owns pixels where masks overlap because it composites from the same clean camera snapshot, not from the result of the previous blur entry.
+
+Recommended order:
+
+```text
+1. Background or far blur
+2. Midground blur
+3. Foreground or sharp restore layer
+```
+
+If a foreground object must stay sharp while blocking blur behind it, add it as the final entry with `Opacity = 0`. The feature skips its blur passes but still composites the clean camera snapshot through that foreground mask.
 
 ## Full Setup
 
@@ -193,17 +222,20 @@ This feature is optimized for practical real-time use:
 - Iterations are clamped from `1` to `4`.
 - Blur radius is clamped from `0` to `8`.
 - Disabled entries are skipped.
-- Entries with `Opacity` set to `0` are skipped.
+- Entries with `Opacity` set to `0` skip their blur passes and perform only the sharp restore composite.
 - Empty mask texture names are skipped.
 - One renderer feature can manage multiple blur strengths, so you do not need many separate feature instances.
 
 Important cost rule:
 
 ```text
-Each active blur entry performs its own blur work.
+Passes per render event = 1 source copy
+Passes per unique Downsample + Blur Radius chain = 2 x highest requested Iterations
+Passes per entry = 1 composite
+Passes per Opacity 0 restore entry = 1 composite
 ```
 
-That is necessary because different blur strengths create different blurred textures.
+Entries with matching `Downsample` and `Blur Radius` reuse the same chain. For example, entries requesting iteration levels 1 and 3 share the six blur passes needed to build level 3 instead of recording separate two-pass and six-pass chains.
 
 For better performance:
 
@@ -211,7 +243,7 @@ For better performance:
 - Increase `Downsample`.
 - Lower `Iterations`.
 - Lower `Blur Radius`.
-- Use broad strength buckets like light/medium/heavy instead of many tiny variations.
+- Keep `Downsample` and `Blur Radius` equal across related entries and use `Iterations` for light, medium, and heavy levels.
 - Avoid overlapping masks when possible.
 
 ## Feature Order
@@ -248,7 +280,8 @@ Common options:
 - `Blur Radius`: controls how far samples spread.
 - `Mask Threshold`: controls the mask value where blur starts. Pure black mask pixels stay unblurred.
 - `Mask Softness`: controls the soft transition width above `Mask Threshold`.
-- `Opacity`: blends between the original scene and the blurred scene.
+- `Opacity`: blends between the original scene and the blurred scene. `0` restores the original scene inside the mask, which is useful for sharp foreground/blocker layers.
+- List order: later entries own overlapping pixels. Order entries from back/far to front/near.
 - `Camera Size Multiplier`: lower values on the mask output can make the mask cheaper but less precise.
 
 ## Troubleshooting
@@ -263,12 +296,12 @@ Common options:
   - Check that each mask output has a unique `Texture Name`.
   - Check that each `Blur Layer Settings` entry uses the matching texture name.
   - Check that the object is on the correct layer or rendering layer.
-  - Check that the entry is enabled and has `Opacity` above `0`.
+  - Check that the entry is enabled. `Opacity = 0` intentionally restores the sharp source instead of showing blur.
 
 - The wrong blur strength appears where masks overlap:
-  - Reorder `Blur Layer Settings`.
-  - Later entries composite over earlier entries.
-  - Avoid overlapping masks if priority should be unambiguous.
+  - Order `Blur Layer Settings` from back/far/heavy to front/near/light.
+  - Add a final `Opacity = 0` entry for foreground objects that must remain sharp.
+  - Avoid overlapping masks when the art direction should be completely unambiguous.
 
 - The blur appears everywhere:
   - Check that each mask output `Layer Mask` only includes the intended blur layer.

@@ -36,6 +36,7 @@ public class SimpleMaskOutlineMaterialFeature : ScriptableRendererFeature
     private class SimpleMaskOutlineMaterialPass : ScriptableRenderPass
     {
         private Material _material;
+        private string _profilingName;
         private int _materialPassIndex;
 
         private class PassData
@@ -47,7 +48,10 @@ public class SimpleMaskOutlineMaterialFeature : ScriptableRendererFeature
         public void Setup(RenderPassEvent passEvent, Material material, int materialPassIndex)
         {
             renderPassEvent = passEvent;
-            profilingSampler = new ProfilingSampler("Simple Mask Outline Material");
+            profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(
+                "Simple Mask Outline Material",
+                ref _profilingName,
+                profilingSampler);
             _material = material;
             _materialPassIndex = materialPassIndex;
         }

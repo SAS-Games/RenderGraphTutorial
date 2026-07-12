@@ -606,6 +606,100 @@ Tuning:
 - Use fewer layers for gameplay.
 - Use more aggressive blur only for cutscenes, screenshots, or photo mode.
 
+## Recipe 13: Side-Scroller Background Depth Blur
+
+Use for side-scroller or 2.5D scenes where the far background should be soft, the midground should be slightly soft, and the foreground/gameplay layer should stay sharp.
+
+The idea is:
+
+```text
+Background layer -> heavy blur mask -> strong blur
+Midground layer  -> light blur mask -> soft blur
+Foreground layer -> opacity 0 entry -> sharp restore
+```
+
+Important: the blur is screen-space. It blurs the screen area covered by masks. If a broad background mask sits behind the whole level, it can cover the same screen pixels as midground or foreground objects. Put later/front entries later in the list so they own overlapping pixels.
+
+Setup steps:
+
+1. Create Unity layers named `BackgroundHeavyBlur`, `MidgroundLightBlur`, and `ForegroundSharp`.
+2. Put far background objects, sprites, tilemaps, or proxy shapes on `BackgroundHeavyBlur`.
+3. Put midground objects, sprites, tilemaps, or proxy shapes on `MidgroundLightBlur`.
+4. Put gameplay characters, pickups, enemies, and front props on `ForegroundSharp`.
+5. Add three mask outputs in `ObjectsToRenderTextureFeature`.
+6. Add three blur entries in `LayerBlurFeature`.
+7. Set the foreground entry `Opacity` to `0` so it restores the original sharp scene inside that mask.
+
+Mask output values:
+
+| Purpose | Layer Mask | Texture Name | Render Queue Upper Bound |
+| --- | --- | --- | --- |
+| Heavy background blur | `BackgroundHeavyBlur` | `_BackgroundHeavyBlurMask` | `2499` for opaque 3D, `5000` for sprites/transparent objects |
+| Light midground blur | `MidgroundLightBlur` | `_MidgroundLightBlurMask` | `2499` for opaque 3D, `5000` for sprites/transparent objects |
+| Sharp foreground blocker | `ForegroundSharp` | `_ForegroundSharpMask` | `2499` for opaque 3D, `5000` for sprites/transparent objects |
+
+Use these values for both mask outputs:
+
+| Setting | Value |
+| --- | --- |
+| `Material` | `LayerBlurMask` |
+| `Render Pass Event` | `AfterRenderingOpaques` for depth-writing 3D, or a later event if your sprites are only available later |
+| `Render Pass Input` | `Depth` |
+| `Texture Size Mode` | `Camera` |
+| `Camera Size Multiplier` | `1` |
+| `Filter Mode` | `Bilinear` |
+| `Wrap Mode` | `Clamp` |
+| `Depth` | Enabled when using depth-writing 3D/2.5D objects |
+| `Write Depth` | Disabled |
+| `Depth Compare` | `LessEqual` |
+
+Blur entry values:
+
+| Name | Mask Texture Name | Downsample | Iterations | Blur Radius | Mask Threshold | Mask Softness | Opacity |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `Background Heavy Blur` | `_BackgroundHeavyBlurMask` | `4` | `3` | `6` | `0.5` | `0.08` | `0.85` |
+| `Midground Light Blur` | `_MidgroundLightBlurMask` | `2` | `1` | `2` | `0.5` | `0.05` | `0.55` |
+| `Foreground Sharp Restore` | `_ForegroundSharpMask` | `1` | `1` | `0` | `0.5` | `0.03` | `0` |
+
+Recommended `Blur Layer Settings` order:
+
+```text
+1. Background Heavy Blur
+2. Midground Light Blur
+3. Foreground Sharp Restore
+```
+
+This lets the lighter midground blur win over the heavy background blur, and lets the foreground restore the original sharp scene where its mask exists.
+
+List-order composition makes the layers exclusive where their masks are fully opaque:
+
+```text
+Background blur is removed wherever midground or foreground exists.
+Midground blur is removed wherever foreground exists.
+Foreground opacity is 0, so it restores the original sharp scene.
+```
+
+For 3D or 2.5D objects:
+
+- Keep `Depth` enabled on the mask outputs.
+- Make sure foreground objects write depth if they should block background blur.
+- Keep `Camera Size Multiplier = 1` when using depth.
+
+For pure 2D transparent sprites:
+
+- Transparent sprites often do not write depth, so a background mask can still cover screen pixels behind a foreground sprite.
+- Add `Foreground Sharp Restore` as the final entry with `Opacity = 0` so foreground screen pixels restore the original scene.
+- Another safe setup is to render foreground/gameplay sprites after `LayerBlurFeature`, or use a separate foreground camera/layer drawn after the blur.
+- If a mask output is empty for sprites, add the sprite shader pass tag to `Shader Tags`, commonly `Universal2D` for URP 2D projects.
+- Use `Debug View` on each mask and confirm foreground character areas are black if they must stay sharp.
+
+Tuning:
+
+- Increase background `Blur Radius` to `7-8` for very distant painted backgrounds.
+- Lower background `Opacity` to `0.6-0.7` if the game becomes hard to read.
+- Increase midground `Blur Radius` to `3` if it still feels too sharp.
+- Keep foreground as the final `Opacity = 0` entry when it should stay sharp.
+
 ## Multiple Effects At The Same Time
 
 You can run multiple recipes together.
@@ -615,8 +709,8 @@ Rules:
 1. Every mask output needs a unique `Texture Name`.
 2. Every blur entry must use the matching `Mask Texture Name`.
 3. Keep all blur entries enabled only when needed.
-4. Later blur entries composite over earlier entries when masks overlap.
-5. Each active blur entry costs its own blur work.
+4. Order entries from lower priority/background to higher priority/foreground.
+5. Entries with `Opacity = 0` act as sharp restore layers. They skip blur work but still run one composite pass.
 
 Suggested list order when combining effects:
 
