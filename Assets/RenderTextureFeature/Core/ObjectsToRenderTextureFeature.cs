@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Serialization;
 
-public class ObjectsToRenderTextureFeature : ScriptableRendererFeature
+public partial class ObjectsToRenderTextureFeature : ScriptableRendererFeature
 {
     private const string DebugShaderName = "Hidden/RenderTextureFeature/DebugTexture";
 
@@ -19,6 +19,7 @@ public class ObjectsToRenderTextureFeature : ScriptableRendererFeature
 
     public override void Create()
     {
+        ValidateConfiguration();
         EnsurePassCount(GetRenderTextureOutputSettingsCount());
     }
 
@@ -35,7 +36,7 @@ public class ObjectsToRenderTextureFeature : ScriptableRendererFeature
         for (int i = 0; i < outputSettingsCount; i++)
         {
             RenderTexturePass.Settings outputSettings = GetRenderTextureOutputSettings(i);
-            if (outputSettings == null)
+            if (outputSettings == null || string.IsNullOrWhiteSpace(outputSettings.TextureName))
             {
                 continue;
             }

@@ -22,6 +22,21 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         public int TexturePropertyId;
         public int TexelSizePropertyId;
         public Vector4 TexelSize;
+        public bool PublishGlobalTexture;
+        public bool PublishGlobalTexelSize;
+    }
+
+    private readonly struct TextureExposurePolicy
+    {
+        public TextureExposurePolicy(bool publishGlobalTexture, bool publishGlobalTexelSize)
+        {
+            PublishGlobalTexture = publishGlobalTexture;
+            PublishGlobalTexelSize = publishGlobalTexelSize;
+        }
+
+        public bool PublishGlobalTexture { get; }
+
+        public bool PublishGlobalTexelSize { get; }
     }
 
     public void Setup(string profilingName, Settings settings)
@@ -71,11 +86,15 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         // Setup as a render target via UseTextureFragment, which is the equivalent of using the old cmd.SetRenderTarget
         builder.SetRenderAttachment(destination, 0);
         SetDepthAttachment(builder, frameData, destinationDescriptor, cameraDescriptor);
-        builder.SetGlobalTextureAfterPass(destination, passData.TexturePropertyId);
+        if (passData.PublishGlobalTexture)
+        {
+            builder.SetGlobalTextureAfterPass(destination, passData.TexturePropertyId);
+        }
 
-        // Shader keyword changes are considered as global state modifications
-        builder.AllowGlobalStateModification(true);
-        builder.AllowPassCulling(true);
+        if (passData.PublishGlobalTexelSize || Settings.HasActiveGlobalKeywordChanges(passData.GlobalKeywords))
+        {
+            builder.AllowGlobalStateModification(true);
+        }
 
         // Assign the ExecutePass function to the render pass delegate, which will be called by the render graph when executing the pass
         builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
@@ -86,7 +105,10 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     {
         UpdateKeywordsBeforeRender(data, context.cmd);
 
-        context.cmd.SetGlobalVector(data.TexelSizePropertyId, data.TexelSize);
+        if (data.PublishGlobalTexelSize)
+        {
+            context.cmd.SetGlobalVector(data.TexelSizePropertyId, data.TexelSize);
+        }
         context.cmd.ClearRenderTarget(RTClearFlags.Color, Color.black, 0, 0);
 
         context.cmd.DrawRendererList(data.RendererListHandle);
@@ -100,7 +122,7 @@ public partial class RenderTexturePass  : ScriptableRenderPass
             return;
         foreach (Settings.GlobalKeyword keyword in data.GlobalKeywords)
         {
-            if (keyword.Disabled)
+            if (keyword.Disabled || string.IsNullOrWhiteSpace(keyword.Name))
                 continue;
             switch (keyword.BeforeRenderMode)
             {
@@ -125,7 +147,7 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         
         foreach (Settings.GlobalKeyword keyword in data.GlobalKeywords)
         {
-            if (keyword.Disabled)
+            if (keyword.Disabled || string.IsNullOrWhiteSpace(keyword.Name))
                 continue;
 
             switch (keyword.AfterRenderMode)
@@ -159,6 +181,20 @@ public partial class RenderTexturePass  : ScriptableRenderPass
 
         passData.RendererListHandle = renderListHandle;
         passData.GlobalKeywords = _settings.GlobalShaderKeywords;
+        TextureExposurePolicy exposurePolicy = GetTextureExposurePolicy(_settings.TextureExposure);
+        passData.PublishGlobalTexture = exposurePolicy.PublishGlobalTexture;
+        passData.PublishGlobalTexelSize = exposurePolicy.PublishGlobalTexelSize;
+    }
+
+    private static TextureExposurePolicy GetTextureExposurePolicy(Settings.TextureExposureMode textureExposure)
+    {
+        return textureExposure switch
+        {
+            Settings.TextureExposureMode.FrameRegistryOnly => new TextureExposurePolicy(false, false),
+            Settings.TextureExposureMode.FrameRegistryAndGlobalTexture => new TextureExposurePolicy(true, false),
+            Settings.TextureExposureMode.FrameRegistryAndShaderGlobals => new TextureExposurePolicy(true, true),
+            _ => new TextureExposurePolicy(true, true),
+        };
     }
 
     private TextureHandle CreateDestinationTexture(RenderGraph renderGraph, ContextContainer frameData, out RenderTextureDescriptor desc, out RenderTextureDescriptor cameraDescriptor)

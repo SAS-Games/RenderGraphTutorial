@@ -45,8 +45,24 @@ public partial class RenderTexturePass
             Fullscreen,
             Overlay,
         }
-        [Tooltip("Global shader texture property name set after this pass, for example _ObjectMask. Any effect that reads this texture must use the exact same name.")]
+
+        public enum TextureExposureMode
+        {
+            [InspectorName("Frame Registry + Global Texture + Texel Size")]
+            FrameRegistryAndShaderGlobals = 0,
+
+            [InspectorName("Frame Registry Only")]
+            FrameRegistryOnly = 1,
+
+            [InspectorName("Frame Registry + Global Texture")]
+            FrameRegistryAndGlobalTexture = 2,
+        }
+
+        [Tooltip("Name used to register this output in FrameTextureRegistry and, when Texture Exposure includes Shader Globals, publish it as a global shader texture. Every consumer must use the exact same name.")]
         public string TextureName = "_MyTexture";
+
+        [Tooltip("Controls how this output is exposed. Frame Registry Only is preferred for C# Render Graph consumers. Frame Registry + Global Texture follows Unity's tracked global-texture path without publishing texel size. Frame Registry + Global Texture + Texel Size also publishes <TextureName>_TexelSize and therefore requires global-state modification.")]
+        public TextureExposureMode TextureExposure = TextureExposureMode.FrameRegistryAndShaderGlobals;
 
         [Tooltip("Optional override material used to render matching objects into this output texture. Use a flat mask, id, normal, or custom effect material when another pass will read this texture; leave empty to render objects with their own materials.")]
         public Material Material;
@@ -147,8 +163,32 @@ public partial class RenderTexturePass
             [Tooltip("Keyword action applied before this output renders. Use Enable or Disable when the mask/effect shader needs a specific global keyword state.")]
             public Mode BeforeRenderMode;
 
-            [Tooltip("Keyword action applied after this output renders. Use this to restore or intentionally change the global keyword state after the pass.")]
+            [Tooltip("Keyword action applied after this output renders. This applies the selected state; it does not remember and restore the state that existed before the pass.")]
             public Mode AfterRenderMode;
+        }
+
+        public static bool HasActiveGlobalKeywordChanges(GlobalKeyword[] globalKeywords)
+        {
+            if (globalKeywords == null)
+            {
+                return false;
+            }
+
+            foreach (GlobalKeyword keyword in globalKeywords)
+            {
+                if (keyword.Disabled || string.IsNullOrWhiteSpace(keyword.Name))
+                {
+                    continue;
+                }
+
+                if (keyword.BeforeRenderMode != GlobalKeyword.Mode.None ||
+                    keyword.AfterRenderMode != GlobalKeyword.Mode.None)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public RenderQueueRange RenderQueueRange => new(RenderQueueLowerBound, RenderQueueUpperBound);

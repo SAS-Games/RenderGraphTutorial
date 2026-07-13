@@ -61,6 +61,7 @@ It renders from the active camera using the active camera culling results. The o
 ## Main Files
 
 - `ObjectsToRenderTextureFeature.cs`: the renderer feature shown in the URP renderer asset.
+- `ObjectsToRenderTextureFeature.Validation.cs`: editor/lifecycle validation for output settings.
 - `RenderTexturePass.cs`: the render pass that creates an output texture and draws matching objects into it.
 - `RenderTexturePass.Settings.cs`: the serializable inspector settings for each output texture.
 - `RenderTextureDebugPass.cs`: optional debug pass that draws an output texture back to the camera.
@@ -87,12 +88,12 @@ Then `RenderTexturePass` does this inside Render Graph:
 5. Clears the destination texture to black.
 6. Draws matching renderers into the destination texture.
 7. Stores the texture handle in `FrameTextureRegistry`.
-8. Exposes the texture globally using `Texture Name`.
-9. Sets a matching texel-size vector.
+8. When `Texture Exposure` includes a global texture, exposes it globally using `Texture Name`.
+9. Only when the selected mode includes texel size, sets a matching global texel-size vector.
 
 ## Data Flow
 
-The generated texture is exposed in two ways.
+The generated texture is always stored in `FrameTextureRegistry`. Either global-texture mode can additionally expose it to ordinary shaders, while only the full shader-globals mode publishes `<TextureName>_TexelSize`.
 
 ### Global Shader Texture
 
@@ -102,7 +103,7 @@ The pass calls:
 builder.SetGlobalTextureAfterPass(destination, texturePropertyId);
 ```
 
-That makes the texture available through the global shader property named by `Texture Name`.
+When either global-texture exposure mode is enabled, that makes the texture available through the global shader property named by `Texture Name`.
 
 If `Texture Name` is:
 
@@ -420,7 +421,7 @@ Leave this at default if you are not using URP rendering layers.
 
 ### `Texture Name`
 
-Global shader property name used for the output texture.
+Registry key and optional global shader property name used for the output texture.
 
 This is the contract between the producer and every consumer.
 
@@ -446,13 +447,245 @@ _TexelSize
 
 to the texture name.
 
+### `Texture Exposure`
+
+Controls how consumers can access the generated texture. It does not change which objects are rendered or what pixels are written into the texture.
+
+The producer always executes this registration:
+
+```csharp
+textureRegistry.SetTexture(
+    texturePropertyId,
+    destination,
+    texelSize);
+```
+
+Therefore all exposure modes support `FrameTextureRegistry`. The differences are whether the same texture is also published to Unity's global shader-property table and whether matching texel-size metadata is published globally.
+
+#### `Frame Registry Only`
+
+This mode exposes the texture only through the frame-local `FrameTextureRegistry` used by C# Render Graph passes.
+
+What it provides:
+
+- the generated `TextureHandle`
+- the texture's `(1 / width, 1 / height, width, height)` texel-size vector
+- a stable lookup key produced from `Texture Name`
+- an explicit Render Graph resource that consumers declare with `UseTexture`
+
+What it does not provide:
+
+- a global shader texture visible automatically to every material
+- a global `<TextureName>_TexelSize` shader vector
+- a persistent texture that remains valid after the current camera/frame graph
+- CPU access to the texture's pixels
+
+A typical C# consumer uses `FrameTextureResolver`:
+
+```csharp
+private readonly FrameTextureResolver _resolver =
+    new(nameof(MyRendererFeature));
+
+_resolver.SetTextureName("_ObjectMask");
+
+if (!_resolver.TryResolve(
+        frameData,
+        out TextureHandle mask,
+        out Vector4 maskTexelSize))
+{
+    return;
+}
+
+builder.UseTexture(mask, AccessFlags.Read);
+```
+
+The call to `UseTexture` is important. Looking up a handle is not enough by itself; the consumer must declare how it uses the resource so Render Graph can establish producer-before-consumer ordering and manage the texture lifetime.
+
+Use this mode for the package's C# effects, including:
+
+- `MaskOutlineFeature`
+- `MaskHaloFeature`
+- `LayerBlurFeature`
+- `JumpFloodDistanceFieldFeature`
+- `DistanceFieldOutlineFeature`
+- `MaskDistortionFeature`
+- `FrameTextureProcessingFeature`
+- `RenderTextureDebugPass`
+
+Advantages:
+
+- dependencies are explicit to Render Graph
+- unused producer work can be culled when there are no other side effects
+- no global texture-name collision with unrelated shaders
+- no global texel-size command
+- multiple named frame textures can coexist cleanly
+- consumer code receives dimensions together with the handle
+
+Disadvantages:
+
+- ordinary scene materials cannot sample the texture merely by declaring the same property name
+- a C# consumer pass is required to resolve and bind the texture
+- the handle is valid only for the current frame's Render Graph
+- producer and consumer order still must be correct
+
+Recommended setup for the package effects:
+
+```text
+Texture Name: _ObjectMask
+Texture Exposure: Frame Registry Only
+Global Shader Keywords: Empty
+```
+
+Set the consuming feature's mask/source texture name to `_ObjectMask` exactly.
+
+#### `Frame Registry + Global Texture`
+
+This mode keeps the registry entry and publishes only the texture through Unity's Render Graph-aware API:
+
+```csharp
+builder.SetGlobalTextureAfterPass(
+    destination,
+    texturePropertyId);
+```
+
+It does not execute a command-buffer global vector update, so this mode does not require `AllowGlobalStateModification(true)` when global keyword actions are empty.
+
+Use this mode when an ordinary material or Shader Graph needs the texture but does not require a globally published `<TextureName>_TexelSize` vector.
+
+Advantages:
+
+- follows Unity's tracked global-texture publication path
+- ordinary shaders can sample the texture by name
+- retains registry access for C# Render Graph consumers
+- avoids command-buffer global-state permission when no global keywords are active
+- allows Render Graph to cull the producer if no declared consumer or other side effect needs it
+
+Disadvantages:
+
+- shaders expecting `<TextureName>_TexelSize` do not receive it from this feature
+- global property names can collide with unrelated systems
+- shader/pass ordering still determines when this frame's texture becomes available
+
+This is the recommended global mode when the texture alone is sufficient.
+
+#### Executable Exposure Proof
+
+The `TextureExposureProof` folder contains two strict diagnostic consumers that use one producer texture named `_TextureExposureProofMask`:
+
+- `GlobalTextureProofFeature` requires the `GlobalTexture` capability and draws a green mask fill.
+- `GlobalTextureAndTexelSizeProofFeature` requires both `GlobalTexture` and `GlobalTexelSize` and draws a yellow one-texel edge.
+
+Neither feature falls back to the registry's `TextureHandle`. They use `UseGlobalTexture` and direct shader-global declarations, so they provide an executable A/B test for the exposure modes. See `TextureExposureProof/README.md` for the complete setup and expected result matrix.
+
+#### `Frame Registry + Global Texture + Texel Size`
+
+The backing enum member for this Inspector option is `FrameRegistryAndShaderGlobals`. It remains serialized value `0` so existing renderer assets preserve their previous behavior.
+
+This mode keeps the registry entry and additionally publishes the output as a global shader texture:
+
+```csharp
+builder.SetGlobalTextureAfterPass(
+    destination,
+    texturePropertyId);
+```
+
+It also publishes:
+
+```text
+<TextureName>_TexelSize
+```
+
+For `_ObjectMask`, ordinary shaders can receive:
+
+```hlsl
+TEXTURE2D_X(_ObjectMask);
+float4 _ObjectMask_TexelSize;
+```
+
+The texture is available after the producer pass has executed. A shader that runs before the producer cannot read this frame's result. Do not retain or rely on the transient Render Graph texture in a later frame.
+
+Use this mode when:
+
+- a regular scene material directly samples the output by property name
+- Shader Graph directly samples a global texture property
+- a third-party shader expects a named global mask or buffer
+- adding a dedicated C# consumer pass is not appropriate
+
+Advantages:
+
+- ordinary materials can sample the output without knowing about `FrameTextureRegistry`
+- Shader Graph and hand-written shaders can share the same named texture
+- existing shader APIs that expect a global texture remain compatible
+- C# Render Graph consumers can still use the registry
+
+Disadvantages:
+
+- the global texel-size command requires `AllowGlobalStateModification(true)`
+- global state introduces a Render Graph synchronization point
+- a pass that allows global-state modification cannot be culled
+- later passes cannot be reordered before that synchronization point
+- common names can collide with global properties owned by other systems
+- shader execution order becomes part of the texture contract
+
+This full shader-global mode is the default so renderer assets created before `Texture Exposure` was added preserve their previous behavior.
+
+#### Exposure Mode Comparison
+
+| Question | Frame Registry Only | Registry + Global Texture | Registry + Global Texture + Texel Size |
+| --- | --- | --- | --- |
+| Registered in `FrameTextureRegistry`? | Yes | Yes | Yes |
+| Usable by C# Render Graph effects? | Yes | Yes | Yes |
+| Automatically visible to ordinary shaders? | No | Yes | Yes |
+| Publishes global `<TextureName>_TexelSize`? | No | No | Yes |
+| Requires global state when keywords are empty? | No | No | Yes |
+| Can be culled when no consumer or side effect exists? | Yes | Yes | No |
+| Recommended use | Package/C# effects | Shader access to texture only | Shaders requiring texture and texel metadata |
+
+`Texture Exposure` and `Global Shader Keywords` are independent settings. `Frame Registry Only` means the texture is registry-only; it does not prohibit a separately configured global keyword change. If active global keyword actions are configured, the pass must still allow global-state modification even in registry-only mode.
+
 ## Shader Pass Filtering
+
+Shader pass filtering answers this question:
+
+```text
+Which Pass inside each selected object's shader is eligible for this draw?
+```
+
+It is separate from layers, render queues, rendering layers, shader keywords, and texture exposure.
+
+The complete selection pipeline is approximately:
+
+```text
+camera culling
+  -> GameObject Layer Mask
+  -> Rendering Layer Mask
+  -> render queue bounds
+  -> matching LightMode shader pass
+  -> optional override material/pass
+  -> draw into the generated texture
+```
+
+An object can pass every layer and queue test and still be absent when none of its shader passes matches the configured `LightMode` names.
 
 ### `Light Mode`
 
 Flags for common shader `LightMode` tags.
 
-The renderer list uses these tags to decide which shader passes are valid draw candidates.
+`LightMode` is a ShaderLab Pass tag. URP uses it to identify the purpose of an individual pass inside a shader:
+
+```shaderlab
+Pass
+{
+    Name "ForwardLit"
+    Tags { "LightMode" = "UniversalForward" }
+
+    HLSLPROGRAM
+    // Vertex and fragment programs.
+    ENDHLSL
+}
+```
+
+The renderer list receives a list of `ShaderTagId` values created from the selected flags. A renderer is drawable only when Unity can use a compatible shader pass from that list.
 
 `Standard` includes common URP forward/unlit tags:
 
@@ -461,15 +694,63 @@ The renderer list uses these tags to decide which shader passes are valid draw c
 - `UniversalForwardOnly`
 - `LightweightForward`
 
-Additional flags are available for depth and normal-related shader passes.
+The available flags have these intended roles:
+
+| Light Mode | Typical meaning |
+| --- | --- |
+| `SRPDefaultUnlit` | Untagged/default unlit or extra SRP pass; URP treats a pass without `LightMode` as this value |
+| `UniversalForward` | Normal URP forward geometry pass with lighting |
+| `UniversalForwardOnly` | Forward-only geometry pass usable in forward and deferred renderers |
+| `LightweightForward` | Legacy Lightweight/early URP forward tag retained for compatible shaders |
+| `DepthOnly` | Camera-space depth-only pass |
+| `DepthNormals` | Depth-and-normal pass name used by compatible URP/custom shaders |
+| `DepthNormalsOnly` | URP depth-and-normal prepass, particularly relevant to deferred rendering and SSAO |
+
+`Standard` is the safest default for color or flat-mask capture because it covers common visible geometry passes. Depth and normal tags should be selected only when the desired shader pass really writes useful data to this output. A depth-only pass is not automatically a good color-mask pass.
 
 Why it matters:
 
 If an object has the correct layer and render queue but still does not draw, its shader may not expose a pass with one of the selected `LightMode` tags.
 
+When to change it:
+
+- enable `DepthOnly` when intentionally drawing a shader's depth pass
+- enable a depth-normal tag when intentionally capturing normals/depth data
+- disable broad forward tags when a narrowly controlled custom pass should be the only eligible pass
+- keep `Standard` for ordinary URP Lit, Simple Lit, and Unlit objects
+
+When not to change it:
+
+- do not use it as an object category system; use layers or rendering layers
+- do not add tags merely because their names appear in a shader
+- do not expect it to enable a shader feature; use material properties or keywords for shader variants
+- do not add `ShadowCaster` expecting a camera-space object mask; shadow passes use shadow-rendering assumptions
+
 ### `Shader Tags`
 
-Extra shader `LightMode` tag strings.
+Extra custom `LightMode` tag values appended to the built-in `Light Mode` selection.
+
+This field expects the value on the right side of a Pass tag:
+
+```shaderlab
+Tags { "LightMode" = "ObjectMask" }
+```
+
+The corresponding Inspector value is:
+
+```text
+Shader Tags
+  Element 0: ObjectMask
+```
+
+Do not enter:
+
+- the shader asset path
+- the shader's `Name`
+- the Pass `Name`
+- `RenderType`
+- `Queue`
+- the complete text `LightMode=ObjectMask`
 
 Use this for custom shaders that use custom pass tags.
 
@@ -478,14 +759,104 @@ How to use it:
 1. Inspect the shader pass that should draw into this output.
 2. Find its `LightMode` tag.
 3. Add that tag string to `Shader Tags`.
+4. Keep the spelling and capitalization exact.
+5. Confirm that layers, rendering layers, and render queue bounds also include the object.
+6. Enable the producer's debug view and verify the result.
 
 This supplements `Light Mode`; it does not replace it.
+
+Example custom capture pass:
+
+```shaderlab
+Pass
+{
+    Name "ObjectMaskPass"
+    Tags { "LightMode" = "ObjectMask" }
+
+    ZWrite Off
+    ZTest LEqual
+
+    HLSLPROGRAM
+    #pragma vertex Vert
+    #pragma fragment Frag
+
+    half4 Frag(Varyings input) : SV_Target
+    {
+        return half4(1, 1, 1, 1);
+    }
+    ENDHLSL
+}
+```
+
+For a tightly controlled custom-pass workflow, set `Light Mode` to `None` and add only `ObjectMask`. For general URP materials, retain `Standard` and add custom tags only for additional shader families.
+
+Advantages of custom shader tags:
+
+- precisely selects a pass designed for the generated texture
+- avoids relying on the visual forward pass to encode mask/data output
+- works with custom shader architectures
+- can reduce ambiguity when one shader contains many passes
+
+Disadvantages of custom shader tags:
+
+- creates a string contract between the renderer feature and shader source
+- a typo or renamed tag makes affected objects disappear silently from the output
+- every shader family that needs capture support must provide a compatible pass
+- an overly broad built-in selection can still make another pass eligible
+
+Troubleshooting a missing object:
+
+1. Confirm that the camera culls the object as expected.
+2. Confirm `Layer Mask`.
+3. Confirm `Render Layer Mask`.
+4. Confirm render queue bounds.
+5. Confirm that the shader contains a matching `LightMode` pass.
+6. Confirm `Material Pass Index` when an override material is assigned.
+7. Confirm the pass event occurs before the consuming effect.
+
+### Shader Tags Versus Shader Keywords
+
+These settings solve different problems:
+
+| Setting | Selects or changes | Example |
+| --- | --- | --- |
+| `Light Mode` / `Shader Tags` | Which shader Pass Unity draws | Select the Pass tagged `ObjectMask` |
+| `Global Shader Keywords` | Which compiled variant of an eligible Pass runs | Enable `OBJECT_MASK_CAPTURE` |
+
+A shader tag cannot enable keyword-controlled code. A keyword cannot make an ineligible `LightMode` pass enter the renderer list.
 
 ## Global Keyword Settings
 
 ### `Global Shader Keywords`
 
 Optional list of global shader keyword changes applied before and after this output renders.
+
+A shader keyword selects conditional shader behavior. For variant keywords, Unity compiles different shader programs and selects a matching variant from the enabled keyword state.
+
+A hand-written shader might declare a global keyword like this:
+
+```hlsl
+#pragma multi_compile _ OBJECT_MASK_CAPTURE
+
+half4 Frag(Varyings input) : SV_Target
+{
+#if defined(OBJECT_MASK_CAPTURE)
+    return half4(1, 1, 1, 1);
+#else
+    return EvaluateNormalSurface(input);
+#endif
+}
+```
+
+This feature can enable `OBJECT_MASK_CAPTURE` before drawing its renderer list and disable it afterward.
+
+Do not declare the keyword with a `_local` directive for this field:
+
+```hlsl
+#pragma shader_feature_local OBJECT_MASK_CAPTURE
+```
+
+Global keyword commands do not control a local keyword with the same name. Prefer local keywords for ordinary per-material features, but use a genuinely global declaration when this pass must drive the variant globally.
 
 Each entry has:
 
@@ -501,20 +872,40 @@ Why it matters:
 - Global keywords affect shader state beyond a single material.
 - Incorrect keyword state can change unrelated rendering.
 - Overuse can create hard-to-debug rendering differences.
+- Active global keyword commands require `AllowGlobalStateModification(true)`.
+- The global-state declaration prevents pass culling and restricts Render Graph scheduling.
+- Every variant keyword can contribute to shader variant count and build complexity.
 
 Prefer separate materials, material properties, local shader keywords, or shader variants when possible.
+
+Good reasons to use this setting:
+
+- a shader already provides a global capture variant that must be active only for this draw
+- a third-party shader exposes the needed behavior only through a global keyword
+- multiple materials rendered by the same output must enter the same global variant without mutating every material asset
+- the keyword state must be encoded in GPU command order immediately around `DrawRendererList`
+
+Poor reasons to use this setting:
+
+- producing a normal white mask when an override mask material can do it directly
+- controlling one material that can use a local keyword or material property
+- making the output texture globally accessible; use `Texture Exposure` for that
+- selecting which Pass Unity draws; use `Light Mode` or `Shader Tags`
+- selecting which objects are included; use layers, rendering layers, and queues
 
 ### `GlobalKeyword.Name`
 
 The keyword string to change.
 
-Keep it exactly equal to the shader keyword name.
+Keep it exactly equal to the global keyword name declared by the shader. Names are case-sensitive contracts. Empty and whitespace-only names are ignored by this implementation.
 
 ### `GlobalKeyword.Disabled`
 
 Skips this entry without removing it from the list.
 
 Use it to temporarily disable one keyword action while preserving the configuration.
+
+A disabled entry does not count as active global-state modification.
 
 ### `GlobalKeyword.BeforeRenderMode`
 
@@ -526,13 +917,231 @@ Options:
 - `Enable`
 - `Disable`
 
+Examples:
+
+| Before mode | State used by renderer-list draws |
+| --- | --- |
+| `None` | Whatever state was already active |
+| `Enable` | Keyword is enabled before drawing |
+| `Disable` | Keyword is disabled before drawing |
+
 ### `GlobalKeyword.AfterRenderMode`
 
-Action applied after drawing the renderer list.
+Action applied after drawing the renderer list. It determines the state seen by later rendering commands.
 
-Use this to restore state or set the next desired state.
+Important: this setting does not capture or remember the previous keyword state. It applies the exact action selected.
 
-If you enable a keyword before rendering, usually disable it after rendering unless another part of the frame intentionally needs it enabled.
+For example, `Before = Enable` and `After = Disable` guarantees that this renderer-list draw sees the keyword enabled and later commands see it disabled. If the keyword was already enabled before this pass, this combination does not restore that earlier enabled state; it still disables the keyword afterward.
+
+Use `After = None` only when another system intentionally owns the later state. Leaving a keyword enabled can affect later passes, later renderer features, and subsequent camera rendering until another command changes it.
+
+Recommended isolated transition:
+
+```text
+Name: OBJECT_MASK_CAPTURE
+Disabled: false
+Before Render Mode: Enable
+After Render Mode: Disable
+```
+
+### When A Keyword Entry Is Active
+
+An entry causes global-state modification only when all of these are true:
+
+- the array element exists
+- `Disabled` is false
+- `Name` is not empty or whitespace
+- either `Before Render Mode` or `After Render Mode` is not `None`
+
+An empty array, disabled entries, unnamed entries, or entries with both actions set to `None` do not require global keyword commands.
+
+### Shader Variant And Build Considerations
+
+Changing a keyword at runtime does not create a missing shader variant. The required variant must survive shader compilation and build stripping.
+
+Practical rules:
+
+- use `multi_compile` when a global runtime state must reliably select both variants
+- use `shader_feature` carefully because variants unused by build-time materials can be stripped
+- keep keyword sets small because combinations multiply variant counts
+- use stage-specific directives such as `multi_compile_fragment` when only one stage needs the keyword and the target graphics APIs benefit
+- verify a development player build, not only the Editor
+- use strict shader-variant matching or shader-variant logging when diagnosing missing variants
+
+### Global Keyword Advantages And Disadvantages
+
+| Advantages | Disadvantages |
+| --- | --- |
+| Changes a variant at an exact point in GPU command order | Affects global shader state rather than one material |
+| Can control many rendered materials consistently | Requires Render Graph global-state permission |
+| Avoids editing every material instance | Prevents pass culling and adds a scheduling constraint |
+| Supports shader-authored capture variants | Can leak into later rendering when the after action is wrong |
+| Useful for compatible third-party shader contracts | Adds variant-management and stripping risk |
+
+### Keyword Troubleshooting
+
+If enabling a keyword appears to do nothing:
+
+1. Confirm the name and capitalization.
+2. Confirm the shader declares a global keyword, not a `_local` keyword.
+3. Confirm the selected `LightMode` pass contains the keyword declaration.
+4. Confirm the required variant was not stripped from the player build.
+5. Confirm the before action executes before the renderer-list draw.
+6. Confirm an override material is not replacing the shader you expected to receive the keyword.
+7. Inspect the Frame Debugger or Render Graph Viewer to verify pass order.
+
+If unrelated rendering changes:
+
+1. Check whether `After Render Mode` is `None`.
+2. Check whether another feature uses the same global keyword name.
+3. Use a unique package/project prefix for custom global keywords.
+4. Prefer an override material or local material keyword when global scope is unnecessary.
+
+## Why Global State Is Conditional
+
+The producer records this logic:
+
+```csharp
+if (passData.PublishGlobalTexture)
+{
+    builder.SetGlobalTextureAfterPass(
+        destination,
+        passData.TexturePropertyId);
+}
+
+if (passData.PublishGlobalTexelSize ||
+    Settings.HasActiveGlobalKeywordChanges(passData.GlobalKeywords))
+{
+    builder.AllowGlobalStateModification(true);
+}
+```
+
+### First Condition: Publish The Texture
+
+`SetGlobalTextureAfterPass` is Render Graph's explicit API for binding a generated `TextureHandle` to a global shader property after the producer has written it.
+
+It is called for both global-texture modes. Registry-only consumers already receive the handle through `FrameTextureRegistry` and do not need a global binding.
+
+`SetGlobalTextureAfterPass` itself is declared to Render Graph and does not require `AllowGlobalStateModification(true)`.
+
+### Second Condition: Permit Command-Buffer Global Changes
+
+`AllowGlobalStateModification(true)` declares that commands recorded by `ExecutePass` modify state outside the pass's normal attachments and resources.
+
+There are two possible command-buffer side effects in this implementation:
+
+1. Shader-global exposure executes `SetGlobalVector` for `<TextureName>_TexelSize`.
+2. Active keyword entries execute `EnableShaderKeyword` or `DisableShaderKeyword`.
+
+That is why the condition uses logical OR:
+
+```text
+publish global texel size OR execute active global keyword changes
+```
+
+The behavior matrix is:
+
+| Texture exposure | Active keyword action | Global texture | Global texel size | Allow global state |
+| --- | --- | --- | --- | --- |
+| Frame Registry Only | No | No | No | No |
+| Frame Registry Only | Yes | No | No | Yes |
+| Registry + Global Texture | No | Yes | No | No |
+| Registry + Global Texture | Yes | Yes | No | Yes |
+| Registry + Global Texture + Texel Size | No | Yes | Yes | Yes |
+| Registry + Global Texture + Texel Size | Yes | Yes | Yes | Yes |
+
+### Is The Code Correct?
+
+Yes, it is correct for the current `ExecutePass` implementation.
+
+It satisfies these rules:
+
+- global texture publication occurs only in modes that promise global texture access
+- registry-only mode avoids global texture and texel-size publication
+- every `SetGlobalVector`, `EnableShaderKeyword`, and `DisableShaderKeyword` path has declared global-state permission
+- no global-state permission is requested for registry-only or global-texture-only mode when there is no active keyword action
+- `SetGlobalTextureAfterPass` remains in recording code rather than being issued as an unsafe command-buffer texture binding
+
+The two conditions must remain synchronized with `ExecutePass`. If the global texel-size `SetGlobalVector` call is removed in the future, `PublishGlobalTexelSize` would no longer need to participate in the second condition. If another command-buffer global operation is added, its activation condition must also be included.
+
+Do not replace the second condition with only `HasActiveGlobalKeywordChanges(...)` while `SetGlobalVector` still runs. Doing so would execute an undeclared global-state command whenever the texel-size mode is selected.
+
+The cost of `AllowGlobalStateModification(true)` is why the code derives it automatically rather than exposing a manual checkbox. In this Unity version it introduces a graph synchronization point, prevents later passes from moving before the pass, and disables pass culling.
+
+## Configuration Validation
+
+`ObjectsToRenderTextureFeature` validates its output list in two lifecycle locations:
+
+```text
+OnValidate() -> when serialized values change in the Unity Editor
+Create()     -> when URP creates or recreates the renderer feature
+```
+
+Validation is intentionally not performed in full inside `AddRenderPasses`, because that method runs per camera and should remain a small scheduling path. `AddRenderPasses` keeps one inexpensive runtime guard: null settings and empty texture names are skipped.
+
+### Validation Rules
+
+| Condition | Severity and behavior |
+| --- | --- |
+| Settings element is null | Warning; output is skipped |
+| `Texture Name` is empty | Warning; output is skipped |
+| Duplicate `Texture Name` | Warning; both entries remain configured, but registry/global keys collide and must be fixed |
+| Unknown serialized exposure enum | Warning; runtime uses the backward-compatible global texture plus texel-size policy |
+| Queue lower bound is greater than upper bound | Warning; configured range cannot represent the intended filter |
+| Custom texture width or height is non-positive | Warning; runtime clamps each invalid dimension to 1 pixel |
+| `Light Mode` is `None` and no valid custom Shader Tag exists | Warning; no shader pass can be selected |
+| Active keyword action has no name | Warning; entry is ignored |
+| Active keyword name is duplicated | Warning; actions execute in list order and may conflict |
+| Keyword changes before rendering but has no after action | Warning; changed state can leak into later passes/cameras |
+| Registry-only or global-texture-only mode has active global keyword actions | Warning; valid configuration, but keywords still disable pass culling through global state |
+
+Warnings describe consequences but do not silently rewrite legitimate user settings. The only automatic behavior is the documented runtime fallback or safety clamp.
+
+### Warning Deduplication
+
+Validation messages are cached by the feature instance. `Create()` does not repeat messages already reported by `OnValidate()`. When an Inspector edit triggers `OnValidate`, the cache is cleared so the current configuration is checked again and a reintroduced problem can be reported.
+
+No warning cache is static, so separate renderer features validate independently.
+
+### Exposure Validation By Construction
+
+The enum makes unsupported publication combinations impossible:
+
+```text
+Frame Registry Only
+  -> no global texture, no global texel size
+
+Frame Registry + Global Texture
+  -> global texture, no global texel size
+
+Frame Registry + Global Texture + Texel Size
+  -> global texture and global texel size
+```
+
+There is no mode that publishes global texel size without publishing its corresponding global texture.
+
+The pass converts the enum into a private immutable policy containing:
+
+```csharp
+bool PublishGlobalTexture;
+bool PublishGlobalTexelSize;
+```
+
+Render Graph declarations and execution commands both use this same policy. This prevents the Inspector choice, `SetGlobalTextureAfterPass`, `SetGlobalVector`, and `AllowGlobalStateModification` from drifting apart.
+
+### What Static Validation Cannot Prove
+
+The feature cannot determine all cross-asset contracts automatically. Users must still verify:
+
+- the consuming feature uses the exact same texture name
+- the producer runs before the consumer
+- a global shader declares the expected texture property
+- a global shader that needs pixel offsets obtains texel size from the selected mode or computes dimensions itself
+- a keyword is declared globally rather than with a `_local` directive
+- required shader variants survive player-build stripping
+- selected objects actually contain a compatible `LightMode` pass
+
+Use the debug view, Frame Debugger, Render Graph Viewer, development builds, and shader variant logging for these runtime relationships.
 
 ## Depth Settings
 
@@ -685,10 +1294,12 @@ URP compiles and executes the graph
 ### `ObjectsToRenderTextureFeature` Class Declaration
 
 ```csharp
-public class ObjectsToRenderTextureFeature : ScriptableRendererFeature
+public partial class ObjectsToRenderTextureFeature : ScriptableRendererFeature
 ```
 
 `ScriptableRendererFeature` is URP's extension point for inserting one or more `ScriptableRenderPass` instances into a renderer.
+
+The class is partial so scheduling and validation remain in separate source files while Unity still sees one renderer-feature type. `partial` changes source organization only; it creates no extra component, renderer feature, or runtime object.
 
 Why it is used:
 
@@ -875,6 +1486,8 @@ private class PassData
     public int TexturePropertyId;
     public int TexelSizePropertyId;
     public Vector4 TexelSize;
+    public bool PublishGlobalTexture;
+    public bool PublishGlobalTexelSize;
 }
 ```
 
@@ -1125,13 +1738,13 @@ builder.SetGlobalTextureAfterPass(
     passData.TexturePropertyId);
 ```
 
-After this pass executes, Unity binds the destination to the configured global shader property.
+When `Texture Exposure` is either global-texture mode, Unity binds the destination to the configured global shader property after this pass executes.
 
 This makes the texture available to ordinary shaders that know only the property name. It also establishes the correct timing: the global binding is applied after the producer has written the texture.
 
 If this call is omitted, handle-based consumers using `FrameTextureRegistry` still work, but scene materials and shaders sampling the global name do not receive this frame's texture through this feature.
 
-Global state can limit some Render Graph optimizations. Prefer direct handle dependencies for C# consumers, and publish globally only when shader-level access is part of the feature contract.
+Prefer direct handle dependencies for C# consumers, and publish globally only when shader-level access is part of the feature contract. `SetGlobalTextureAfterPass` is Render Graph's explicit global-texture API; it does not by itself require `AllowGlobalStateModification(true)`. The separate global texel-size command does.
 
 #### `AllowGlobalStateModification(true)`
 
@@ -1139,11 +1752,13 @@ Global state can limit some Render Graph optimizations. Prefer direct handle dep
 builder.AllowGlobalStateModification(true);
 ```
 
-The execute function changes global shader keywords and a global texel-size vector. Render Graph requires the pass to declare that side effect.
+The pass enables this declaration only when it will publish a global texel-size vector or apply at least one enabled, named global keyword change. Render Graph requires the pass to declare those command-buffer side effects.
 
 Without this declaration, changing global state inside a raster pass violates the graph contract and can trigger validation problems. It also prevents Render Graph from reasoning incorrectly that the pass has no external side effects.
 
-Avoid global state when a local material property or explicit texture dependency can express the same behavior. Global keywords affect all shaders and can make pass ordering more fragile.
+Allowing global state creates a Render Graph synchronization point, prevents later passes from moving before this pass, and disables pass culling. Avoid it when a local material property or explicit texture dependency can express the same behavior. Global keywords affect all shaders and can make pass ordering more fragile.
+
+Do not expose this Render Graph declaration as a manual setting. The implementation derives it from `Texture Exposure` and the configured keyword actions so the declaration cannot disagree with the commands executed by the pass.
 
 #### `SetRenderFunc`
 
@@ -1432,7 +2047,7 @@ context.cmd.SetGlobalVector(
     data.TexelSize);
 ```
 
-For texture `_ObjectMask`, this publishes `_ObjectMask_TexelSize` as:
+When `Frame Registry + Global Texture + Texel Size` is selected, texture `_ObjectMask` publishes `_ObjectMask_TexelSize` as:
 
 ```text
 (1 / width, 1 / height, width, height)
@@ -1538,6 +2153,7 @@ If no configured tag matches an object's shader, the object does not render into
 | Inspector setting | Unity/URP API receiving it | Effect if omitted or wrong |
 | --- | --- | --- |
 | `TextureName` | `Shader.PropertyToID`, registry key, texture name, global texture property | Consumers cannot agree on the texture; empty names create unusable contracts |
+| `TextureExposure` | `FrameTextureRegistry`, optional `SetGlobalTextureAfterPass`, optional global texel-size update | Registry-only is unavailable directly to scene shaders; texture-only avoids global command state; texel-size mode adds scheduling constraints |
 | `Material` | `DrawingSettings.overrideMaterial` | Original object materials render instead of controlled data |
 | `MaterialPassIndex` | `DrawingSettings.overrideMaterialPassIndex` | Wrong shader pass or no useful draw |
 | `RenderPassEvent` | `ScriptableRenderPass.renderPassEvent` | Producer may execute too early or after its consumer |
@@ -1570,7 +2186,7 @@ If no configured tag matches an object's shader, the object does not render into
 | `SetGlobalTextureAfterPass` | Required only for global shader access | Registry consumers work, global shader sampling contract does not |
 | `SetRenderAttachmentDepth` | Conditional | No depth testing/writing against camera depth |
 | `ConfigureInput` | Conditional | Requested camera resources may not exist |
-| `AllowGlobalStateModification` | Conditional but required by current keyword/vector behavior | Global state commands violate graph declaration |
+| `AllowGlobalStateModification` | Automatically required for shader-global texel size or active global keyword changes | Global state commands violate the graph declaration; enabling it unnecessarily disables culling and restricts scheduling |
 | profiling sampler | Diagnostic | Pixels unchanged; profiling labels degrade |
 | debug pass | Diagnostic | Production output unchanged; no fullscreen/overlay inspection |
 
@@ -1713,6 +2329,10 @@ The implementation follows Unity's Render Graph renderer-feature model. These re
 - [Access current-frame data in URP](https://docs.unity3d.com/6000.0/Documentation/Manual/urp/accessing-frame-data.html)
 - [Work with textures in URP Render Graph](https://docs.unity3d.com/6000.0/Documentation/Manual/urp/working-with-textures.html)
 - [Create a global texture in URP](https://docs.unity3d.com/6000.0/Documentation/Manual/urp/render-graph-create-global-texture.html)
+- [URP ShaderLab Pass tags and LightMode values](https://docs.unity3d.com/6000.0/Documentation/Manual/urp/urp-shaders/urp-shaderlab-pass-tags.html)
+- [Declare shader keywords](https://docs.unity3d.com/6000.0/Documentation/Manual/SL-MultipleProgramVariants-declare.html)
+- [Strip shader variants](https://docs.unity3d.com/6000.0/Documentation/Manual/shader-variant-stripping.html)
+- [CommandBuffer global keyword commands](https://docs.unity3d.com/ScriptReference/Rendering.CommandBuffer.html)
 - [Shader.PropertyToID](https://docs.unity3d.com/ScriptReference/Shader.PropertyToID.html)
 - [FilteringSettings](https://docs.unity3d.com/ScriptReference/Rendering.FilteringSettings.html)
 - [SortingCriteria](https://docs.unity3d.com/ScriptReference/Rendering.SortingCriteria.html)
@@ -1771,7 +2391,7 @@ It does not directly render immediately. Instead, it declares:
 - renderer list dependency
 - color attachment
 - optional depth attachment
-- global texture export
+- optional global texture export
 - execute function
 
 Render Graph later schedules and executes the pass.

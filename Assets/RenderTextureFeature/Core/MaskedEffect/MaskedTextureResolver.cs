@@ -59,6 +59,7 @@ public sealed class FrameTextureRegistry : ContextItem
         texelSize = Vector4.zero;
         return false;
     }
+
 }
 
 public class FrameTextureResolver
