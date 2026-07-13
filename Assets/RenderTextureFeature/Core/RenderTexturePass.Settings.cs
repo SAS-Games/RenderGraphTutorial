@@ -54,10 +54,6 @@ public partial class RenderTexturePass
         [Tooltip("Override material pass to render. -1 renders all passes; use 0 or another explicit pass index when the override shader has a dedicated mask/effect pass.")]
         public int MaterialPassIndex = -1; // -1 means render all passes
 
-        // TODO: Add support for doing a blit after rendering the objects to a texture
-        // public Material BlitMaterial;
-        // public int BlitMaterialPassIndex = -1; // -1 means render all passes
-
         [Tooltip("When this output pass runs in the URP frame. Choose an event before the effect that reads Texture Name; AfterRenderingOpaques is a good default for opaque masks.")]
         public RenderPassEvent RenderPassEvent = RenderPassEvent.AfterRenderingOpaques;
 

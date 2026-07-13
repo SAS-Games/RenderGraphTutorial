@@ -17,6 +17,10 @@ public class SimpleMaskOutlineFeature : ScriptableRendererFeature
     public class Settings
     {
         public RenderPassEvent RenderPassEvent = RenderPassEvent.AfterRenderingTransparents;
+
+        [Tooltip("Registered mask texture produced by ObjectsToRenderTextureFeature.")]
+        public string MaskTextureName = "_SelectionOutlineMask";
+
         public Color Color = Color.yellow;
 
         [Range(1, 8)]
@@ -62,6 +66,7 @@ public class SimpleMaskOutlineFeature : ScriptableRendererFeature
 
         private Settings _settings;
         private Material _material;
+        private readonly FrameTextureResolver _maskResolver = new(nameof(SimpleMaskOutlineFeature));
 
         private class PassData
         {
@@ -77,19 +82,15 @@ public class SimpleMaskOutlineFeature : ScriptableRendererFeature
         {
             _settings = settings;
             _material = material;
+            _maskResolver.SetTextureName(settings.MaskTextureName);
             renderPassEvent = settings.RenderPassEvent;
             profilingSampler = new ProfilingSampler("Simple Mask Outline");
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
-            if (_material == null || !frameData.Contains<RenderTexturePass.CustomTextureData>())
-            {
-                return;
-            }
-
-            RenderTexturePass.CustomTextureData maskData = frameData.Get<RenderTexturePass.CustomTextureData>();
-            if (!maskData.Texture.IsValid())
+            if (_material == null ||
+                !_maskResolver.TryResolve(frameData, out TextureHandle maskTexture, out Vector4 maskTexelSize))
             {
                 return;
             }
@@ -100,14 +101,14 @@ public class SimpleMaskOutlineFeature : ScriptableRendererFeature
                 out PassData passData,
                 profilingSampler);
 
-            passData.MaskTexture = maskData.Texture;
-            passData.MaskTexelSize = maskData.TexelSize;
+            passData.MaskTexture = maskTexture;
+            passData.MaskTexelSize = maskTexelSize;
             passData.Material = _material;
             passData.OutlineColor = _settings.Color;
             passData.OutlineWidth = _settings.Width;
             passData.OutlineIntensity = _settings.Intensity;
 
-            builder.UseTexture(maskData.Texture, AccessFlags.Read);
+            builder.UseTexture(maskTexture, AccessFlags.Read);
             builder.SetRenderAttachment(resourceData.activeColorTexture, 0, AccessFlags.ReadWrite);
             builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
         }

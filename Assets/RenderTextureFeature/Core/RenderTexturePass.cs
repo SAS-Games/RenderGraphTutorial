@@ -7,30 +7,6 @@ using UnityEngine.Rendering.Universal;
 
 public partial class RenderTexturePass  : ScriptableRenderPass
 {
-    // Compatibility alias for older consumers. New code should use FrameTextureRegistry.
-    public sealed class CustomTextureData : FrameTextureRegistry
-    {
-        public TextureHandle Texture { get; private set; }
-        public Vector4 TexelSize { get; private set; }
-
-        public override void Reset()
-        {
-            base.Reset();
-            Texture = TextureHandle.nullHandle;
-            TexelSize = Vector4.zero;
-        }
-
-        public override void SetTexture(
-            int texturePropertyId,
-            TextureHandle texture,
-            Vector4 texelSize)
-        {
-            base.SetTexture(texturePropertyId, texture, texelSize);
-            Texture = texture;
-            TexelSize = texelSize;
-        }
-    }
-
     private Settings _settings;
     private string _profilingName;
     private string _textureName;
@@ -58,12 +34,9 @@ public partial class RenderTexturePass  : ScriptableRenderPass
             _texelSizePropertyId = Shader.PropertyToID($"{settings.TextureName}_TexelSize");
         }
         renderPassEvent = _settings.RenderPassEvent;
-        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(
-            profilingName,
-            ref _profilingName,
-            profilingSampler);
+        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(profilingName, ref _profilingName, profilingSampler);
         _renderStateBlock = new RenderStateBlock(RenderStateMask.Nothing);
-        // Debug.Log($"RenderTexturePass: depth? {_settings.Depth}");
+
         if (_settings.Depth)
         {
             _renderStateBlock.mask |= RenderStateMask.Depth;
@@ -76,21 +49,12 @@ public partial class RenderTexturePass  : ScriptableRenderPass
 
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
     {
-        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(
-            _settings.TextureName,
-            out PassData passData,
-            profilingSampler
-        );
+        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(_settings.TextureName, out PassData passData, profilingSampler);
 
         // Initialize the pass data
         InitPassData(renderGraph, frameData, ref passData);
         // Create the destination texture
-        TextureHandle destination = CreateDestinationTexture(
-            renderGraph,
-            frameData,
-            out RenderTextureDescriptor destinationDescriptor,
-            out RenderTextureDescriptor cameraDescriptor
-        );
+        TextureHandle destination = CreateDestinationTexture(renderGraph, frameData, out RenderTextureDescriptor destinationDescriptor, out RenderTextureDescriptor cameraDescriptor);
         passData.TexturePropertyId = _texturePropertyId;
         passData.TexelSizePropertyId = _texelSizePropertyId;
         passData.TexelSize = CreateTexelSize(destinationDescriptor.width, destinationDescriptor.height);
@@ -98,8 +62,8 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         if (!passData.RendererListHandle.IsValid())
             return;
 
-        FrameTextureRegistry customData = FrameTextureRegistry.GetOrCreate(frameData);
-        customData.SetTexture(passData.TexturePropertyId, destination, passData.TexelSize);
+        FrameTextureRegistry textureRegistry = FrameTextureRegistry.GetOrCreate(frameData);
+        textureRegistry.SetTexture(passData.TexturePropertyId, destination, passData.TexelSize);
 
         // We declare the RendererList we just created as an input dependency to this pass, via UseRendererList()
         builder.UseRendererList(passData.RendererListHandle);
@@ -111,7 +75,7 @@ public partial class RenderTexturePass  : ScriptableRenderPass
 
         // Shader keyword changes are considered as global state modifications
         builder.AllowGlobalStateModification(true);
-       // builder.AllowPassCulling(true);
+        builder.AllowPassCulling(true);
 
         // Assign the ExecutePass function to the render pass delegate, which will be called by the render graph when executing the pass
         builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
@@ -133,15 +97,11 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     private static void UpdateKeywordsBeforeRender(PassData data, RasterCommandBuffer cmd)
     {
         if (data.GlobalKeywords == null)
-        {
             return;
-        }
         foreach (Settings.GlobalKeyword keyword in data.GlobalKeywords)
         {
             if (keyword.Disabled)
-            {
                 continue;
-            }
             switch (keyword.BeforeRenderMode)
             {
                 case Settings.GlobalKeyword.Mode.None:
@@ -161,15 +121,13 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     private static void UpdateKeywordsAfterRender(PassData data, RasterCommandBuffer cmd)
     {
         if (data.GlobalKeywords == null)
-        {
             return;
-        }
+        
         foreach (Settings.GlobalKeyword keyword in data.GlobalKeywords)
         {
             if (keyword.Disabled)
-            {
                 continue;
-            }
+
             switch (keyword.AfterRenderMode)
             {
                 case Settings.GlobalKeyword.Mode.None:
@@ -192,36 +150,18 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         var cameraData = frameData.Get<UniversalCameraData>();
         var lightData = frameData.Get<UniversalLightData>();
 
-        DrawingSettings drawingSettings = RenderingUtils.CreateDrawingSettings(
-            _settings.LightModeShaderTags,
-            universalRenderingData,
-            cameraData,
-            lightData,
-            _settings.SortingCriteria
-        );
+        DrawingSettings drawingSettings = RenderingUtils.CreateDrawingSettings(_settings.LightModeShaderTags, universalRenderingData, cameraData, lightData, _settings.SortingCriteria);
         drawingSettings.overrideMaterial = _settings.Material;
         drawingSettings.overrideMaterialPassIndex = _settings.MaterialPassIndex;
 
         var filteringSettings = new FilteringSettings(_settings.RenderQueueRange, _settings.LayerMask, (uint)_settings.RenderLayerMask);
-       
-        RendererListHandle renderListHandle = RenderingHelpers.CreateRendererListWithRenderStateBlock(
-            renderGraph,
-            ref universalRenderingData.cullResults,
-            drawingSettings,
-            filteringSettings,
-            _renderStateBlock
-        );
+        RendererListHandle renderListHandle = RenderingHelpers.CreateRendererListWithRenderStateBlock(renderGraph, ref universalRenderingData.cullResults, drawingSettings, filteringSettings, _renderStateBlock);
 
         passData.RendererListHandle = renderListHandle;
         passData.GlobalKeywords = _settings.GlobalShaderKeywords;
     }
 
-    private TextureHandle CreateDestinationTexture(
-        RenderGraph renderGraph,
-        ContextContainer frameData,
-        out RenderTextureDescriptor desc,
-        out RenderTextureDescriptor cameraDescriptor
-    )
+    private TextureHandle CreateDestinationTexture(RenderGraph renderGraph, ContextContainer frameData, out RenderTextureDescriptor desc, out RenderTextureDescriptor cameraDescriptor)
     {
         var cameraData = frameData.Get<UniversalCameraData>();
         cameraDescriptor = cameraData.cameraTargetDescriptor;
@@ -234,17 +174,10 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         return destination;
     }
 
-    private void SetDepthAttachment(
-        IRasterRenderGraphBuilder builder,
-        ContextContainer frameData,
-        RenderTextureDescriptor destinationDescriptor,
-        RenderTextureDescriptor cameraDescriptor
-    )
+    private void SetDepthAttachment(IRasterRenderGraphBuilder builder, ContextContainer frameData, RenderTextureDescriptor destinationDescriptor, RenderTextureDescriptor cameraDescriptor)
     {
         if (!_settings.Depth)
-        {
             return;
-        }
 
         if (!CanUseCameraDepthAttachment(destinationDescriptor, cameraDescriptor))
         {
@@ -268,9 +201,7 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     private void LogSkippedDepthAttachmentOnce(RenderTextureDescriptor destinationDescriptor, RenderTextureDescriptor cameraDescriptor)
     {
         if (_loggedSkippedDepthAttachment)
-        {
             return;
-        }
 
         Debug.LogWarning(
             $"{nameof(RenderTexturePass)} skipped camera depth attachment for '{_settings.TextureName}' because the output size " +
@@ -299,9 +230,7 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     {
         float sizeMultiplier = Mathf.Clamp(_settings.CameraSizeMultiplier, 0.0f, 2.0f);
         if (Mathf.Approximately(sizeMultiplier, 1.0f))
-        {
             return;
-        }
 
         desc.width = Mathf.Max(1, Mathf.RoundToInt(desc.width * sizeMultiplier));
         desc.height = Mathf.Max(1, Mathf.RoundToInt(desc.height * sizeMultiplier));

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
 
-public class FrameTextureRegistry : ContextItem
+public sealed class FrameTextureRegistry : ContextItem
 {
     private readonly Dictionary<int, Entry> _textures = new();
 
@@ -26,16 +26,14 @@ public class FrameTextureRegistry : ContextItem
 
     public static FrameTextureRegistry GetOrCreate(ContextContainer frameData)
     {
-        return frameData.GetOrCreate<RenderTexturePass.CustomTextureData>();
+        return frameData.GetOrCreate<FrameTextureRegistry>();
     }
 
-    public static bool TryGet(
-        ContextContainer frameData,
-        out FrameTextureRegistry textureRegistry)
+    public static bool TryGet(ContextContainer frameData, out FrameTextureRegistry textureRegistry)
     {
-        if (frameData.Contains<RenderTexturePass.CustomTextureData>())
+        if (frameData.Contains<FrameTextureRegistry>())
         {
-            textureRegistry = frameData.Get<RenderTexturePass.CustomTextureData>();
+            textureRegistry = frameData.Get<FrameTextureRegistry>();
             return true;
         }
 
@@ -43,18 +41,12 @@ public class FrameTextureRegistry : ContextItem
         return false;
     }
 
-    public virtual void SetTexture(
-        int texturePropertyId,
-        TextureHandle texture,
-        Vector4 texelSize)
+    public void SetTexture(int texturePropertyId, TextureHandle texture, Vector4 texelSize)
     {
         _textures[texturePropertyId] = new Entry(texture, texelSize);
     }
 
-    public bool TryGetTexture(
-        int texturePropertyId,
-        out TextureHandle texture,
-        out Vector4 texelSize)
+    public bool TryGetTexture(int texturePropertyId, out TextureHandle texture, out Vector4 texelSize)
     {
         if (_textures.TryGetValue(texturePropertyId, out Entry entry))
         {
@@ -96,17 +88,12 @@ public class FrameTextureResolver
         }
 
         _textureName = textureName;
-        _texturePropertyId = string.IsNullOrWhiteSpace(_textureName)
-            ? 0
-            : Shader.PropertyToID(_textureName);
+        _texturePropertyId = string.IsNullOrWhiteSpace(_textureName) ? 0 : Shader.PropertyToID(_textureName);
         _loggedMissingMaskData = false;
         _loggedMissingMaskTexture = false;
     }
 
-    public bool TryResolve(
-        ContextContainer frameData,
-        out TextureHandle maskTexture,
-        out Vector4 maskTexelSize)
+    public bool TryResolve(ContextContainer frameData, out TextureHandle maskTexture, out Vector4 maskTexelSize)
     {
         maskTexture = TextureHandle.nullHandle;
         maskTexelSize = Vector4.zero;
@@ -133,9 +120,7 @@ public class FrameTextureResolver
             return;
         }
 
-        Debug.LogWarning(
-            $"{_ownerName} did not find the frame texture registry. " +
-            $"Ensure a prior renderer feature publishes a texture named '{_textureName}'.");
+        Debug.LogWarning($"{_ownerName} did not find the frame texture registry. " + $"Ensure a prior renderer feature publishes a texture named '{_textureName}'.");
 
         _loggedMissingMaskData = true;
     }
@@ -147,9 +132,7 @@ public class FrameTextureResolver
             return;
         }
 
-        Debug.LogWarning(
-            $"{_ownerName} did not find registered texture '{_textureName}'. " +
-            $"Check the producer feature order and make sure both features use the same texture name.");
+        Debug.LogWarning($"{_ownerName} did not find registered texture '{_textureName}'. Check the producer feature order and make sure both features use the same texture name.");
 
         _loggedMissingMaskTexture = true;
     }
@@ -157,8 +140,7 @@ public class FrameTextureResolver
 
 public sealed class MaskedTextureResolver : FrameTextureResolver
 {
-    public MaskedTextureResolver(string ownerName)
-        : base(ownerName)
+    public MaskedTextureResolver(string ownerName) : base(ownerName)
     {
     }
 }
