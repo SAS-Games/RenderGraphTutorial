@@ -18,10 +18,7 @@ internal sealed class MaskOutlineMaterialSet : IDisposable
     public MaskedEffectMaterialInstance Vertical { get; private set; }
     public MaskedEffectMaterialInstance Composite { get; private set; }
 
-    public bool IsValid =>
-        Horizontal != null && Horizontal.IsValid &&
-        Vertical != null && Vertical.IsValid &&
-        Composite != null && Composite.IsValid;
+    public bool IsValid => Horizontal != null && Horizontal.IsValid && Vertical != null && Vertical.IsValid && Composite != null && Composite.IsValid;
 
     public void Dispose()
     {
@@ -74,82 +71,38 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         public float OutlineMode;
     }
 
-    public void Setup(
-        string profilingName,
-        MaskOutlineFeature.Settings settings,
-        MaskOutlineMaterialSet materials)
+    public void Setup(string profilingName, MaskOutlineFeature.Settings settings, MaskOutlineMaterialSet materials)
     {
         _settings = settings;
         _materials = materials;
         _maskResolver.SetTextureName(settings.MaskTextureName);
         renderPassEvent = settings.RenderPassEvent;
-        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(
-            profilingName,
-            ref _profilingName,
-            profilingSampler);
+        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(profilingName, ref _profilingName, profilingSampler);
     }
 
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
     {
         if (_settings == null || _materials == null || !_materials.IsValid)
-        {
             return;
-        }
 
-        if (!_maskResolver.TryResolve(
-                frameData,
-                out TextureHandle maskTexture,
-                out Vector4 maskTexelSize))
-        {
+        if (!_maskResolver.TryResolve(frameData, out TextureHandle maskTexture, out Vector4 maskTexelSize))
             return;
-        }
 
         UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
-        RenderTextureDescriptor descriptor = CreateMorphologyDescriptor(
-            cameraData.cameraTargetDescriptor,
-            maskTexelSize);
+        RenderTextureDescriptor descriptor = CreateMorphologyDescriptor(cameraData.cameraTargetDescriptor, maskTexelSize);
         TextureHandle horizontal = CreateMorphologyTexture(renderGraph, descriptor, "Horizontal");
         TextureHandle morphology = CreateMorphologyTexture(renderGraph, descriptor, "Result");
 
-        AddMorphologyPass(
-            renderGraph,
-            $"{_profilingName} Horizontal",
-            maskTexture,
-            horizontal,
-            _materials.Horizontal.Material,
-            maskTexelSize,
-            HorizontalMorphologyPass);
-
-        AddMorphologyPass(
-            renderGraph,
-            $"{_profilingName} Vertical",
-            horizontal,
-            morphology,
-            _materials.Vertical.Material,
-            maskTexelSize,
-            VerticalMorphologyPass);
+        AddMorphologyPass(renderGraph, $"{_profilingName} Horizontal", maskTexture, horizontal, _materials.Horizontal.Material, maskTexelSize, HorizontalMorphologyPass);
+        AddMorphologyPass(renderGraph, $"{_profilingName} Vertical", horizontal, morphology, _materials.Vertical.Material, maskTexelSize, VerticalMorphologyPass);
 
         UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
-        AddCompositePass(
-            renderGraph,
-            resourceData.activeColorTexture,
-            maskTexture,
-            morphology);
+        AddCompositePass(renderGraph, resourceData.activeColorTexture, maskTexture, morphology);
     }
 
-    private void AddMorphologyPass(
-        RenderGraph renderGraph,
-        string passName,
-        TextureHandle source,
-        TextureHandle destination,
-        Material material,
-        Vector4 maskTexelSize,
-        int materialPass)
+    private void AddMorphologyPass(RenderGraph renderGraph, string passName, TextureHandle source, TextureHandle destination, Material material, Vector4 maskTexelSize, int materialPass)
     {
-        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(
-            passName,
-            out MorphologyPassData passData,
-            profilingSampler);
+        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(passName, out MorphologyPassData passData, profilingSampler);
 
         passData.Source = source;
         passData.Material = material;
@@ -163,16 +116,9 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         builder.SetRenderFunc((MorphologyPassData data, RasterGraphContext context) => ExecuteMorphologyPass(data, context));
     }
 
-    private void AddCompositePass(
-        RenderGraph renderGraph,
-        TextureHandle activeColor,
-        TextureHandle maskTexture,
-        TextureHandle morphologyTexture)
+    private void AddCompositePass(RenderGraph renderGraph, TextureHandle activeColor, TextureHandle maskTexture, TextureHandle morphologyTexture)
     {
-        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(
-            $"{_profilingName} Composite",
-            out CompositePassData passData,
-            profilingSampler);
+        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass($"{_profilingName} Composite", out CompositePassData passData, profilingSampler);
 
         passData.MaskTexture = maskTexture;
         passData.MorphologyTexture = morphologyTexture;
@@ -188,23 +134,12 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         builder.SetRenderFunc((CompositePassData data, RasterGraphContext context) => ExecuteCompositePass(data, context));
     }
 
-    private TextureHandle CreateMorphologyTexture(
-        RenderGraph renderGraph,
-        RenderTextureDescriptor descriptor,
-        string suffix)
+    private TextureHandle CreateMorphologyTexture(RenderGraph renderGraph, RenderTextureDescriptor descriptor, string suffix)
     {
-        return UniversalRenderer.CreateRenderGraphTexture(
-            renderGraph,
-            descriptor,
-            $"{_profilingName} {suffix}",
-            false,
-            FilterMode.Point,
-            TextureWrapMode.Clamp);
+        return UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, $"{_profilingName} {suffix}", false, FilterMode.Point, TextureWrapMode.Clamp);
     }
 
-    private static RenderTextureDescriptor CreateMorphologyDescriptor(
-        RenderTextureDescriptor descriptor,
-        Vector4 maskTexelSize)
+    private static RenderTextureDescriptor CreateMorphologyDescriptor(RenderTextureDescriptor descriptor, Vector4 maskTexelSize)
     {
         descriptor.width = Mathf.Max(1, Mathf.RoundToInt(maskTexelSize.z));
         descriptor.height = Mathf.Max(1, Mathf.RoundToInt(maskTexelSize.w));
@@ -222,12 +157,7 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         data.Material.SetFloat(OutlineWidthId, data.OutlineWidth);
         data.Material.SetFloat(MaskThresholdId, data.MaskThreshold);
 
-        Blitter.BlitTexture(
-            context.cmd,
-            data.Source,
-            new Vector4(1, 1, 0, 0),
-            data.Material,
-            data.MaterialPass);
+        Blitter.BlitTexture(context.cmd, data.Source, new Vector4(1, 1, 0, 0), data.Material, data.MaterialPass);
     }
 
     private static void ExecuteCompositePass(CompositePassData data, RasterGraphContext context)
@@ -238,11 +168,6 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         data.Material.SetFloat(MaskThresholdId, data.MaskThreshold);
         data.Material.SetFloat(OutlineModeId, data.OutlineMode);
 
-        Blitter.BlitTexture(
-            context.cmd,
-            data.MaskTexture,
-            new Vector4(1, 1, 0, 0),
-            data.Material,
-            CompositePass);
+        Blitter.BlitTexture(context.cmd, data.MaskTexture, new Vector4(1, 1, 0, 0), data.Material, CompositePass);
     }
 }

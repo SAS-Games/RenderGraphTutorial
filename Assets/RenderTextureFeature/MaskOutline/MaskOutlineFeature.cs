@@ -17,10 +17,8 @@ public sealed class MaskOutlineFeature : ScriptableRendererFeature
     public Settings OutlineSettings = new();
 
     private MaskOutlinePass _pass;
-    private readonly MaskedEffectMaterialCache _materialCache =
-        new(nameof(MaskOutlineFeature), CompositeShaderName);
-    private readonly MaskedEffectItemPool<MaskOutlineMaterialSet> _materialSets =
-        new(source => new MaskOutlineMaterialSet(source));
+    private readonly MaskedEffectMaterialCache _materialCache = new(nameof(MaskOutlineFeature), CompositeShaderName);
+    private readonly MaskedEffectItemPool<MaskOutlineMaterialSet> _materialSets = new(source => new MaskOutlineMaterialSet(source));
 
     public enum OutlineMode
     {
@@ -66,12 +64,8 @@ public sealed class MaskOutlineFeature : ScriptableRendererFeature
     {
         OutlineSettings ??= new Settings();
 
-        if (string.IsNullOrWhiteSpace(OutlineSettings.MaskTextureName) ||
-            OutlineSettings.OutlineIntensity <= 0.0001f ||
-            !_materialCache.Ensure(CompositeMaterial))
-        {
+        if (string.IsNullOrWhiteSpace(OutlineSettings.MaskTextureName) || OutlineSettings.OutlineIntensity <= 0.0001f || !_materialCache.Ensure(CompositeMaterial))
             return;
-        }
 
         _materialSets.EnsureCount(1, _materialCache.Material, _materialCache.Version);
         _pass.Setup(ProfilingName, OutlineSettings, _materialSets[0]);
