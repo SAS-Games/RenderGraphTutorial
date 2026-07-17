@@ -21,27 +21,10 @@ Shader "Custom/URPCustomTagMultiPass"
             Tags { "LightMode" = "UniversalForward" }
 
             HLSLPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
-            struct MeshData { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
-            struct Interpolators { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; };
-
-            Texture2D _MainTex; SamplerState sampler_MainTex; float4 _BaseColor;
-
-            Interpolators vert(MeshData input)
-            {
-                Interpolators output;
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
-                output.uv = input.uv;
-                return output;
-            }
-
-            float4 frag(Interpolators input) : SV_Target
-            {
-                return _MainTex.Sample(sampler_MainTex, input.uv) * _BaseColor;
-            }
+            #pragma vertex BaseVert
+            #pragma fragment BaseFrag
+            #include "../../Chapter 4/Shader/URPMultiPassBaseVertex.hlsl"
+            #include "../../Chapter 4/Shader/URPMultiPassBaseFragment.hlsl"
             ENDHLSL
         }
 
@@ -56,27 +39,10 @@ Shader "Custom/URPCustomTagMultiPass"
             Cull Front
             ZTest Always
             HLSLPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
-            struct MeshData { float4 positionOS : POSITION; float3 normalOS : NORMAL; };
-            struct Interpolators { float4 positionCS : SV_POSITION; };
-
-            float4 _OutlineColor; float _OutlineWidth;
-
-            Interpolators vert(MeshData input)
-            {
-                Interpolators output;
-                float3 extrudedPositionOS = input.positionOS.xyz + (input.normalOS * _OutlineWidth);
-                output.positionCS = TransformObjectToHClip(extrudedPositionOS);
-                return output;
-            }
-
-            float4 frag(Interpolators input) : SV_Target
-            {
-                return _OutlineColor;
-            }
+            #pragma vertex OutlineVert
+            #pragma fragment OutlineFrag
+            #include "../../Chapter 4/Shader/URPMultiPassOutlineVertex.hlsl"
+            #include "../../Chapter 4/Shader/URPMultiPassOutlineFragment.hlsl"
             ENDHLSL
         }
     }
