@@ -1,74 +1,65 @@
-Shader "Hidden/RenderTextureFeature/SimpleMaskOutline"
+Shader "Hidden/Chapter6/SimpleOutline"
 {
     Properties
     {
         _OutlineColor("Outline Color", Color) = (1, 1, 0, 1)
-        _OutlineWidth("Outline Width", Int) = 2
-        _OutlineIntensity("Outline Intensity", Float) = 1
+        _OutlineWidth("Outline Width", Range(0.001, 0.5)) = 0.05
     }
 
     SubShader
     {
-        Tags { "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" }
-        ZTest Always
-        ZWrite Off
-        Cull Off
-        Blend SrcAlpha OneMinusSrcAlpha
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
 
         Pass
         {
-            Name "SimpleMaskOutline"
+            Name "Outline"
+            Cull Front
+            ZTest Always
+            ZWrite Off
+            Blend Off
 
             HLSLPROGRAM
-            #pragma vertex Vert
-            #pragma fragment frag
+            #pragma vertex OutlineVertex
+            #pragma fragment OutlineFragment
+            #pragma multi_compile_instancing
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
-            TEXTURE2D_X(_MaskTexture);
-            SAMPLER(sampler_MaskTexture);
-
-            half4 _OutlineColor;
-            int _OutlineWidth;
-            float _OutlineIntensity;
-            float4 _MaskTexture_TexelSize;
-
-            half SampleMask(float2 uv)
+            struct Attributes
             {
-                return SAMPLE_TEXTURE2D_X(_MaskTexture, sampler_MaskTexture, uv).r;
+                float4 positionOS : POSITION;
+                float3 normalOS : NORMAL;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            CBUFFER_START(UnityPerMaterial)
+                half4 _OutlineColor;
+                float _OutlineWidth;
+            CBUFFER_END
+
+            Varyings OutlineVertex(Attributes input)
+            {
+                Varyings output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+
+                float3 normalOS = normalize(input.normalOS);
+                float3 expandedPositionOS =input.positionOS.xyz + normalOS * _OutlineWidth;
+
+                output.positionCS = TransformObjectToHClip(expandedPositionOS);
+                return output;
             }
 
-            half4 frag(Varyings input) : SV_Target
+            half4 OutlineFragment(Varyings input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-
-                float2 uv = input.texcoord;
-                float2 texelSize = _MaskTexture_TexelSize.xy;
-                int radius = clamp(_OutlineWidth, 1, 8);
-
-                half center = SampleMask(uv);
-                half expanded = center;
-
-                [loop]
-                for (int y = -8; y <= 8; y++)
-                {
-                    [loop]
-                    for (int x = -8; x <= 8; x++)
-                    {
-                        if (abs(x) > radius || abs(y) > radius)
-                        {
-                            continue;
-                        }
-
-                        float2 offset = float2(x, y) * texelSize;
-                        expanded = max(expanded, SampleMask(uv + offset));
-                    }
-                }
-
-                half edge = saturate(expanded - center);
-                half alpha = edge * _OutlineColor.a * _OutlineIntensity;
-                return half4(_OutlineColor.rgb * _OutlineIntensity, alpha);
+                return _OutlineColor;
             }
             ENDHLSL
         }
