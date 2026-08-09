@@ -108,7 +108,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Controller: {fileID: 11400000, guid: f15cd9968dbf8bc4b8bb8387504d92b1, type: 2}
-  m_BlackboardData: {fileID: 11400000, guid: 2f8c8a1e1d9b11b4f8ba2d7619d91d56, type: 2}
+  m_BlackboardData: {fileID: 11400000, guid: f6b14e928c9f21043839683378882a2b, type: 2}
   m_Configs:
   - data: {fileID: 11400000, guid: 7eb4458ed72ca1a4f8cd227318e04bf4, type: 2}
     name: 
@@ -154,7 +154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf6e55b7543fdb447b6aeb440afb841c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_InputConfig: {fileID: 11400000, guid: 65d89e83670e7184d97e74fc4d5b6efe, type: 2}
+  m_InputConfig: {fileID: 11400000, guid: 8ce339401f36e6643bf4db11b04c994b, type: 2}
   m_targetSpeedReachMultiplier: 20
 --- !u!114 &2138588084976954242
 MonoBehaviour:

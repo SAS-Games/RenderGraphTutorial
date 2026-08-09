@@ -1,146 +1,122 @@
+using SAS.Core.TagSystem;
 using SAS.StateMachineCharacterController;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public class CombatInputBinding : MonoBehaviour
 {
-    [SerializeField] private InputHandler inputHandler;
-    [SerializeField] private CombatActionGraphController combatController;
-    [SerializeField] private float heavyHoldThreshold = 0.25f;
-    [SerializeField] private float shieldHoldThreshold = 0.25f;
-    [SerializeField] private bool enablePrimaryAttack = true;
-    [SerializeField] private bool enableSecondaryAttack = true;
+    [FieldRequiresParent] private InputHandler _inputHandler;
+    [FieldRequiresSelf] private CombatActionGraphController _combatController;
+    [FormerlySerializedAs("heavyHoldThreshold")] [SerializeField] private float _heavyHoldThreshold = 0.25f;
+    [FormerlySerializedAs("shieldHoldThreshold")] [SerializeField] private float _shieldHoldThreshold = 0.25f;
+    [FormerlySerializedAs("enablePrimaryAttack")] [SerializeField] private bool _enablePrimaryAttack = true;
+    [FormerlySerializedAs("enableSecondaryAttack")] [SerializeField] private bool _enableSecondaryAttack = true;
 
-    private float primaryDownTime;
-    private float secondaryDownTime;
-    private bool primaryHeld;
-    private bool secondaryHeld;
-    private bool heavyActionStarted;
-    private bool shieldRushActionStarted;
-    private bool primaryConsumedByActiveAction;
-    private bool secondaryConsumedByActiveAction;
+    private float _primaryDownTime;
+    private float _secondaryDownTime;
+    private bool _primaryHeld;
+    private bool _secondaryHeld;
+    private bool _heavyActionStarted;
+    private bool _shieldRushActionStarted;
+    private bool _primaryConsumedByActiveAction;
+    private bool _secondaryConsumedByActiveAction;
 
     private void Awake()
     {
-        if (inputHandler == null)
-            inputHandler = GetComponentInParent<InputHandler>();
-
-        if (combatController == null)
-            combatController = GetComponent<CombatActionGraphController>();
+        this.Initialize();
     }
 
     private void Start()
     {
-        if (inputHandler == null || combatController == null)
+        if (_inputHandler == null || _combatController == null)
             return;
 
-        if (enablePrimaryAttack)
-        {
-            inputHandler.RegisterInputCommand(
-                "PrimaryAttack",
-                new CombatAttackCommand("PrimaryAttack", OnPrimaryStarted, OnPrimaryCanceled),
-                true);
-        }
+        if (_enablePrimaryAttack)
+            _inputHandler.RegisterInputCommand("PrimaryAttack", new CombatAttackCommand("PrimaryAttack", OnPrimaryStarted, OnPrimaryCanceled), true);
 
-        if (enableSecondaryAttack)
-        {
-            inputHandler.RegisterInputCommand(
-                "SecondaryAttack",
-                new CombatAttackCommand("SecondaryAttack", OnSecondaryStarted, OnSecondaryCanceled),
-                true);
-        }
+        if (_enableSecondaryAttack)
+            _inputHandler.RegisterInputCommand("SecondaryAttack", new CombatAttackCommand("SecondaryAttack", OnSecondaryStarted, OnSecondaryCanceled), true);
     }
 
     private void Update()
     {
-        if (primaryHeld && !primaryConsumedByActiveAction &&
-            !heavyActionStarted && !combatController.IsBusy &&
-            Time.time - primaryDownTime >= heavyHoldThreshold)
-        {
-            heavyActionStarted = combatController.TryStartHoldAction(CombatActionId.HeavyAttack);
-        }
+        if (_primaryHeld && !_primaryConsumedByActiveAction && !_heavyActionStarted && !_combatController.IsBusy && Time.time - _primaryDownTime >= _heavyHoldThreshold)
+            _heavyActionStarted = _combatController.TryStartHoldAction(CombatActionId.HeavyAttack);
 
-        if (secondaryHeld && !secondaryConsumedByActiveAction &&
-            !shieldRushActionStarted && !combatController.IsBusy &&
-            Time.time - secondaryDownTime >= shieldHoldThreshold)
-        {
-            shieldRushActionStarted = combatController.TryStartHoldAction(CombatActionId.ShieldRush);
-        }
+        if (_secondaryHeld && !_secondaryConsumedByActiveAction && !_shieldRushActionStarted && !_combatController.IsBusy && Time.time - _secondaryDownTime >= _shieldHoldThreshold)
+            _shieldRushActionStarted = _combatController.TryStartHoldAction(CombatActionId.ShieldRush);
     }
 
     private void OnDisable()
     {
-        primaryHeld = false;
-        secondaryHeld = false;
-        heavyActionStarted = false;
-        shieldRushActionStarted = false;
-        primaryConsumedByActiveAction = false;
-        secondaryConsumedByActiveAction = false;
+        _primaryHeld = false;
+        _secondaryHeld = false;
+        _heavyActionStarted = false;
+        _shieldRushActionStarted = false;
+        _primaryConsumedByActiveAction = false;
+        _secondaryConsumedByActiveAction = false;
     }
 
     private void OnPrimaryStarted()
     {
-        if (combatController.CurrentAction == CombatActionId.ShieldRush)
+        if (_combatController.CurrentAction == CombatActionId.ShieldRush)
             return;
 
-        primaryHeld = true;
-        primaryDownTime = Time.time;
-        heavyActionStarted = false;
-        primaryConsumedByActiveAction = combatController.IsBusy;
+        _primaryHeld = true;
+        _primaryDownTime = Time.time;
+        _heavyActionStarted = false;
+        _primaryConsumedByActiveAction = _combatController.IsBusy;
 
-        if (primaryConsumedByActiveAction)
-            combatController.SubmitSwordInput();
+        if (_primaryConsumedByActiveAction)
+            _combatController.SubmitSwordInput();
     }
 
     private void OnPrimaryCanceled()
     {
-        if (!primaryHeld)
+        if (!_primaryHeld)
             return;
 
-        primaryHeld = false;
+        _primaryHeld = false;
 
-        if (primaryConsumedByActiveAction)
-        {
-            primaryConsumedByActiveAction = false;
-        }
-        else if (heavyActionStarted)
-            combatController.ReleaseHold(CombatActionId.HeavyAttack);
+        if (_primaryConsumedByActiveAction)
+            _primaryConsumedByActiveAction = false;
+        else if (_heavyActionStarted)
+            _combatController.ReleaseHold(CombatActionId.HeavyAttack);
         else
-            combatController.SubmitSwordInput();
+            _combatController.SubmitSwordInput();
 
-        heavyActionStarted = false;
+        _heavyActionStarted = false;
     }
 
     private void OnSecondaryStarted()
     {
-        if (combatController.CurrentAction == CombatActionId.ShieldRush)
+        if (_combatController.CurrentAction == CombatActionId.ShieldRush)
             return;
 
-        secondaryHeld = true;
-        secondaryDownTime = Time.time;
-        shieldRushActionStarted = false;
-        secondaryConsumedByActiveAction = combatController.IsBusy;
+        _secondaryHeld = true;
+        _secondaryDownTime = Time.time;
+        _shieldRushActionStarted = false;
+        _secondaryConsumedByActiveAction = _combatController.IsBusy;
 
-        if (secondaryConsumedByActiveAction)
-            combatController.SubmitShieldInput();
+        if (_secondaryConsumedByActiveAction)
+            _combatController.SubmitShieldInput();
     }
 
     private void OnSecondaryCanceled()
     {
-        if (!secondaryHeld)
+        if (!_secondaryHeld)
             return;
 
-        secondaryHeld = false;
+        _secondaryHeld = false;
 
-        if (secondaryConsumedByActiveAction)
-        {
-            secondaryConsumedByActiveAction = false;
-        }
-        else if (shieldRushActionStarted)
-            combatController.ReleaseHold(CombatActionId.ShieldRush);
+        if (_secondaryConsumedByActiveAction)
+            _secondaryConsumedByActiveAction = false;
+        else if (_shieldRushActionStarted)
+            _combatController.ReleaseHold(CombatActionId.ShieldRush);
         else
-            combatController.SubmitShieldInput();
+            _combatController.SubmitShieldInput();
 
-        shieldRushActionStarted = false;
+        _shieldRushActionStarted = false;
     }
 }

@@ -63,16 +63,12 @@ public class CombatActionGraphController : MonoBehaviour
 
     public bool SubmitSwordInput()
     {
-        return IsBusy
-            ? signals != null && signals.TryQueue(CombatComboInput.Sword)
-            : TryStart(CombatActionId.SwordCombo);
+        return IsBusy ? signals != null && signals.TryQueue(CombatComboInput.Sword) : TryStart(CombatActionId.SwordCombo);
     }
 
     public bool SubmitShieldInput()
     {
-        return IsBusy
-            ? signals != null && signals.TryQueue(CombatComboInput.Shield)
-            : TryStart(CombatActionId.ShieldAttack);
+        return IsBusy ? signals != null && signals.TryQueue(CombatComboInput.Shield) : TryStart(CombatActionId.ShieldAttack);
     }
 
     public bool TryStartHoldAction(CombatActionId action)
