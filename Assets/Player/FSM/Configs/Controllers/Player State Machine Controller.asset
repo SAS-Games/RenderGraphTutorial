@@ -1,0 +1,1043 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-9203654813547074387
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-9106185067002372399
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Combat Attack->To->LocoMotion
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: -6736576259512663916}
+  m_TargetNode: {fileID: 7383936760125653877}
+  m_SourceState: {fileID: -6736576259512663916}
+  m_TargetState: {fileID: 7383936760125653877}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 0
+    m_CustomCondition: 
+--- !u!114 &-8097919155767922259
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-7709045701829386084
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: LocoMotion->To->Combat Attack
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 7383936760125653877}
+  m_TargetNode: {fileID: -6736576259512663916}
+  m_SourceState: {fileID: 7383936760125653877}
+  m_TargetState: {fileID: -6736576259512663916}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 1
+    m_CustomCondition: 
+--- !u!114 &-6736576259512663916
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7557f759ffd418e4bab479f7b35953ed, type: 3}
+  m_Name: Combat Attack
+  m_EditorClassIdentifier: 
+  m_Position: {x: 1180, y: 237, z: 0}
+  m_Tag: 
+  m_StateActions:
+  - fullName: SAS.StateMachineCharacterController.StopMovement, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: 
+    whenToExecute: 1
+  - fullName: SAS.StateMachineCharacterController.VerticalPull, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: VerticalPull
+    whenToExecute: 4
+  m_Transitions:
+  - {fileID: -9106185067002372399}
+--- !u!114 &-6724701970900993346
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-6343620476896356389
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-6263581183484471407
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-5995004509299696154
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-5152664531571643854
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-2877321194916296883
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-1661140074411876371
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-1463959820012921045
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e8e5e4f8dad46dcba4340a6fa36aca3, type: 3}
+  m_Name: Entry
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.EntryStateModel
+  m_Position: {x: 664, y: 238, z: 0}
+  m_Transitions:
+  - {fileID: 8361732784111180508}
+--- !u!114 &-1296731022910552309
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-1294538683894811666
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ed43b1bea1e69d49a73ea66f6732994, type: 3}
+  m_Name: Base StateMachine
+  m_EditorClassIdentifier: 
+  m_Position: {x: 300, y: 50, z: 0}
+  m_PositionAsUpNode: {x: 561, y: 343, z: 0}
+  m_AnyStatePosition: {x: 375, y: 415, z: 0}
+  m_ParentStateMachine: {fileID: 0}
+  m_ChildStateMachines: []
+  m_StateModels:
+  - {fileID: 7383936760125653877}
+  - {fileID: 8166284527128004876}
+  - {fileID: -6736576259512663916}
+  - {fileID: 5723879210972037197}
+  - {fileID: 2765174820920771261}
+  m_EntryNode: {fileID: -1463959820012921045}
+  m_ExitNode: {fileID: 5370566824724233344}
+  m_Transitions: []
+--- !u!114 &-1126109929450030581
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-1040253951032286813
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-444382984977231977
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-324923363888614341
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &-145954902865230020
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1523b8ee4bacc64cb19ba28d47e9317, type: 3}
+  m_Name: Player State Machine Controller
+  m_EditorClassIdentifier: 
+  m_BaseStateMachineModel: {fileID: -1294538683894811666}
+  _parameters:
+  - m_Name: MoveInput
+    m_Type: 1
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+  - m_Name: CombatPhase
+    m_Type: 3
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+  - m_Name: Interact
+    m_Type: 4
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+  m_DefaultStateModel: {fileID: 7383936760125653877}
+  m_AnyStateModel: {fileID: 7687902253306019718}
+--- !u!114 &91784768396817638
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &563233811523804505
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &910000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: LocoMotion->To->Shield Hold
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 7383936760125653877}
+  m_TargetNode: {fileID: 2765174820920771261}
+  m_SourceState: {fileID: 7383936760125653877}
+  m_TargetState: {fileID: 2765174820920771261}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 2
+    m_CustomCondition: 
+--- !u!114 &910000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: LocoMotion->To->Rush
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 7383936760125653877}
+  m_TargetNode: {fileID: 8166284527128004876}
+  m_SourceState: {fileID: 7383936760125653877}
+  m_TargetState: {fileID: 8166284527128004876}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 3
+    m_CustomCondition: 
+--- !u!114 &910000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Shield Hold->To->Rush
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 2765174820920771261}
+  m_TargetNode: {fileID: 8166284527128004876}
+  m_SourceState: {fileID: 2765174820920771261}
+  m_TargetState: {fileID: 8166284527128004876}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 3
+    m_CustomCondition: 
+--- !u!114 &910000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Shield Hold->To->LocoMotion
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 2765174820920771261}
+  m_TargetNode: {fileID: 7383936760125653877}
+  m_SourceState: {fileID: 2765174820920771261}
+  m_TargetState: {fileID: 7383936760125653877}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 0
+    m_CustomCondition: 
+--- !u!114 &910000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Rush->To->Combat Attack
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 8166284527128004876}
+  m_TargetNode: {fileID: -6736576259512663916}
+  m_SourceState: {fileID: 8166284527128004876}
+  m_TargetState: {fileID: -6736576259512663916}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 1
+    m_CustomCondition: 
+--- !u!114 &910000000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Rush->To->LocoMotion
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 8166284527128004876}
+  m_TargetNode: {fileID: 7383936760125653877}
+  m_SourceState: {fileID: 8166284527128004876}
+  m_TargetState: {fileID: 7383936760125653877}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: CombatPhase
+    m_Mode: 5
+    m_Type: 3
+    m_FloatValue: 0
+    m_CustomCondition: 
+--- !u!114 &1640267339743622753
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &2016419573733919103
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &2765174820920771261
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7557f759ffd418e4bab479f7b35953ed, type: 3}
+  m_Name: Shield Hold
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateModel
+  m_Position: {x: 916, y: 400, z: 0}
+  m_Tag: 
+  m_StateActions:
+  - fullName: SAS.StateMachineCharacterController.StopMovement, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: 
+    whenToExecute: 1
+  - fullName: SAS.StateMachineCharacterController.VerticalPull, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: VerticalPull
+    whenToExecute: 4
+  m_Transitions:
+  - {fileID: 910000000000000003}
+  - {fileID: 910000000000000004}
+--- !u!114 &3419192475740693293
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &4114378345721202677
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: LocoMotion->To->Interact
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 7383936760125653877}
+  m_TargetState: {fileID: 5723879210972037197}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: Interact
+    m_Mode: 1
+    m_Type: 4
+    m_FloatValue: 0
+    m_CustomCondition: 
+--- !u!114 &4622466247047287093
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &5370566824724233344
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b300d3da8982460aa2a88cd5ea42a681, type: 3}
+  m_Name: Exit
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.ExitStateModel
+  m_Position: {x: 1396, y: 238, z: 0}
+  m_Transitions: []
+--- !u!114 &5723879210972037197
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7557f759ffd418e4bab479f7b35953ed, type: 3}
+  m_Name: Interact
+  m_EditorClassIdentifier: 
+  m_Position: {x: 916, y: 134, z: 0}
+  m_Tag: 
+  m_StateActions:
+  - fullName: SAS.StateMachineCharacterController.VerticalPull, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: VerticalPull
+    whenToExecute: 4
+  - fullName: SAS.StateMachineCharacterController.StopMovement, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: 
+    whenToExecute: 1
+  m_Transitions:
+  - {fileID: 7090742331724709620}
+--- !u!114 &6576209436168598059
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &7090742331724709620
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Interact->To->LocoMotion
+  m_EditorClassIdentifier: 
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 5723879210972037197}
+  m_TargetState: {fileID: 7383936760125653877}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions:
+  - m_Name: Interact
+    m_Mode: 2
+    m_Type: 4
+    m_FloatValue: 0
+    m_CustomCondition: 
+--- !u!114 &7383936760125653877
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7557f759ffd418e4bab479f7b35953ed, type: 3}
+  m_Name: LocoMotion
+  m_EditorClassIdentifier: 
+  m_Position: {x: 916, y: 237, z: 0}
+  m_Tag: 
+  m_StateActions:
+  - fullName: SAS.StateMachineCharacterController.HorizontalMovement, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: MoveSpeed
+    whenToExecute: 4
+  - fullName: SAS.StateMachineCharacterController.VerticalPull, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: VerticalPull
+    whenToExecute: 4
+  - fullName: SAS.StateMachineCharacterController.ApplyRotation, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: TurnSmoothTime
+    whenToExecute: 4
+  m_Transitions:
+  - {fileID: -7709045701829386084}
+  - {fileID: 4114378345721202677}
+  - {fileID: 910000000000000001}
+  - {fileID: 910000000000000002}
+--- !u!114 &7687902253306019718
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7557f759ffd418e4bab479f7b35953ed, type: 3}
+  m_Name: Any State
+  m_EditorClassIdentifier: 
+  m_Position: {x: 375, y: 415, z: 0}
+  m_Tag: 
+  m_StateActions: []
+  m_Transitions: []
+--- !u!114 &7817918121909044890
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &8166284527128004876
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7557f759ffd418e4bab479f7b35953ed, type: 3}
+  m_Name: Rush
+  m_EditorClassIdentifier: 
+  m_Position: {x: 1180, y: 400, z: 0}
+  m_Tag: 
+  m_StateActions:
+  - fullName: SAS.StateMachineCharacterController.StopMovement, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: 
+    whenToExecute: 17
+  - fullName: SAS.StateMachineCharacterController.VerticalPull, AssemblyStateMachineCharacterController,
+      Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    tag:
+      guid: 0
+      resolvedName: 
+      sourceOptions: {fileID: 0}
+      lastKnownName: 
+    key: VerticalPull
+    whenToExecute: 4
+  m_Transitions:
+  - {fileID: 910000000000000005}
+  - {fileID: 910000000000000006}
+--- !u!114 &8361732784111180508
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: -1463959820012921045}
+  m_TargetNode: {fileID: 7383936760125653877}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 7383936760125653877}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
+--- !u!114 &8520450701268307862
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []

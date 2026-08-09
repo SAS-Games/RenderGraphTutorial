@@ -1,0 +1,246 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5534036977718953681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 495eec7b07054dd6ae81412cf2fa12c7, type: 3}
+  m_Name: MaskDistortionFeature
+  m_EditorClassIdentifier: Assembly-CSharp::MaskDistortionFeature
+  m_Active: 1
+  ProfilingName: Energy Shield Distortion
+  DistortionMaterial: {fileID: 2100000, guid: 88e51891abf14602b2ad030385cf851d, type: 2}
+  DistortionSettings:
+    Enabled: 1
+    RenderPassEvent: 500
+    MaskTextureName: _EnergyShieldMask
+    DistortionStrengthPixels: 3.5
+    DistortionFrequency: 14
+    DistortionSpeed: 0.4
+    ChromaticAberrationPixels: 0.3
+    MaskThreshold: 0.52
+    MaskSoftness: 0.05
+    Opacity: 0.3
+    TintColor: {r: 0.1, g: 0.65, b: 1, a: 1}
+    TintStrength: 0.08
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
+  m_Name: EnergyShieldRenderer
+  m_EditorClassIdentifier: 
+  debugShaders:
+    debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
+    hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
+    probeVolumeSamplingDebugComputeShader: {fileID: 7200000, guid: 53626a513ea68ce47b59dc1299fe3959, type: 3}
+  probeVolumeResources:
+    probeVolumeDebugShader: {fileID: 4800000, guid: e5c6678ed2aaa91408dd3df699057aae, type: 3}
+    probeVolumeFragmentationDebugShader: {fileID: 4800000, guid: 03cfc4915c15d504a9ed85ecc404e607, type: 3}
+    probeVolumeOffsetDebugShader: {fileID: 4800000, guid: 53a11f4ebaebf4049b3638ef78dc9664, type: 3}
+    probeVolumeSamplingDebugShader: {fileID: 4800000, guid: 8f96cd657dc40064aa21efcc7e50a2e7, type: 3}
+    probeSamplingDebugMesh: {fileID: -3555484719484374845, guid: 57d7c4c16e2765b47a4d2069b311bffe, type: 3}
+    probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e, type: 3}
+    probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
+  m_RendererFeatures:
+  - {fileID: 7833122117494664109}
+  - {fileID: 6018888855869579118}
+  - {fileID: -6644047088829064792}
+  - {fileID: -5534036977718953681}
+  - {fileID: 4967556268841796359}
+  - {fileID: -1877731332762619128}
+  m_RendererFeatureMap: ad6b866f10d7b46c6edfa96486638753a81960d75f9acba32f792f79b02633b3078314761b4ef0440833102f4df5f0e5
+  m_UseNativeRenderPass: 1
+  xrSystemData: {fileID: 0}
+  postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
+  m_AssetVersion: 3
+  m_PrepassLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_OpaqueLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_TransparentLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_DefaultStencilState:
+    overrideStencilState: 0
+    stencilReference: 1
+    stencilCompareFunction: 3
+    passOperation: 2
+    failOperation: 0
+    zFailOperation: 0
+  m_ShadowTransparentReceive: 1
+  m_RenderingMode: 2
+  m_DepthPrimingMode: 0
+  m_CopyDepthMode: 0
+  m_DepthAttachmentFormat: 0
+  m_DepthTextureFormat: 0
+  m_AccurateGbufferNormals: 0
+  m_IntermediateTextureMode: 0
+--- !u!114 &6018888855869579118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dc8418175ec7794aac340c895bf30f8, type: 3}
+  m_Name: RenderObjectsToTextureFeature
+  m_EditorClassIdentifier: Assembly-CSharp::RenderObjectsToTextureFeature
+  m_Active: 1
+  ProfilingName: Energy Shield Mask
+  RenderTextureOutputSettings:
+  - TextureName: _EnergyShieldMask
+    TextureExposure: 0
+    Material: {fileID: 2100000, guid: 8268069b5f5e4a00994dcfff14cc9778, type: 2}
+    MaterialPassIndex: -1
+    RenderPassEvent: 300
+    RenderPassInput: 1
+    RenderQueueLowerBound: 0
+    RenderQueueUpperBound: 5000
+    ColorFormat: 16
+    TextureSizeMode: 0
+    CameraSizeMultiplier: 1
+    TextureSize: {x: 1024, y: 1024}
+    FilterMode: 1
+    WrapMode: 1
+    SortingCriteria: 23
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    RenderLayerMask:
+      serializedVersion: 0
+      m_Bits: 2
+    LightMode: 15
+    GlobalShaderKeywords: []
+    ShaderTags: []
+    Depth: 1
+    WriteDepth: 0
+    DepthCompare: 4
+    DebugView: 0
+    DebugDisplayMode: 1
+    DebugColor: {r: 1, g: 1, b: 1, a: 1}
+    DebugRenderPassEvent: 500
+--- !u!114 &7833122117494664109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
+  m_Name: ScreenSpaceAmbientOcclusion
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  m_Settings:
+    AOMethod: 0
+    Downsample: 0
+    AfterOpaque: 0
+    Source: 1
+    NormalSamples: 1
+    Intensity: 0.4
+    DirectLightingStrength: 0.25
+    Radius: 0.3
+    Samples: 1
+    BlurQuality: 0
+    Falloff: 100
+    SampleCount: -1
+--- !u!114 &-6644047088829064792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7edd5c4d36e74842a7bd9aebd1e4d434, type: 3}
+  m_Name: LayerBlurFeature
+  m_EditorClassIdentifier: Assembly-CSharp::LayerBlurFeature
+  m_Active: 1
+  ProfilingName: Energy Shield Blur
+  BlurMaterial: {fileID: 2100000, guid: 1d74abb2827c4907a5b85613d49ac6b0, type: 2}
+  BlurLayerSettings:
+  - Enabled: 1
+    Name: Shield Interior
+    RenderPassEvent: 500
+    MaskTextureName: _EnergyShieldMask
+    MaskThreshold: 0.4
+    Opacity: 0.25
+    Downsample: 2
+    Iterations: 2
+    BlurRadius: 1.5
+    MaskSoftness: 0.08
+--- !u!114 &4967556268841796359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef664606d5d49148185eb828c38354e, type: 3}
+  m_Name: MaskHaloFeature
+  m_EditorClassIdentifier: Assembly-CSharp::MaskHaloFeature
+  m_Active: 1
+  ProfilingName: Energy Shield Halo
+  HaloMaterial: {fileID: 2100000, guid: 41089d5580cf4e77b7ff13ea32882742, type: 2}
+  HaloSettings:
+    Enabled: 1
+    Name: Shield Halo
+    RenderPassEvent: 500
+    MaskTextureName: _EnergyShieldMask
+    MaskThreshold: 0.4
+    Opacity: 1
+    Downsample: 2
+    BlurIterations: 4
+    BlurRadius: 2
+    MaskSoftness: 0.04
+    OuterGlowColor: {r: 0.05, g: 0.45, b: 1, a: 1}
+    OuterGlowIntensity: 0.7
+    OuterGlowFalloff: 0.85
+    InnerGlowColor: {r: 0.1, g: 0.75, b: 1, a: 1}
+    InnerGlowIntensity: 0.9
+    InnerGlowTightness: 2.5
+    RimColor: {r: 0.4, g: 0.9, b: 1, a: 1}
+    RimWidth: 2
+    RimIntensity: 1.4
+--- !u!114 &-1877731332762619128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f82c2ab9370a440384491b2d3d13b04d, type: 3}
+  m_Name: MaskOutlineFeature
+  m_EditorClassIdentifier: Assembly-CSharp::MaskOutlineFeature
+  m_Active: 0
+  ProfilingName: Energy Shield Outline
+  CompositeMaterial: {fileID: 2100000, guid: a992fa90e5ff44c690e888fc57007286, type: 2}
+  OutlineSettings:
+    RenderPassEvent: 500
+    MaskTextureName: _EnergyShieldMask
+    OutlineColor: {r: 0.45, g: 0.95, b: 1, a: 1}
+    OutlineWidth: 1.5
+    OutlineIntensity: 1.5
+    MaskThreshold: 0.4
+    Mode: 0

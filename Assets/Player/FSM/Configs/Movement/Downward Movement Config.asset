@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b2f81d14eb8a4848a8ec90e7a40466e, type: 3}
+  m_Name: Downward Movement Config
+  m_EditorClassIdentifier: 
+  gravityMultiplier: 5
+  fallSpeedRange:
+    min: -30
+    max: 50

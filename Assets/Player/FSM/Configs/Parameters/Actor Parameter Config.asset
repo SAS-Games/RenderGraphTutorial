@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea6ec34827732f5438aeee3ca3c7e2e4, type: 3}
+  m_Name: Actor Parameter Config
+  m_EditorClassIdentifier: 
+  m_ParametersKeyMap:
+  - key: Idle
+    parameters: []
+  - key: Descending
+    parameters:
+    - m_Name: Jump
+      m_Type: 4
+      m_BoolValue: 0
+      m_IntValue: 0
+      m_FloatValue: 0
+    - m_Name: Dash
+      m_Type: 9
+      m_BoolValue: 1
+      m_IntValue: 0
+      m_FloatValue: 0
+  m_Description: 

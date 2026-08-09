@@ -1,0 +1,284 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89528923cf4cf4f48843187ab98866ca, type: 3}
+  m_Name: HeavyAttackActionGraph
+  m_EditorClassIdentifier: AssemblyCore::ActionGraphAsset
+  root:
+    rid: 254681187355459686
+  references:
+    version: 2
+    RefIds:
+    - rid: 254681187355459686
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 254681187355459687
+        - rid: 254681187355459688
+        - rid: 254681187355459689
+        - rid: 254681187355459690
+        - rid: 254681187355459691
+    - rid: 254681187355459687
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459692
+    - rid: 254681187355459688
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459693
+    - rid: 254681187355459689
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459694
+    - rid: 254681187355459690
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 254681187355459695
+        - rid: 254681187355459696
+        - rid: 254681187355459697
+        - rid: 254681187355459698
+    - rid: 254681187355459691
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459699
+    - rid: 254681187355459692
+      type: {class: AnimatorSetBoolProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: HeavyHold
+          value: 1
+    - rid: 254681187355459693
+      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - condition:
+            rid: 254681187355459700
+          timeoutSeconds: -1
+          throwOnTimeout: 0
+    - rid: 254681187355459694
+      type: {class: AnimatorSetBoolProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: HeavyHold
+          value: 0
+    - rid: 254681187355459695
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459701
+    - rid: 254681187355459696
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459702
+    - rid: 254681187355459697
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459703
+    - rid: 254681187355459698
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 1
+        children:
+        - rid: 254681187355459704
+        - rid: 254681187355459705
+    - rid: 254681187355459699
+      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: ReturnIdle
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+    - rid: 254681187355459700
+      type: {class: ActionGraphBlackboardBoolCondition, ns: , asm: AssemblyCore}
+      data:
+        key: HoldReleased
+        expected: 1
+        resultWhenMissing: 0
+    - rid: 254681187355459701
+      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: AnimationEnded
+          valueType: 0
+          boolValue: 0
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+          objectValue: {fileID: 0}
+    - rid: 254681187355459702
+      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: MovementRequested
+          valueType: 0
+          boolValue: 0
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+          objectValue: {fileID: 0}
+    - rid: 254681187355459703
+      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: HeavyAttack
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+    - rid: 254681187355459704
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459706
+    - rid: 254681187355459705
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 254681187355459707
+        - rid: 254681187355459708
+    - rid: 254681187355459706
+      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - condition:
+            rid: 254681187355459709
+          timeoutSeconds: -1
+          throwOnTimeout: 0
+    - rid: 254681187355459707
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459710
+    - rid: 254681187355459708
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459711
+    - rid: 254681187355459709
+      type: {class: ActionGraphBlackboardBoolCondition, ns: , asm: AssemblyCore}
+      data:
+        key: AnimationEnded
+        expected: 1
+        resultWhenMissing: 0
+    - rid: 254681187355459710
+      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - condition:
+            rid: 254681187355459712
+          timeoutSeconds: -1
+          throwOnTimeout: 0
+    - rid: 254681187355459711
+      type: {class: CombatMovementActionProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - actionType: 0
+          distance: 1.2
+          duration: 0.5
+          speed: 10
+          resultKey: RushHit
+          priority: 200
+    - rid: 254681187355459712
+      type: {class: ActionGraphBlackboardBoolCondition, ns: , asm: AssemblyCore}
+      data:
+        key: MovementRequested
+        expected: 1
+        resultWhenMissing: 0

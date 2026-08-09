@@ -1,0 +1,235 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
+  m_Name: ThermalVisionRenderer
+  m_EditorClassIdentifier:
+  debugShaders:
+    debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
+    hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
+    probeVolumeSamplingDebugComputeShader: {fileID: 7200000, guid: 53626a513ea68ce47b59dc1299fe3959, type: 3}
+  probeVolumeResources:
+    probeVolumeDebugShader: {fileID: 4800000, guid: e5c6678ed2aaa91408dd3df699057aae, type: 3}
+    probeVolumeFragmentationDebugShader: {fileID: 4800000, guid: 03cfc4915c15d504a9ed85ecc404e607, type: 3}
+    probeVolumeOffsetDebugShader: {fileID: 4800000, guid: 53a11f4ebaebf4049b3638ef78dc9664, type: 3}
+    probeVolumeSamplingDebugShader: {fileID: 4800000, guid: 8f96cd657dc40064aa21efcc7e50a2e7, type: 3}
+    probeSamplingDebugMesh: {fileID: -3555484719484374845, guid: 57d7c4c16e2765b47a4d2069b311bffe, type: 3}
+    probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e, type: 3}
+    probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
+  m_RendererFeatures:
+  - {fileID: 7833122117494664109}
+  - {fileID: 6018888855869579118}
+  - {fileID: 8160000000000000016}
+  - {fileID: 4967556268841796359}
+  m_RendererFeatureMap: ad6b866f10d7b46c6edfa9648663875310003037c4243e71078314761b4ef044
+  m_UseNativeRenderPass: 1
+  xrSystemData: {fileID: 0}
+  postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
+  m_AssetVersion: 3
+  m_PrepassLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_OpaqueLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_TransparentLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_DefaultStencilState:
+    overrideStencilState: 0
+    stencilReference: 1
+    passOperation: 2
+    failOperation: 0
+    zFailOperation: 0
+  m_ShadowTransparentReceive: 1
+  m_RenderingMode: 2
+  m_DepthPrimingMode: 0
+  m_CopyDepthMode: 0
+  m_DepthAttachmentFormat: 0
+  m_DepthTextureFormat: 0
+  m_AccurateGbufferNormals: 0
+  m_IntermediateTextureMode: 0
+--- !u!114 &7833122117494664109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
+  m_Name: ScreenSpaceAmbientOcclusion
+  m_EditorClassIdentifier:
+  m_Active: 1
+  m_Settings:
+    AOMethod: 0
+    Downsample: 0
+    AfterOpaque: 0
+    Source: 1
+    NormalSamples: 1
+    Intensity: 0.4
+    DirectLightingStrength: 0.25
+    Radius: 0.3
+    Samples: 1
+    BlurQuality: 0
+    Falloff: 100
+    SampleCount: -1
+--- !u!114 &6018888855869579118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dc8418175ec7794aac340c895bf30f8, type: 3}
+  m_Name: RenderObjectsToTextureFeature
+  m_EditorClassIdentifier: Assembly-CSharp::RenderObjectsToTextureFeature
+  m_Active: 1
+  ProfilingName: Thermal Heat Masks
+  RenderTextureOutputSettings:
+  - TextureName: _ThermalVisibleMask
+    TextureExposure: 0
+    Material: {fileID: 2100000, guid: 94f836ec02b646f6b8346de9243c77c2, type: 2}
+    MaterialPassIndex: 0
+    RenderPassEvent: 300
+    RenderPassInput: 1
+    RenderQueueLowerBound: 0
+    RenderQueueUpperBound: 5000
+    ColorFormat: 16
+    TextureSizeMode: 0
+    CameraSizeMultiplier: 1
+    TextureSize: {x: 1024, y: 1024}
+    FilterMode: 1
+    WrapMode: 1
+    SortingCriteria: 23
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    RenderLayerMask:
+      serializedVersion: 0
+      m_Bits: 2
+    LightMode: 15
+    GlobalShaderKeywords: []
+    ShaderTags: []
+    Depth: 1
+    WriteDepth: 0
+    DepthCompare: 4
+    DebugView: 0
+    DebugDisplayMode: 1
+    DebugColor: {r: 0, g: 1, b: 1, a: 0.75}
+    DebugRenderPassEvent: 500
+  - TextureName: _ThermalThroughWallMask
+    TextureExposure: 0
+    Material: {fileID: 2100000, guid: 94f836ec02b646f6b8346de9243c77c2, type: 2}
+    MaterialPassIndex: 0
+    RenderPassEvent: 300
+    RenderPassInput: 1
+    RenderQueueLowerBound: 0
+    RenderQueueUpperBound: 5000
+    ColorFormat: 16
+    TextureSizeMode: 0
+    CameraSizeMultiplier: 1
+    TextureSize: {x: 1024, y: 1024}
+    FilterMode: 1
+    WrapMode: 1
+    SortingCriteria: 23
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    RenderLayerMask:
+      serializedVersion: 0
+      m_Bits: 2
+    LightMode: 15
+    GlobalShaderKeywords: []
+    ShaderTags: []
+    Depth: 1
+    WriteDepth: 0
+    DepthCompare: 8
+    DebugView: 0
+    DebugDisplayMode: 1
+    DebugColor: {r: 1, g: 0.2, b: 0, a: 0.75}
+    DebugRenderPassEvent: 500
+--- !u!114 &8160000000000000016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 224b0dc115bb4e3f9504f971455dcb43, type: 3}
+  m_Name: ThermalVisionFeature
+  m_EditorClassIdentifier: Assembly-CSharp::ThermalVisionFeature
+  m_Active: 1
+  ProfilingName: Thermal Vision
+  CompositeMaterial: {fileID: 2100000, guid: 3e09abe64058431e9b68ad9f98044d7a, type: 2}
+  ThermalSettings:
+    Enabled: 1
+    RenderPassEvent: 500
+    VisibleMaskTextureName: _ThermalVisibleMask
+    ThroughWallMaskTextureName: _ThermalThroughWallMask
+    EditorPreviewIntensity: 0
+    PreviewThroughWalls: 0
+    Opacity: 1
+    CoolShadow: {r: 0.005, g: 0.01, b: 0.055, a: 1}
+    CoolMid: {r: 0.015, g: 0.12, b: 0.32, a: 1}
+    CoolHighlight: {r: 0.08, g: 0.65, b: 0.8, a: 1}
+    EnvironmentContrast: 1.25
+    ColdHeat: {r: 0.2, g: 0, b: 0.35, a: 1}
+    WarmHeat: {r: 1, g: 0.05, b: 0, a: 1}
+    HotHeat: {r: 1.5, g: 0.55, b: 0, a: 1}
+    CoreHeat: {r: 2.2, g: 2, b: 1.2, a: 1}
+    MaskThreshold: 0.05
+    MaskSoftness: 0.04
+    SurfaceDetail: 0.22
+    EdgeIntensity: 0.7
+    NoiseStrength: 0.025
+    ScanlineStrength: 0.035
+    ScanlineFrequency: 220
+--- !u!114 &4967556268841796359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ef664606d5d49148185eb828c38354e, type: 3}
+  m_Name: MaskHaloFeature
+  m_EditorClassIdentifier: Assembly-CSharp::MaskHaloFeature
+  m_Active: 1
+  ProfilingName: Thermal Heat Bloom
+  HaloMaterial: {fileID: 2100000, guid: 41089d5580cf4e77b7ff13ea32882742, type: 2}
+  HaloSettings:
+    Enabled: 1
+    Name: Visible Heat Bloom
+    RenderPassEvent: 500
+    MaskTextureName: _ThermalVisibleMask
+    MaskThreshold: 0.35
+    Opacity: 0.75
+    Downsample: 2
+    BlurIterations: 3
+    BlurRadius: 1.5
+    MaskSoftness: 0.08
+    OuterGlowColor: {r: 1, g: 0.12, b: 0, a: 1}
+    OuterGlowIntensity: 0.3
+    OuterGlowFalloff: 0.85
+    InnerGlowColor: {r: 1.6, g: 0.55, b: 0.02, a: 1}
+    InnerGlowIntensity: 0.45
+    InnerGlowTightness: 2.8
+    RimColor: {r: 2, g: 1.6, b: 0.5, a: 1}
+    RimWidth: 1.25
+    RimIntensity: 0.5

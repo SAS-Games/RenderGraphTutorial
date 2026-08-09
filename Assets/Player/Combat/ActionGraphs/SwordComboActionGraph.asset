@@ -1,0 +1,503 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89528923cf4cf4f48843187ab98866ca, type: 3}
+  m_Name: SwordComboActionGraph
+  m_EditorClassIdentifier: AssemblyCore::ActionGraphAsset
+  root:
+    rid: 254681187355459640
+  references:
+    version: 2
+    RefIds:
+    - rid: 254681187355459640
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 80, y: 120}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 254681187355459641
+        - rid: 254681187355459642
+        - rid: 254681187355459643
+    - rid: 254681187355459641
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 353.33334, y: 120}
+        editorSize: {x: 275.99997, y: 215.33333}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459644
+    - rid: 254681187355459642
+      type: {class: LoopNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 664.6667, y: 120}
+        editorSize: {x: 295.3333, y: 245.33333}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        maxIterations: 2
+        conditionTiming: 1
+        condition:
+          rid: 254681187355459645
+        child:
+          rid: 254681187355459646
+    - rid: 254681187355459643
+      type: {class: ConditionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 353.33334, y: 492.66666}
+        editorSize: {x: 242.66666, y: 169.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        condition:
+          rid: 254681187355459647
+        trueNode:
+          rid: 254681187355459648
+        falseNode:
+          rid: 254681187355459649
+    - rid: 254681187355459644
+      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: ComboStep
+          valueType: 1
+          boolValue: 0
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+          objectValue: {fileID: 0}
+    - rid: 254681187355459645
+      type: {class: ActionGraphBlackboardStringCondition, ns: , asm: AssemblyCore}
+      data:
+        key: ComboInput
+        comparison: 0
+        compareValue: Sword
+        ignoreCase: 0
+        resultWhenMissing: 0
+    - rid: 254681187355459646
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 1013.3333, y: 120}
+        editorSize: {x: 248.66669, y: 212.00002}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 254681187355459650
+        - rid: 254681187355459651
+        - rid: 254681187355459652
+        - rid: 254681187355459653
+    - rid: 254681187355459647
+      type: {class: CompositeCondition, ns: , asm: AssemblyCore}
+      data:
+        mode: 1
+        conditions:
+        - rid: 254681187355459654
+        - rid: 254681187355459655
+    - rid: 254681187355459648
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 711.3333, y: 492.66666}
+        editorSize: {x: 248.66669, y: 233.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 254681187355459656
+        - rid: 254681187355459657
+        - rid: 254681187355459658
+        - rid: 254681187355459659
+        - rid: 254681187355459660
+    - rid: 254681187355459649
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 616.6667, y: 819.3334}
+        editorSize: {x: 220, y: 215.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459661
+    - rid: 254681187355459650
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 1314.6666, y: 120}
+        editorSize: {x: 276, y: 215.33333}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459662
+    - rid: 254681187355459651
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 1636.6666, y: 120}
+        editorSize: {x: 220, y: 235.33333}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459663
+    - rid: 254681187355459652
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 1920, y: 120}
+        editorSize: {x: 220, y: 215.33333}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459664
+    - rid: 254681187355459653
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2172.6667, y: 120}
+        editorSize: {x: 310, y: 215.33333}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459665
+    - rid: 254681187355459654
+      type: {class: ActionGraphBlackboardIntCondition, ns: , asm: AssemblyCore}
+      data:
+        key: ComboStep
+        comparison: 3
+        compareValue: 2
+        resultWhenMissing: 0
+    - rid: 254681187355459655
+      type: {class: CompositeCondition, ns: , asm: AssemblyCore}
+      data:
+        mode: 0
+        conditions:
+        - rid: 254681187355459666
+        - rid: 254681187355459667
+    - rid: 254681187355459656
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 1013.3333, y: 492.66666}
+        editorSize: {x: 276.00006, y: 215.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459668
+    - rid: 254681187355459657
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 1314.6666, y: 492.66666}
+        editorSize: {x: 276, y: 215.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459669
+    - rid: 254681187355459658
+      type: {class: ConditionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 1636.6666, y: 492.66666}
+        editorSize: {x: 350, y: 229.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        condition:
+          rid: 254681187355459670
+        trueNode:
+          rid: 254681187355459671
+        falseNode:
+          rid: 254681187355459672
+    - rid: 254681187355459659
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2328, y: 492.66666}
+        editorSize: {x: 248.66675, y: 170}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 1
+        children:
+        - rid: 254681187355459673
+        - rid: 254681187355459674
+    - rid: 254681187355459660
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2938, y: 492.66666}
+        editorSize: {x: 220, y: 215.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459675
+    - rid: 254681187355459661
+      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: ReturnIdle
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+    - rid: 254681187355459662
+      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: ComboDecisionReady
+          valueType: 0
+          boolValue: 0
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+          objectValue: {fileID: 0}
+    - rid: 254681187355459663
+      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 0
+        data:
+        - parameterName: Sword01
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+        - parameterName: Sword02
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+    - rid: 254681187355459664
+      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - condition:
+            rid: 254681187355459676
+          timeoutSeconds: -1
+          throwOnTimeout: 0
+    - rid: 254681187355459665
+      type: {class: ActionGraphModifyBlackboardNumberProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: ComboStep
+          numberType: 0
+          operation: 0
+          value: 1
+          createIfMissing: 1
+    - rid: 254681187355459666
+      type: {class: ActionGraphBlackboardStringCondition, ns: , asm: AssemblyCore}
+      data:
+        key: ComboInput
+        comparison: 0
+        compareValue: Sword
+        ignoreCase: 0
+        resultWhenMissing: 0
+    - rid: 254681187355459667
+      type: {class: ActionGraphBlackboardStringCondition, ns: , asm: AssemblyCore}
+      data:
+        key: ComboInput
+        comparison: 0
+        compareValue: Shield
+        ignoreCase: 0
+        resultWhenMissing: 0
+    - rid: 254681187355459668
+      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: AnimationEnded
+          valueType: 0
+          boolValue: 0
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+          objectValue: {fileID: 0}
+    - rid: 254681187355459669
+      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: MovementRequested
+          valueType: 0
+          boolValue: 0
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+          objectValue: {fileID: 0}
+    - rid: 254681187355459670
+      type: {class: ActionGraphBlackboardStringCondition, ns: , asm: AssemblyCore}
+      data:
+        key: ComboInput
+        comparison: 0
+        compareValue: Sword
+        ignoreCase: 0
+        resultWhenMissing: 0
+    - rid: 254681187355459671
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2062.6667, y: 492.66666}
+        editorSize: {x: 220, y: 215.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459677
+    - rid: 254681187355459672
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2062.6667, y: 765.3334}
+        editorSize: {x: 220, y: 215.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459678
+    - rid: 254681187355459673
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2598.6667, y: 674.6667}
+        editorSize: {x: 220, y: 215.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459679
+    - rid: 254681187355459674
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2598.6667, y: 956.6667}
+        editorSize: {x: 248.6665, y: 170}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 254681187355459680
+        - rid: 254681187355459681
+    - rid: 254681187355459675
+      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: ReturnIdle
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+    - rid: 254681187355459676
+      type: {class: ActionGraphBlackboardBoolCondition, ns: , asm: AssemblyCore}
+      data:
+        key: ComboDecisionReady
+        expected: 1
+        resultWhenMissing: 0
+    - rid: 254681187355459677
+      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: Sword03
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+    - rid: 254681187355459678
+      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: Shield03
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle
+    - rid: 254681187355459679
+      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - condition:
+            rid: 254681187355459682
+          timeoutSeconds: -1
+          throwOnTimeout: 0
+    - rid: 254681187355459680
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 2938, y: 956.6667}
+        editorSize: {x: 220, y: 215.33337}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459683
+    - rid: 254681187355459681
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 3254.6667, y: 956.6667}
+        editorSize: {x: 220, y: 215.33337}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681187355459684
+    - rid: 254681187355459682
+      type: {class: ActionGraphBlackboardBoolCondition, ns: , asm: AssemblyCore}
+      data:
+        key: AnimationEnded
+        expected: 1
+        resultWhenMissing: 0
+    - rid: 254681187355459683
+      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - condition:
+            rid: 254681187355459685
+          timeoutSeconds: -1
+          throwOnTimeout: 0
+    - rid: 254681187355459684
+      type: {class: CombatMovementActionProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - actionType: 0
+          distance: 1
+          duration: 0.4
+          speed: 10
+          resultKey: RushHit
+          priority: 200
+    - rid: 254681187355459685
+      type: {class: ActionGraphBlackboardBoolCondition, ns: , asm: AssemblyCore}
+      data:
+        key: MovementRequested
+        expected: 1
+        resultWhenMissing: 0
