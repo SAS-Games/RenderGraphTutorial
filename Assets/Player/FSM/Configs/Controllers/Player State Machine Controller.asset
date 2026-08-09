@@ -45,6 +45,26 @@ MonoBehaviour:
     m_Type: 3
     m_FloatValue: 0
     m_CustomCondition: 
+--- !u!114 &-8844818831666768462
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
+  m_Name: Entry->To->LocoMotion
+  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
+  m_SourceNode: {fileID: 0}
+  m_TargetNode: {fileID: 0}
+  m_SourceState: {fileID: 0}
+  m_TargetState: {fileID: 0}
+  m_HasExitTime: 0
+  m_ExitTime: 0
+  m_WaitForAwaitableActionsToComplete: 1
+  m_Conditions: []
 --- !u!114 &-8097919155767922259
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -278,8 +298,7 @@ MonoBehaviour:
   m_Name: Entry
   m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.EntryStateModel
   m_Position: {x: 664, y: 238, z: 0}
-  m_Transitions:
-  - {fileID: 8361732784111180508}
+  m_Transitions: []
 --- !u!114 &-1296731022910552309
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1001,26 +1020,6 @@ MonoBehaviour:
   m_Transitions:
   - {fileID: 910000000000000005}
   - {fileID: 910000000000000006}
---- !u!114 &8361732784111180508
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d9f0dc7669bda5a4eb7472cb2dc10cb7, type: 3}
-  m_Name: Entry->To->LocoMotion
-  m_EditorClassIdentifier: AssemblyStateMachine::SAS.StateMachineGraph.StateTransitionModel
-  m_SourceNode: {fileID: -1463959820012921045}
-  m_TargetNode: {fileID: 7383936760125653877}
-  m_SourceState: {fileID: 0}
-  m_TargetState: {fileID: 7383936760125653877}
-  m_HasExitTime: 0
-  m_ExitTime: 0
-  m_WaitForAwaitableActionsToComplete: 1
-  m_Conditions: []
 --- !u!114 &8520450701268307862
 MonoBehaviour:
   m_ObjectHideFlags: 1

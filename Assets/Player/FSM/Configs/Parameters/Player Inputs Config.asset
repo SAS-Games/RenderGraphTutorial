@@ -12,15 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d61a38a356517744a99ab947d5f19f8d, type: 3}
   m_Name: Player Inputs Config
   m_EditorClassIdentifier: 
-  <InputActionAsset>k__BackingField: {fileID: -944628639613478452, guid: d1482542abbf4f2448aeefd71f0a4750, type: 3}
   m_Inputs:
   - m_Key: Move
     m_InputActionReference: {fileID: -9043773041164887839, guid: d1482542abbf4f2448aeefd71f0a4750, type: 3}
-  - m_Key: Jump
-    m_InputActionReference: {fileID: 4672474682873483239, guid: d1482542abbf4f2448aeefd71f0a4750, type: 3}
-  - m_Key: Attack
-    m_InputActionReference: {fileID: 2795192816747268572, guid: d1482542abbf4f2448aeefd71f0a4750, type: 3}
-  - m_Key: Dash
-    m_InputActionReference: {fileID: -6201028831682897634, guid: d1482542abbf4f2448aeefd71f0a4750, type: 3}
-  - m_Key: Climb
-    m_InputActionReference: {fileID: -106243935172258878, guid: d1482542abbf4f2448aeefd71f0a4750, type: 3}
