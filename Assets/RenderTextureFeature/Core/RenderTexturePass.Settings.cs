@@ -48,21 +48,18 @@ public partial class RenderTexturePass
 
         public enum TextureExposureMode
         {
-            [InspectorName("Frame Registry + Global Texture + Texel Size")]
-            FrameRegistryAndShaderGlobals = 0,
+            [InspectorName("Frame Registry + Global Texture")]
+            FrameRegistryAndGlobalTexture = 0,
 
             [InspectorName("Frame Registry Only")]
             FrameRegistryOnly = 1,
-
-            [InspectorName("Frame Registry + Global Texture")]
-            FrameRegistryAndGlobalTexture = 2,
         }
 
-        [Tooltip("Name used to register this output in FrameTextureRegistry and, when Texture Exposure includes Shader Globals, publish it as a global shader texture. Every consumer must use the exact same name.")]
+        [Tooltip("Name used to register this output in FrameTextureRegistry and, when Texture Exposure includes Global Texture, publish it as a global shader texture. Every consumer must use the exact same name.")]
         public string TextureName = "_MyTexture";
 
-        [Tooltip("Controls how this output is exposed. Frame Registry Only is preferred for C# Render Graph consumers. Frame Registry + Global Texture follows Unity's tracked global-texture path without publishing texel size. Frame Registry + Global Texture + Texel Size also publishes <TextureName>_TexelSize and therefore requires global-state modification.")]
-        public TextureExposureMode TextureExposure = TextureExposureMode.FrameRegistryAndShaderGlobals;
+        [Tooltip("Controls how this output is exposed. Frame Registry Only is preferred for C# Render Graph consumers. Frame Registry + Global Texture uses Unity's tracked global-texture path for shaders; Unity automatically supplies the conventional <TextureName>_TexelSize vector.")]
+        public TextureExposureMode TextureExposure = TextureExposureMode.FrameRegistryAndGlobalTexture;
 
         [Tooltip("Optional override material used to render matching objects into this output texture. Use a flat mask, id, normal, or custom effect material when another pass will read this texture; leave empty to render objects with their own materials.")]
         public Material Material;
@@ -77,12 +74,10 @@ public partial class RenderTexturePass
         public ScriptableRenderPassInput RenderPassInput = ScriptableRenderPassInput.None;
 
         [Tooltip("Minimum material render queue included in this output. Use 0 for most opaque/mask captures, or raise it to isolate a specific queue range.")]
-        [Range(0, 5000)]
-        public int RenderQueueLowerBound;
+        [Range(0, 5000)] public int RenderQueueLowerBound;
 
         [Tooltip("Maximum material render queue included in this output. 2499 captures opaque objects; 5000 includes transparent objects too.")]
-        [Range(0, 5000)]
-        public int RenderQueueUpperBound = 2499;
+        [Range(0, 5000)] public int RenderQueueUpperBound = 2499;
 
         [Tooltip("Graphics format used by the output render texture. R8 is recommended for masks because it stores one channel and uses less memory and bandwidth. Use ARGB32 or another multi-channel format only for color, normal, or packed-data outputs.")]
         public RenderTextureFormat ColorFormat = RenderTextureFormat.R8;
@@ -91,8 +86,7 @@ public partial class RenderTexturePass
         public SizeMode TextureSizeMode = SizeMode.Camera;
 
         [Tooltip("Scales the active camera resolution when Texture Size Mode is Camera. 1 matches camera size, 0.5 is half resolution, and 2 is double resolution; lower values are cheaper but less precise. The active camera depth texture can only be attached when the final output size still matches the camera size.")]
-        [Range(0.1f, 2.0f)]
-        public float CameraSizeMultiplier = 1.0f;
+        [Range(0.1f, 2.0f)] public float CameraSizeMultiplier = 1.0f;
 
         [Tooltip("Explicit output texture width and height when Texture Size Mode is Custom. Ignored when Texture Size Mode is Camera.")]
         public Vector2Int TextureSize = new(1024, 1024);

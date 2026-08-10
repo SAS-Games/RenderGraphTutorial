@@ -39,10 +39,7 @@ public partial class ObjectsToRenderTextureFeature
         }
     }
 
-    private void ValidateTextureName(
-        RenderTexturePass.Settings settings,
-        int index,
-        Dictionary<string, int> textureNameOwners)
+    private void ValidateTextureName(RenderTexturePass.Settings settings, int index, Dictionary<string, int> textureNameOwners)
     {
         if (string.IsNullOrWhiteSpace(settings.TextureName))
         {
@@ -52,10 +49,7 @@ public partial class ObjectsToRenderTextureFeature
 
         if (textureNameOwners.TryGetValue(settings.TextureName, out int firstIndex))
         {
-            LogValidationWarning(
-                index,
-                $"Texture Name '{settings.TextureName}' is already used by output {firstIndex}. " +
-                "Texture names must be unique because registry and global-property entries use this name as their key.");
+            LogValidationWarning(index, $"Texture Name '{settings.TextureName}' is already used by output {firstIndex}. Texture names must be unique because registry and global-property entries use this name as their key.");
             return;
         }
 
@@ -66,10 +60,7 @@ public partial class ObjectsToRenderTextureFeature
     {
         if (!Enum.IsDefined(typeof(RenderTexturePass.Settings.TextureExposureMode), settings.TextureExposure))
         {
-            LogValidationWarning(
-                index,
-                $"Texture Exposure contains unknown serialized value {(int)settings.TextureExposure}. " +
-                "The pass will use the backward-compatible global texture and texel-size behavior.");
+            LogValidationWarning(index, $"Texture Exposure contains unknown serialized value {(int)settings.TextureExposure}. The pass will use the backward-compatible global texture behavior.");
         }
     }
 
@@ -98,24 +89,17 @@ public partial class ObjectsToRenderTextureFeature
 
     private void ValidateShaderPassFilters(RenderTexturePass.Settings settings, int index)
     {
-        if (settings.LightMode != RenderTexturePass.Settings.LightModeTags.None ||
-            HasCustomShaderTag(settings.ShaderTags))
-        {
+        if (settings.LightMode != RenderTexturePass.Settings.LightModeTags.None || HasCustomShaderTag(settings.ShaderTags))
             return;
-        }
 
-        LogValidationWarning(
-            index,
-            "Light Mode is None and Shader Tags contains no valid custom LightMode tag. No shader pass can be selected.");
+        LogValidationWarning(index, "Light Mode is None and Shader Tags contains no valid custom LightMode tag. No shader pass can be selected.");
     }
 
     private void ValidateGlobalKeywords(RenderTexturePass.Settings settings, int index)
     {
         RenderTexturePass.Settings.GlobalKeyword[] keywords = settings.GlobalShaderKeywords;
         if (keywords == null || keywords.Length == 0)
-        {
             return;
-        }
 
         var activeKeywordNames = new HashSet<string>(StringComparer.Ordinal);
 
@@ -123,52 +107,34 @@ public partial class ObjectsToRenderTextureFeature
         {
             RenderTexturePass.Settings.GlobalKeyword keyword = keywords[keywordIndex];
             if (keyword.Disabled)
-            {
                 continue;
-            }
 
             bool hasAction = keyword.BeforeRenderMode != RenderTexturePass.Settings.GlobalKeyword.Mode.None ||
                              keyword.AfterRenderMode != RenderTexturePass.Settings.GlobalKeyword.Mode.None;
 
             if (!hasAction)
-            {
                 continue;
-            }
 
             if (string.IsNullOrWhiteSpace(keyword.Name))
             {
-                LogValidationWarning(
-                    index,
-                    $"Global Shader Keywords element {keywordIndex} has an action but no Name, so it will be ignored.");
+                LogValidationWarning(index, $"Global Shader Keywords element {keywordIndex} has an action but no Name, so it will be ignored.");
                 continue;
             }
 
             if (!activeKeywordNames.Add(keyword.Name))
             {
-                LogValidationWarning(
-                    index,
-                    $"Global keyword '{keyword.Name}' appears more than once. Conflicting actions execute in list order.");
+                LogValidationWarning(index, $"Global keyword '{keyword.Name}' appears more than once. Conflicting actions execute in list order.");
             }
 
-            if (keyword.BeforeRenderMode != RenderTexturePass.Settings.GlobalKeyword.Mode.None &&
-                keyword.AfterRenderMode == RenderTexturePass.Settings.GlobalKeyword.Mode.None)
+            if (keyword.BeforeRenderMode != RenderTexturePass.Settings.GlobalKeyword.Mode.None && keyword.AfterRenderMode == RenderTexturePass.Settings.GlobalKeyword.Mode.None)
             {
-                LogValidationWarning(
-                    index,
-                    $"Global keyword '{keyword.Name}' changes before rendering but has no After Render action. " +
-                    "Its changed state can affect later passes and cameras.");
+                LogValidationWarning(index, $"Global keyword '{keyword.Name}' changes before rendering but has no After Render action. Its changed state can affect later passes and cameras.");
             }
         }
 
-        bool exposureOtherwiseAvoidsGlobalState =
-            settings.TextureExposure == RenderTexturePass.Settings.TextureExposureMode.FrameRegistryOnly ||
-            settings.TextureExposure == RenderTexturePass.Settings.TextureExposureMode.FrameRegistryAndGlobalTexture;
-
-        if (exposureOtherwiseAvoidsGlobalState &&
-            RenderTexturePass.Settings.HasActiveGlobalKeywordChanges(keywords))
+        if (RenderTexturePass.Settings.HasActiveGlobalKeywordChanges(keywords))
         {
-            LogValidationWarning(
-                index,
+            LogValidationWarning(index,
                 $"Texture Exposure '{settings.TextureExposure}' does not require command-buffer global state by itself, " +
                 "but active global keyword actions still require global-state modification and prevent this pass from being culled.");
         }
@@ -177,9 +143,7 @@ public partial class ObjectsToRenderTextureFeature
     private static bool HasCustomShaderTag(List<string> shaderTags)
     {
         if (shaderTags == null)
-        {
             return false;
-        }
 
         foreach (string shaderTag in shaderTags)
         {

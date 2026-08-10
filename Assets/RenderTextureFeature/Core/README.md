@@ -89,11 +89,10 @@ Then `RenderTexturePass` does this inside Render Graph:
 6. Draws matching renderers into the destination texture.
 7. Stores the texture handle in `FrameTextureRegistry`.
 8. When `Texture Exposure` includes a global texture, exposes it globally using `Texture Name`.
-9. Only when the selected mode includes texel size, sets a matching global texel-size vector.
 
 ## Data Flow
 
-The generated texture is always stored in `FrameTextureRegistry`. Either global-texture mode can additionally expose it to ordinary shaders, while only the full shader-globals mode publishes `<TextureName>_TexelSize`.
+The generated texture is always stored in `FrameTextureRegistry`. Global-texture exposure additionally makes it available to ordinary shaders. Unity automatically supplies the conventional `<TextureName>_TexelSize` companion vector when it binds that texture.
 
 ### Global Shader Texture
 
@@ -103,7 +102,7 @@ The pass calls:
 builder.SetGlobalTextureAfterPass(destination, texturePropertyId);
 ```
 
-When either global-texture exposure mode is enabled, that makes the texture available through the global shader property named by `Texture Name`.
+When global-texture exposure is enabled, that makes the texture available through the global shader property named by `Texture Name`.
 
 If `Texture Name` is:
 
@@ -117,7 +116,7 @@ then later shaders can sample:
 _SomeObjectBuffer
 ```
 
-The pass also sets:
+Unity also supplies:
 
 ```text
 _SomeObjectBuffer_TexelSize
@@ -460,7 +459,7 @@ textureRegistry.SetTexture(
     texelSize);
 ```
 
-Therefore all exposure modes support `FrameTextureRegistry`. The differences are whether the same texture is also published to Unity's global shader-property table and whether matching texel-size metadata is published globally.
+Therefore both exposure modes support `FrameTextureRegistry`. The difference is whether the same texture is also published to Unity's global shader-property table.
 
 #### `Frame Registry Only`
 
@@ -517,7 +516,7 @@ Advantages:
 - dependencies are explicit to Render Graph
 - unused producer work can be culled when there are no other side effects
 - no global texture-name collision with unrelated shaders
-- no global texel-size command
+- no manually managed global texture metadata
 - multiple named frame textures can coexist cleanly
 - consumer code receives dimensions together with the handle
 
@@ -550,7 +549,7 @@ builder.SetGlobalTextureAfterPass(
 
 It does not execute a command-buffer global vector update, so this mode does not require `AllowGlobalStateModification(true)` when global keyword actions are empty.
 
-Use this mode when an ordinary material or Shader Graph needs the texture but does not require a globally published `<TextureName>_TexelSize` vector.
+Use this mode whenever an ordinary material or Shader Graph needs the texture. Unity automatically supplies `<TextureName>_TexelSize`, so shaders can also perform pixel-sized neighbor sampling.
 
 Advantages:
 
@@ -562,84 +561,31 @@ Advantages:
 
 Disadvantages:
 
-- shaders expecting `<TextureName>_TexelSize` do not receive it from this feature
 - global property names can collide with unrelated systems
 - shader/pass ordering still determines when this frame's texture becomes available
 
-This is the recommended global mode when the texture alone is sufficient.
+This is the single global mode. It covers both direct sampling and effects that use the automatic texel-size companion vector.
 
 #### Executable Exposure Proof
 
 The `TextureExposureProof` folder contains two strict diagnostic consumers that use one producer texture named `_TextureExposureProofMask`:
 
 - `GlobalTextureProofFeature` requires the `GlobalTexture` capability and draws a green mask fill.
-- `GlobalTextureAndTexelSizeProofFeature` requires both `GlobalTexture` and `GlobalTexelSize` and draws a yellow one-texel edge.
+- `GlobalTextureAndTexelSizeProofFeature` uses Unity's automatically supplied `_TexelSize` value to draw a yellow one-texel edge.
 
-Neither feature falls back to the registry's `TextureHandle`. They use `UseGlobalTexture` and direct shader-global declarations, so they provide an executable A/B test for the exposure modes. See `TextureExposureProof/README.md` for the complete setup and expected result matrix.
-
-#### `Frame Registry + Global Texture + Texel Size`
-
-The backing enum member for this Inspector option is `FrameRegistryAndShaderGlobals`. It remains serialized value `0` so existing renderer assets preserve their previous behavior.
-
-This mode keeps the registry entry and additionally publishes the output as a global shader texture:
-
-```csharp
-builder.SetGlobalTextureAfterPass(
-    destination,
-    texturePropertyId);
-```
-
-It also publishes:
-
-```text
-<TextureName>_TexelSize
-```
-
-For `_ObjectMask`, ordinary shaders can receive:
-
-```hlsl
-TEXTURE2D_X(_ObjectMask);
-float4 _ObjectMask_TexelSize;
-```
-
-The texture is available after the producer pass has executed. A shader that runs before the producer cannot read this frame's result. Do not retain or rely on the transient Render Graph texture in a later frame.
-
-Use this mode when:
-
-- a regular scene material directly samples the output by property name
-- Shader Graph directly samples a global texture property
-- a third-party shader expects a named global mask or buffer
-- adding a dedicated C# consumer pass is not appropriate
-
-Advantages:
-
-- ordinary materials can sample the output without knowing about `FrameTextureRegistry`
-- Shader Graph and hand-written shaders can share the same named texture
-- existing shader APIs that expect a global texture remain compatible
-- C# Render Graph consumers can still use the registry
-
-Disadvantages:
-
-- the global texel-size command requires `AllowGlobalStateModification(true)`
-- global state introduces a Render Graph synchronization point
-- a pass that allows global-state modification cannot be culled
-- later passes cannot be reordered before that synchronization point
-- common names can collide with global properties owned by other systems
-- shader execution order becomes part of the texture contract
-
-This full shader-global mode is the default so renderer assets created before `Texture Exposure` was added preserve their previous behavior.
+Neither feature falls back to the registry's `TextureHandle`. They use `UseGlobalTexture` and direct shader-global declarations, so they provide an executable test of global exposure and automatic texel metadata. See `TextureExposureProof/README.md` for the complete setup and expected result matrix.
 
 #### Exposure Mode Comparison
 
-| Question | Frame Registry Only | Registry + Global Texture | Registry + Global Texture + Texel Size |
-| --- | --- | --- | --- |
-| Registered in `FrameTextureRegistry`? | Yes | Yes | Yes |
-| Usable by C# Render Graph effects? | Yes | Yes | Yes |
-| Automatically visible to ordinary shaders? | No | Yes | Yes |
-| Publishes global `<TextureName>_TexelSize`? | No | No | Yes |
-| Requires global state when keywords are empty? | No | No | Yes |
-| Can be culled when no consumer or side effect exists? | Yes | Yes | No |
-| Recommended use | Package/C# effects | Shader access to texture only | Shaders requiring texture and texel metadata |
+| Question | Frame Registry Only | Registry + Global Texture |
+| --- | --- | --- |
+| Registered in `FrameTextureRegistry`? | Yes | Yes |
+| Usable by C# Render Graph effects? | Yes | Yes |
+| Automatically visible to ordinary shaders? | No | Yes |
+| Unity supplies global `<TextureName>_TexelSize`? | No global texture | Yes |
+| Requires global state when keywords are empty? | No | No |
+| Can be culled when no consumer or side effect exists? | Yes | Yes |
+| Recommended use | C# Render Graph effects | Any shader/material access |
 
 `Texture Exposure` and `Global Shader Keywords` are independent settings. `Frame Registry Only` means the texture is registry-only; it does not prohibit a separately configured global keyword change. If active global keyword actions are configured, the pass must still allow global-state modification even in registry-only mode.
 
@@ -1009,8 +955,7 @@ if (passData.PublishGlobalTexture)
         passData.TexturePropertyId);
 }
 
-if (passData.PublishGlobalTexelSize ||
-    Settings.HasActiveGlobalKeywordChanges(passData.GlobalKeywords))
+if (Settings.HasActiveGlobalKeywordChanges(passData.GlobalKeywords))
 {
     builder.AllowGlobalStateModification(true);
 }
@@ -1020,7 +965,7 @@ if (passData.PublishGlobalTexelSize ||
 
 `SetGlobalTextureAfterPass` is Render Graph's explicit API for binding a generated `TextureHandle` to a global shader property after the producer has written it.
 
-It is called for both global-texture modes. Registry-only consumers already receive the handle through `FrameTextureRegistry` and do not need a global binding.
+It is called for the global-texture mode. Registry-only consumers already receive the handle through `FrameTextureRegistry` and do not need a global binding.
 
 `SetGlobalTextureAfterPass` itself is declared to Render Graph and does not require `AllowGlobalStateModification(true)`.
 
@@ -1028,27 +973,16 @@ It is called for both global-texture modes. Registry-only consumers already rece
 
 `AllowGlobalStateModification(true)` declares that commands recorded by `ExecutePass` modify state outside the pass's normal attachments and resources.
 
-There are two possible command-buffer side effects in this implementation:
-
-1. Shader-global exposure executes `SetGlobalVector` for `<TextureName>_TexelSize`.
-2. Active keyword entries execute `EnableShaderKeyword` or `DisableShaderKeyword`.
-
-That is why the condition uses logical OR:
-
-```text
-publish global texel size OR execute active global keyword changes
-```
+The command-buffer global side effects in this implementation are active keyword entries executing `EnableShaderKeyword` or `DisableShaderKeyword`. Global texture publication uses Render Graph's tracked API, while Unity supplies the texture's standard `_TexelSize` metadata automatically.
 
 The behavior matrix is:
 
-| Texture exposure | Active keyword action | Global texture | Global texel size | Allow global state |
+| Texture exposure | Active keyword action | Global texture | Automatic texel size | Allow global state |
 | --- | --- | --- | --- | --- |
-| Frame Registry Only | No | No | No | No |
-| Frame Registry Only | Yes | No | No | Yes |
-| Registry + Global Texture | No | Yes | No | No |
-| Registry + Global Texture | Yes | Yes | No | Yes |
-| Registry + Global Texture + Texel Size | No | Yes | Yes | Yes |
-| Registry + Global Texture + Texel Size | Yes | Yes | Yes | Yes |
+| Frame Registry Only | No | No | Not applicable | No |
+| Frame Registry Only | Yes | No | Not applicable | Yes |
+| Registry + Global Texture | No | Yes | Yes | No |
+| Registry + Global Texture | Yes | Yes | Yes | Yes |
 
 ### Is The Code Correct?
 
@@ -1057,14 +991,12 @@ Yes, it is correct for the current `ExecutePass` implementation.
 It satisfies these rules:
 
 - global texture publication occurs only in modes that promise global texture access
-- registry-only mode avoids global texture and texel-size publication
-- every `SetGlobalVector`, `EnableShaderKeyword`, and `DisableShaderKeyword` path has declared global-state permission
-- no global-state permission is requested for registry-only or global-texture-only mode when there is no active keyword action
+- registry-only mode avoids global texture publication
+- every `EnableShaderKeyword` and `DisableShaderKeyword` path has declared global-state permission
+- no global-state permission is requested for either texture exposure mode when there is no active keyword action
 - `SetGlobalTextureAfterPass` remains in recording code rather than being issued as an unsafe command-buffer texture binding
 
-The two conditions must remain synchronized with `ExecutePass`. If the global texel-size `SetGlobalVector` call is removed in the future, `PublishGlobalTexelSize` would no longer need to participate in the second condition. If another command-buffer global operation is added, its activation condition must also be included.
-
-Do not replace the second condition with only `HasActiveGlobalKeywordChanges(...)` while `SetGlobalVector` still runs. Doing so would execute an undeclared global-state command whenever the texel-size mode is selected.
+If another command-buffer global operation is added, its activation condition must also be included before executing it.
 
 The cost of `AllowGlobalStateModification(true)` is why the code derives it automatically rather than exposing a manual checkbox. In this Unity version it introduces a graph synchronization point, prevents later passes from moving before the pass, and disables pass culling.
 
@@ -1086,14 +1018,14 @@ Validation is intentionally not performed in full inside `AddRenderPasses`, beca
 | Settings element is null | Warning; output is skipped |
 | `Texture Name` is empty | Warning; output is skipped |
 | Duplicate `Texture Name` | Warning; both entries remain configured, but registry/global keys collide and must be fixed |
-| Unknown serialized exposure enum | Warning; runtime uses the backward-compatible global texture plus texel-size policy |
+| Unknown serialized exposure enum | Warning; runtime uses backward-compatible global texture publication |
 | Queue lower bound is greater than upper bound | Warning; configured range cannot represent the intended filter |
 | Custom texture width or height is non-positive | Warning; runtime clamps each invalid dimension to 1 pixel |
 | `Light Mode` is `None` and no valid custom Shader Tag exists | Warning; no shader pass can be selected |
 | Active keyword action has no name | Warning; entry is ignored |
 | Active keyword name is duplicated | Warning; actions execute in list order and may conflict |
 | Keyword changes before rendering but has no after action | Warning; changed state can leak into later passes/cameras |
-| Registry-only or global-texture-only mode has active global keyword actions | Warning; valid configuration, but keywords still disable pass culling through global state |
+| Either exposure mode has active global keyword actions | Warning; valid configuration, but keywords still disable pass culling through global state |
 
 Warnings describe consequences but do not silently rewrite legitimate user settings. The only automatic behavior is the documented runtime fallback or safety clamp.
 
@@ -1109,25 +1041,19 @@ The enum makes unsupported publication combinations impossible:
 
 ```text
 Frame Registry Only
-  -> no global texture, no global texel size
+  -> no global texture
 
 Frame Registry + Global Texture
-  -> global texture, no global texel size
-
-Frame Registry + Global Texture + Texel Size
-  -> global texture and global texel size
+  -> global texture and Unity's automatic texel metadata
 ```
 
-There is no mode that publishes global texel size without publishing its corresponding global texture.
-
-The pass converts the enum into a private immutable policy containing:
+The pass converts the enum into one execution flag:
 
 ```csharp
 bool PublishGlobalTexture;
-bool PublishGlobalTexelSize;
 ```
 
-Render Graph declarations and execution commands both use this same policy. This prevents the Inspector choice, `SetGlobalTextureAfterPass`, `SetGlobalVector`, and `AllowGlobalStateModification` from drifting apart.
+Render Graph recording uses that flag to decide whether to call `SetGlobalTextureAfterPass`. Global-state permission is derived independently from active keyword actions.
 
 ### What Static Validation Cannot Prove
 
@@ -1136,7 +1062,7 @@ The feature cannot determine all cross-asset contracts automatically. Users must
 - the consuming feature uses the exact same texture name
 - the producer runs before the consumer
 - a global shader declares the expected texture property
-- a global shader that needs pixel offsets obtains texel size from the selected mode or computes dimensions itself
+- a global shader uses the conventional `<TextureName>_TexelSize` name when it needs pixel offsets
 - a keyword is declared globally rather than with a `_local` directive
 - required shader variants survive player-build stripping
 - selected objects actually contain a compatible `LightMode` pass
@@ -1484,10 +1410,8 @@ private class PassData
     public RendererListHandle RendererListHandle;
     public Settings.GlobalKeyword[] GlobalKeywords;
     public int TexturePropertyId;
-    public int TexelSizePropertyId;
     public Vector4 TexelSize;
     public bool PublishGlobalTexture;
-    public bool PublishGlobalTexelSize;
 }
 ```
 
@@ -1521,8 +1445,6 @@ Do not mutate the same settings object from unrelated systems during Render Grap
 
 ```csharp
 _texturePropertyId = Shader.PropertyToID(settings.TextureName);
-_texelSizePropertyId =
-    Shader.PropertyToID($"{settings.TextureName}_TexelSize");
 ```
 
 Unity shader properties have string names such as `_SelectionOutlineMask`. `Shader.PropertyToID` converts a name to the integer identifier accepted by material, command-buffer, and Render Graph APIs.
@@ -1533,7 +1455,7 @@ Why integer IDs are used:
 - IDs avoid repeating the same spelling throughout execution code
 - the same ID becomes the key in `FrameTextureRegistry`
 
-The surrounding name comparison recalculates IDs only when `TextureName` changes. It also avoids allocating the interpolated texel-size string every frame.
+The surrounding name comparison recalculates the ID only when `TextureName` changes.
 
 Property IDs are stable during one application run but are not persistent identifiers. Never serialize an ID, store it in an asset, or send it over a network. Serialize the property name and regenerate the ID at runtime.
 
@@ -1738,13 +1660,13 @@ builder.SetGlobalTextureAfterPass(
     passData.TexturePropertyId);
 ```
 
-When `Texture Exposure` is either global-texture mode, Unity binds the destination to the configured global shader property after this pass executes.
+When `Texture Exposure` is the global-texture mode, Unity binds the destination to the configured global shader property after this pass executes.
 
 This makes the texture available to ordinary shaders that know only the property name. It also establishes the correct timing: the global binding is applied after the producer has written the texture.
 
 If this call is omitted, handle-based consumers using `FrameTextureRegistry` still work, but scene materials and shaders sampling the global name do not receive this frame's texture through this feature.
 
-Prefer direct handle dependencies for C# consumers, and publish globally only when shader-level access is part of the feature contract. `SetGlobalTextureAfterPass` is Render Graph's explicit global-texture API; it does not by itself require `AllowGlobalStateModification(true)`. The separate global texel-size command does.
+Prefer direct handle dependencies for C# consumers, and publish globally only when shader-level access is part of the feature contract. `SetGlobalTextureAfterPass` is Render Graph's explicit global-texture API; it does not by itself require `AllowGlobalStateModification(true)`. Unity automatically supplies the texture's conventional `_TexelSize` companion value.
 
 #### `AllowGlobalStateModification(true)`
 
@@ -1752,13 +1674,13 @@ Prefer direct handle dependencies for C# consumers, and publish globally only wh
 builder.AllowGlobalStateModification(true);
 ```
 
-The pass enables this declaration only when it will publish a global texel-size vector or apply at least one enabled, named global keyword change. Render Graph requires the pass to declare those command-buffer side effects.
+The pass enables this declaration only when it will apply at least one enabled, named global keyword change. Render Graph requires the pass to declare those command-buffer side effects.
 
 Without this declaration, changing global state inside a raster pass violates the graph contract and can trigger validation problems. It also prevents Render Graph from reasoning incorrectly that the pass has no external side effects.
 
 Allowing global state creates a Render Graph synchronization point, prevents later passes from moving before this pass, and disables pass culling. Avoid it when a local material property or explicit texture dependency can express the same behavior. Global keywords affect all shaders and can make pass ordering more fragile.
 
-Do not expose this Render Graph declaration as a manual setting. The implementation derives it from `Texture Exposure` and the configured keyword actions so the declaration cannot disagree with the commands executed by the pass.
+Do not expose this Render Graph declaration as a manual setting. The implementation derives it from the configured keyword actions so the declaration cannot disagree with the commands executed by the pass.
 
 #### `SetRenderFunc`
 
@@ -2039,23 +1961,15 @@ Use them only when a shader variant genuinely depends on global state. Prefer lo
 
 If an enabled keyword is not restored after the draw, later passes or cameras can render with the wrong variant. The before/after configuration exists so the feature can explicitly establish and restore state.
 
-#### Global texel-size vector
+#### Automatic global texel-size vector
 
-```csharp
-context.cmd.SetGlobalVector(
-    data.TexelSizePropertyId,
-    data.TexelSize);
-```
-
-When `Frame Registry + Global Texture + Texel Size` is selected, texture `_ObjectMask` publishes `_ObjectMask_TexelSize` as:
+When the global texture is bound, Unity automatically supplies the conventional `<TextureName>_TexelSize` vector as:
 
 ```text
 (1 / width, 1 / height, width, height)
 ```
 
-Shaders use `.xy` to move by one pixel in UV space and `.zw` to know actual dimensions.
-
-If omitted, handle-based C# consumers still receive texel metadata from `FrameTextureRegistry`, but ordinary shaders expecting Unity's texel-size naming convention may calculate incorrect offsets.
+Shaders use `.xy` to move by one pixel in UV space and `.zw` to know actual dimensions. The producer does not issue a separate `SetGlobalVector` command for this standard metadata.
 
 #### `ClearRenderTarget`
 
@@ -2153,7 +2067,7 @@ If no configured tag matches an object's shader, the object does not render into
 | Inspector setting | Unity/URP API receiving it | Effect if omitted or wrong |
 | --- | --- | --- |
 | `TextureName` | `Shader.PropertyToID`, registry key, texture name, global texture property | Consumers cannot agree on the texture; empty names create unusable contracts |
-| `TextureExposure` | `FrameTextureRegistry`, optional `SetGlobalTextureAfterPass`, optional global texel-size update | Registry-only is unavailable directly to scene shaders; texture-only avoids global command state; texel-size mode adds scheduling constraints |
+| `TextureExposure` | `FrameTextureRegistry`, optional `SetGlobalTextureAfterPass` | Registry-only is unavailable directly to scene shaders; global texture exposure makes the texture and Unity's automatic `_TexelSize` available |
 | `Material` | `DrawingSettings.overrideMaterial` | Original object materials render instead of controlled data |
 | `MaterialPassIndex` | `DrawingSettings.overrideMaterialPassIndex` | Wrong shader pass or no useful draw |
 | `RenderPassEvent` | `ScriptableRenderPass.renderPassEvent` | Producer may execute too early or after its consumer |
@@ -2186,7 +2100,7 @@ If no configured tag matches an object's shader, the object does not render into
 | `SetGlobalTextureAfterPass` | Required only for global shader access | Registry consumers work, global shader sampling contract does not |
 | `SetRenderAttachmentDepth` | Conditional | No depth testing/writing against camera depth |
 | `ConfigureInput` | Conditional | Requested camera resources may not exist |
-| `AllowGlobalStateModification` | Automatically required for shader-global texel size or active global keyword changes | Global state commands violate the graph declaration; enabling it unnecessarily disables culling and restricts scheduling |
+| `AllowGlobalStateModification` | Automatically required for active global keyword changes | Global state commands violate the graph declaration; enabling it unnecessarily disables culling and restricts scheduling |
 | profiling sampler | Diagnostic | Pixels unchanged; profiling labels degrade |
 | debug pass | Diagnostic | Production output unchanged; no fullscreen/overlay inspection |
 
@@ -2467,10 +2381,9 @@ This is the function that actually runs on the raster command buffer.
 It:
 
 1. applies before-render global keyword actions
-2. sets the texel-size global vector
-3. clears the output texture to black
-4. draws the renderer list
-5. applies after-render global keyword actions
+2. clears the output texture to black
+3. draws the renderer list
+4. applies after-render global keyword actions
 
 The clear-to-black behavior is important. It means the absence of drawn objects produces a predictable zero value.
 
