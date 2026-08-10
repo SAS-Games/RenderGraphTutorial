@@ -6,9 +6,6 @@ using UnityEngine.Rendering.Universal;
 
 public sealed class FrameTextureProcessingPass : ScriptableRenderPass
 {
-    private static readonly int BlitTextureTexelSizeId =
-        Shader.PropertyToID("_BlitTexture_TexelSize");
-
     private readonly FrameTextureResolver _inputResolver =
         new(nameof(FrameTextureProcessingFeature));
 
@@ -19,7 +16,6 @@ public sealed class FrameTextureProcessingPass : ScriptableRenderPass
     private int _settingsIndex = -1;
     private string _outputTextureName;
     private int _outputTextureId;
-    private int _outputTexelSizeId;
     private Material _validatedMaterial;
     private int _validatedPassIndex = -1;
     private bool _loggedInvalidMaterialPass;
@@ -30,9 +26,6 @@ public sealed class FrameTextureProcessingPass : ScriptableRenderPass
         public TextureHandle Source;
         public Material Material;
         public int MaterialPassIndex;
-        public Vector4 InputTexelSize;
-        public int OutputTexelSizeId;
-        public Vector4 OutputTexelSize;
     }
 
     public void Setup(
@@ -88,14 +81,10 @@ public sealed class FrameTextureProcessingPass : ScriptableRenderPass
         passData.Source = source;
         passData.Material = _settings.ProcessingMaterial;
         passData.MaterialPassIndex = _settings.MaterialPassIndex;
-        passData.InputTexelSize = sourceTexelSize;
-        passData.OutputTexelSizeId = _outputTexelSizeId;
-        passData.OutputTexelSize = outputTexelSize;
 
         builder.UseTexture(source, AccessFlags.Read);
         builder.SetRenderAttachment(destination, 0);
         builder.SetGlobalTextureAfterPass(destination, _outputTextureId);
-        builder.AllowGlobalStateModification(true);
         builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
             ExecutePass(data, context));
     }
@@ -155,7 +144,6 @@ public sealed class FrameTextureProcessingPass : ScriptableRenderPass
 
         _outputTextureName = outputTextureName;
         _outputTextureId = Shader.PropertyToID(outputTextureName);
-        _outputTexelSizeId = Shader.PropertyToID($"{outputTextureName}_TexelSize");
         _loggedUnsupportedInput = false;
     }
 
@@ -215,8 +203,6 @@ public sealed class FrameTextureProcessingPass : ScriptableRenderPass
 
     private static void ExecutePass(PassData data, RasterGraphContext context)
     {
-        context.cmd.SetGlobalVector(BlitTextureTexelSizeId, data.InputTexelSize);
-        context.cmd.SetGlobalVector(data.OutputTexelSizeId, data.OutputTexelSize);
         Blitter.BlitTexture(
             context.cmd,
             data.Source,

@@ -2,6 +2,9 @@
 
 `FrameTextureProcessingFeature` performs optional one-pass material operations on textures published through `FrameTextureRegistry`.
 
+For a ready-to-run capture, threshold, and overlay setup, open
+`Examples/04_FrameTextureProcessing/Example.unity`.
+
 It is a consumer and producer:
 
 ```text
@@ -86,7 +89,7 @@ half4 Frag(Varyings input) : SV_Target
 
 Use `Vert` from `Blit.hlsl`, and configure the pass with `ZTest Always`, `ZWrite Off`, and `Cull Off`.
 
-`_BlitTexture_TexelSize` is set to `(1 / width, 1 / height, width, height)` for shaders that need pixel-sized offsets.
+Unity automatically supplies `_BlitTexture_TexelSize` as `(1 / width, 1 / height, width, height)` for shaders that need pixel-sized offsets.
 
 The included `MaskThreshold` material demonstrates the contract. It exposes:
 
@@ -96,7 +99,7 @@ The included `MaskThreshold` material demonstrates the contract. It exposes:
 
 ## Output Access
 
-Later C# passes should resolve the result with `FrameTextureResolver` or `FrameTextureRegistry`. Shaders can sample the global property named by `Output Texture Name`. The utility also publishes:
+Later C# passes should resolve the result with `FrameTextureResolver` or `FrameTextureRegistry`. Shaders can sample the global property named by `Output Texture Name`. Unity automatically supplies:
 
 ```text
 <Output Texture Name>_TexelSize
