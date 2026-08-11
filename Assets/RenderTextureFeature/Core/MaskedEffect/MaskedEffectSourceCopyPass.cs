@@ -8,8 +8,7 @@ public sealed class FrameColorSnapshotPass : ScriptableRenderPass
 {
     private static int _nextSnapshotId;
 
-    private readonly int _snapshotTextureId = Shader.PropertyToID(
-        $"_FrameColorSnapshot{Interlocked.Increment(ref _nextSnapshotId)}");
+    private readonly int _snapshotTextureId = Shader.PropertyToID($"_FrameColorSnapshot{Interlocked.Increment(ref _nextSnapshotId)}");
     private string _profilingName;
 
     public int SnapshotTextureId => _snapshotTextureId;
@@ -22,10 +21,7 @@ public sealed class FrameColorSnapshotPass : ScriptableRenderPass
     public void Setup(string profilingName, RenderPassEvent sourceRenderPassEvent)
     {
         renderPassEvent = sourceRenderPassEvent;
-        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(
-            profilingName,
-            ref _profilingName,
-            profilingSampler);
+        profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(profilingName, ref _profilingName, profilingSampler);
     }
 
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -42,22 +38,11 @@ public sealed class FrameColorSnapshotPass : ScriptableRenderPass
         descriptor.depthBufferBits = 0;
         descriptor.msaaSamples = 1;
 
-        TextureHandle sourceCopy = UniversalRenderer.CreateRenderGraphTexture(
-            renderGraph,
-            descriptor,
-            $"{_profilingName} Texture",
-            false,
-            FilterMode.Bilinear,
-            TextureWrapMode.Clamp);
-        Vector4 texelSize = MaskedEffectRenderGraphUtility.CreateTexelSize(
-            descriptor.width,
-            descriptor.height);
+        TextureHandle sourceCopy = UniversalRenderer.CreateRenderGraphTexture(renderGraph, descriptor, $"{_profilingName} Texture", false, FilterMode.Bilinear, TextureWrapMode.Clamp);
+        Vector4 texelSize = MaskedEffectRenderGraphUtility.CreateTexelSize(descriptor.width, descriptor.height);
         textureRegistry.SetTexture(_snapshotTextureId, sourceCopy, texelSize);
 
-        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(
-            _profilingName,
-            out PassData passData,
-            profilingSampler);
+        using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(_profilingName, out PassData passData, profilingSampler);
 
         passData.Source = resourceData.activeColorTexture;
         builder.UseTexture(passData.Source, AccessFlags.Read);
@@ -67,11 +52,6 @@ public sealed class FrameColorSnapshotPass : ScriptableRenderPass
 
     private static void ExecutePass(PassData data, RasterGraphContext context)
     {
-        Blitter.BlitTexture(
-            context.cmd,
-            data.Source,
-            new Vector4(1, 1, 0, 0),
-            0.0f,
-            false);
+        Blitter.BlitTexture(context.cmd, data.Source, new Vector4(1, 1, 0, 0), 0.0f, false);
     }
 }

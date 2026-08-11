@@ -18,6 +18,8 @@ internal sealed class TemporalTrailPass : ScriptableRenderPass
     private static readonly int TrailColorId = Shader.PropertyToID("_TrailColor");
     private static readonly int IntensityId = Shader.PropertyToID("_Intensity");
     private static readonly int SuppressCurrentFrameId = Shader.PropertyToID("_SuppressCurrentFrame");
+    private static readonly int MaskTexelSizeId = Shader.PropertyToID("_TemporalMaskTexelSize");
+    private static readonly int SuppressionRadiusId = Shader.PropertyToID("_SuppressionRadius");
 
     private readonly MaskedTextureResolver maskResolver = new(nameof(TemporalTrailFeature));
     private string profilingName;
@@ -52,6 +54,8 @@ internal sealed class TemporalTrailPass : ScriptableRenderPass
         public float MaskThreshold;
         public float MaskSoftness;
         public float SuppressCurrentFrame;
+        public Vector4 MaskTexelSize;
+        public float SuppressionRadius;
     }
 
     public void Setup(
@@ -80,7 +84,7 @@ internal sealed class TemporalTrailPass : ScriptableRenderPass
         if (settings == null || material == null)
             return;
 
-        if (!maskResolver.TryResolve(frameData, out TextureHandle mask, out _))
+        if (!maskResolver.TryResolve(frameData, out TextureHandle mask, out Vector4 maskTexelSize))
             return;
 
         UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
@@ -118,7 +122,13 @@ internal sealed class TemporalTrailPass : ScriptableRenderPass
         }
 
         RecordAccumulation(renderGraph, source, mask, previousHistory, currentHistory, motion);
-        RecordComposite(renderGraph, resourceData.activeColorTexture, source, mask, currentHistory);
+        RecordComposite(
+            renderGraph,
+            resourceData.activeColorTexture,
+            source,
+            mask,
+            maskTexelSize,
+            currentHistory);
         historyFrame.Commit();
     }
 
@@ -163,6 +173,7 @@ internal sealed class TemporalTrailPass : ScriptableRenderPass
         TextureHandle destination,
         TextureHandle source,
         TextureHandle mask,
+        Vector4 maskTexelSize,
         TextureHandle currentHistory)
     {
         using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass(
@@ -179,6 +190,8 @@ internal sealed class TemporalTrailPass : ScriptableRenderPass
         passData.MaskThreshold = Mathf.Clamp01(settings.MaskThreshold);
         passData.MaskSoftness = Mathf.Clamp(settings.MaskSoftness, 0.0001f, 0.5f);
         passData.SuppressCurrentFrame = Mathf.Clamp01(settings.SuppressCurrentFrame);
+        passData.MaskTexelSize = maskTexelSize;
+        passData.SuppressionRadius = Mathf.Clamp(settings.SuppressionRadius, 0f, 4f);
 
         builder.UseTexture(source, AccessFlags.Read);
         builder.UseTexture(mask, AccessFlags.Read);
@@ -234,6 +247,8 @@ internal sealed class TemporalTrailPass : ScriptableRenderPass
         data.Material.SetFloat(MaskThresholdId, data.MaskThreshold);
         data.Material.SetFloat(MaskSoftnessId, data.MaskSoftness);
         data.Material.SetFloat(SuppressCurrentFrameId, data.SuppressCurrentFrame);
+        data.Material.SetVector(MaskTexelSizeId, data.MaskTexelSize);
+        data.Material.SetFloat(SuppressionRadiusId, data.SuppressionRadius);
 
         Blitter.BlitTexture(
             context.cmd,

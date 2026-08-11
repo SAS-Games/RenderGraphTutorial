@@ -45,11 +45,11 @@ public sealed class TemporalTrailFeature : ScriptableRendererFeature
 
         [Tooltip("Seconds required for an abandoned trail to lose half of its strength.")]
         [Min(0.01f)]
-        public float HalfLife = 0.3f;
+        public float HalfLife = 0.15f;
 
-        [Tooltip("Seconds between new trail snapshots. Zero captures continuously every frame.")]
+        [Tooltip("Seconds between new trail snapshots. Zero captures continuously for the smoothest motion; non-zero values intentionally create discrete afterimages.")]
         [Min(0f)]
-        public float CaptureInterval = 0.1f;
+        public float CaptureInterval;
 
         [Tooltip("Reprojects history using URP motion vectors before accumulation.")]
         public bool MotionCompensation = true;
@@ -87,6 +87,10 @@ public sealed class TemporalTrailFeature : ScriptableRendererFeature
         [Tooltip("Hides trail color beneath the object's current silhouette.")]
         [Range(0f, 1f)]
         public float SuppressCurrentFrame = 1f;
+
+        [Tooltip("Expands current-frame suppression by this many mask texels. Increase slightly when lower-resolution history leaves a fringe around a stationary subject.")]
+        [Range(0f, 4f)]
+        public float SuppressionRadius = 1.5f;
     }
 
     public override void Create()

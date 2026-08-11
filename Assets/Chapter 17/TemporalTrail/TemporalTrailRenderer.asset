@@ -96,7 +96,7 @@ MonoBehaviour:
     LightMode: 15
     GlobalShaderKeywords: []
     ShaderTags: []
-    Depth: 1
+    Depth: 0
     WriteDepth: 0
     DepthCompare: 4
     DebugView: 0
@@ -149,9 +149,9 @@ MonoBehaviour:
     RenderPassEvent: 500
     MaskTextureName: _TemporalTrailMask
     ApplyToSceneView: 0
-    HistoryResolutionScale: 0.5
-    HalfLife: 0.3
-    CaptureInterval: 0.1
+    HistoryResolutionScale: 0.25
+    HalfLife: 0.15
+    CaptureInterval: 0
     MotionCompensation: 1
     MotionVectorScale: 1
     CameraCutDistance: 2
@@ -161,3 +161,4 @@ MonoBehaviour:
     TrailColor: {r: 0.15, g: 0.8, b: 2, a: 1}
     Intensity: 1.15
     SuppressCurrentFrame: 1
+    SuppressionRadius: 1.5

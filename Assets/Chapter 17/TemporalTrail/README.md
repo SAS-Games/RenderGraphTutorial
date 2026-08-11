@@ -44,11 +44,12 @@ The temporal pass runs at `AfterRenderingTransparents`. It requests motion vecto
 ## Important Settings
 
 - **History Resolution Scale** controls the two persistent history buffers. `0.5` is a useful quality/performance compromise.
-- **Half Life** is frame-rate independent: it specifies how long a trail takes to lose half its strength.
-- **Capture Interval** controls snapshot cadence. `0` records continuously; `0.1` records ten discrete silhouettes per second.
+- **Half Life** is frame-rate independent: it specifies how long a trail takes to lose half its strength. The demo uses `0.15` seconds so residual silhouettes clear quickly when the player stops.
+- **Capture Interval** should remain `0` for a continuous, refresh-rate-independent trail. Values above zero intentionally produce stepped echo snapshots (`0.1` records ten per second).
 - **Motion Vector Scale** controls reprojection. `1` uses URP motion vectors directly; `0` leaves history in screen space.
 - **Camera Cut Distance/Angle** reject history after discontinuous camera motion.
 - **Suppress Current Frame** keeps the effect behind the live object instead of tinting it.
+- **Suppression Radius** expands that live-object exclusion slightly, hiding half-resolution history fringes when the player stops. The demo uses `1.5` mask texels.
 
 ## Render Graph Lessons
 

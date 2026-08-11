@@ -67,7 +67,17 @@ public partial class RenderTexturePass  : ScriptableRenderPass
 
         // Setup as a render target via UseTextureFragment, which is the equivalent of using the old cmd.SetRenderTarget
         builder.SetRenderAttachment(destination, 0);
-        SetDepthAttachment(builder, frameData, destinationDescriptor, cameraDescriptor);
+        bool hasDepthAttachment = SetDepthAttachment(
+            builder,
+            frameData,
+            destinationDescriptor,
+            cameraDescriptor);
+
+        // A depth-writer output may intentionally have no color consumer. Keep
+        // the pass because modifying camera depth is itself the desired result.
+        if (hasDepthAttachment && _settings.WriteDepth)
+            builder.AllowPassCulling(false);
+
         if (passData.PublishGlobalTexture)
             builder.SetGlobalTextureAfterPass(destination, passData.TexturePropertyId);
 
@@ -171,20 +181,21 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         return destination;
     }
 
-    private void SetDepthAttachment(IRasterRenderGraphBuilder builder, ContextContainer frameData, RenderTextureDescriptor destinationDescriptor, RenderTextureDescriptor cameraDescriptor)
+    private bool SetDepthAttachment(IRasterRenderGraphBuilder builder, ContextContainer frameData, RenderTextureDescriptor destinationDescriptor, RenderTextureDescriptor cameraDescriptor)
     {
         if (!_settings.Depth)
-            return;
+            return false;
 
         if (!CanUseCameraDepthAttachment(destinationDescriptor, cameraDescriptor))
         {
             LogSkippedDepthAttachmentOnce(destinationDescriptor, cameraDescriptor);
-            return;
+            return false;
         }
 
         var resourceData = frameData.Get<UniversalResourceData>();
         AccessFlags depthAccess = _settings.WriteDepth ? AccessFlags.ReadWrite : AccessFlags.Read;
         builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, depthAccess);
+        return true;
     }
 
     private bool CanUseCameraDepthAttachment(RenderTextureDescriptor destinationDescriptor, RenderTextureDescriptor cameraDescriptor)

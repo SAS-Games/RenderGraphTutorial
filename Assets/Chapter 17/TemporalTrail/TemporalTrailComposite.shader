@@ -31,12 +31,44 @@ Shader "Hidden/Chapter17/TemporalTrail/Composite"
             float _MaskSoftness;
             float _Intensity;
             float _SuppressCurrentFrame;
+            float4 _TemporalMaskTexelSize;
+            float _SuppressionRadius;
         CBUFFER_END
 
         half EvaluateMask(half value)
         {
             half softness = max(_MaskSoftness, 0.0001h);
             return smoothstep(_MaskThreshold, _MaskThreshold + softness, value);
+        }
+
+        half EvaluateSuppressionMask(float2 uv)
+        {
+            half coverage = EvaluateMask(SAMPLE_TEXTURE2D_X(
+                _TemporalMaskTexture, sampler_LinearClamp, uv).r);
+
+            UNITY_BRANCH
+            if (_SuppressionRadius > 0.0001)
+            {
+                float2 offset = _TemporalMaskTexelSize.xy * _SuppressionRadius;
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv + float2(offset.x, 0.0)).r));
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv - float2(offset.x, 0.0)).r));
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv + float2(0.0, offset.y)).r));
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv - float2(0.0, offset.y)).r));
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv + offset).r));
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv - offset).r));
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv + float2(offset.x, -offset.y)).r));
+                coverage = max(coverage, EvaluateMask(SAMPLE_TEXTURE2D_X(
+                    _TemporalMaskTexture, sampler_LinearClamp, uv + float2(-offset.x, offset.y)).r));
+            }
+
+            return coverage;
         }
         ENDHLSL
 
@@ -58,8 +90,10 @@ Shader "Hidden/Chapter17/TemporalTrail/Composite"
                     SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).r)
                     * _CaptureCurrentFrame;
 
-                half2 motion = SAMPLE_TEXTURE2D_X(
+                float2 motion = SAMPLE_TEXTURE2D_X(
                     _TemporalMotionTexture, sampler_LinearClamp, uv).xy;
+                // Unlike TAA, the trail must remain behind the moving subject
+                // instead of following it toward the current-frame position.
                 float2 historyUv = uv - motion * _MotionVectorScale;
                 half historyInside =
                     (all(historyUv >= 0.0) && all(historyUv <= 1.0)) ? 1.0h : 0.0h;
@@ -101,8 +135,7 @@ Shader "Hidden/Chapter17/TemporalTrail/Composite"
                 half4 source = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
                 half4 trail = SAMPLE_TEXTURE2D_X(
                     _TemporalHistoryTexture, sampler_LinearClamp, uv);
-                half currentCoverage = EvaluateMask(SAMPLE_TEXTURE2D_X(
-                    _TemporalMaskTexture, sampler_LinearClamp, uv).r);
+                half currentCoverage = EvaluateSuppressionMask(uv);
 
                 half reveal = 1.0h - currentCoverage * _SuppressCurrentFrame;
                 half3 trailColor = trail.rgb * _TrailColor.rgb * (_Intensity * reveal);
