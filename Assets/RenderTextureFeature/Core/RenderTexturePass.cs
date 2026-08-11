@@ -69,14 +69,10 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         builder.SetRenderAttachment(destination, 0);
         SetDepthAttachment(builder, frameData, destinationDescriptor, cameraDescriptor);
         if (passData.PublishGlobalTexture)
-        {
             builder.SetGlobalTextureAfterPass(destination, passData.TexturePropertyId);
-        }
 
         if (Settings.HasActiveGlobalKeywordChanges(passData.GlobalKeywords))
-        {
             builder.AllowGlobalStateModification(true);
-        }
 
         // Assign the ExecutePass function to the render pass delegate, which will be called by the render graph when executing the pass
         builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
@@ -86,11 +82,8 @@ public partial class RenderTexturePass  : ScriptableRenderPass
     private static void ExecutePass(PassData data, RasterGraphContext context)
     {
         UpdateKeywordsBeforeRender(data, context.cmd);
-
         context.cmd.ClearRenderTarget(RTClearFlags.Color, Color.black, 0, 0);
-
         context.cmd.DrawRendererList(data.RendererListHandle);
-
         UpdateKeywordsAfterRender(data, context.cmd);
     }
 
@@ -153,8 +146,8 @@ public partial class RenderTexturePass  : ScriptableRenderPass
         DrawingSettings drawingSettings = RenderingUtils.CreateDrawingSettings(_settings.LightModeShaderTags, universalRenderingData, cameraData, lightData, _settings.SortingCriteria);
         drawingSettings.overrideMaterial = _settings.Material;
         drawingSettings.overrideMaterialPassIndex = _settings.MaterialPassIndex;
-
-        var filteringSettings = new FilteringSettings(_settings.RenderQueueRange, _settings.LayerMask, (uint)_settings.RenderLayerMask);
+        int layerMask = _settings.LayerMask.value == 0 ? -1 : _settings.LayerMask.value;
+        var filteringSettings = new FilteringSettings(_settings.RenderQueueRange, layerMask, (uint)_settings.RenderLayerMask);
         RendererListHandle renderListHandle = RenderingHelpers.CreateRendererListWithRenderStateBlock(renderGraph, ref universalRenderingData.cullResults, drawingSettings, filteringSettings, _renderStateBlock);
 
         passData.RendererListHandle = renderListHandle;

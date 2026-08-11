@@ -1,12 +1,13 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [ExecuteAlways, DisallowMultipleComponent]
 public sealed class RenderingLayerGroup : MonoBehaviour
 {
     private const int DefaultGameObjectLayer = 0;
 
-    [SerializeField] private RenderingLayerMask renderingLayerMask = 1u << 1;
-    [SerializeField] private bool resetGameObjectLayers = true;
+    [FormerlySerializedAs("renderingLayerMask")] [SerializeField] private RenderingLayerMask m_RenderingLayerMask = 1u << 1;
+    [FormerlySerializedAs("resetGameObjectLayers")] [SerializeField] private bool m_ResetGameObjectLayers = true;
 
     private void OnEnable()
     {
@@ -15,14 +16,14 @@ public sealed class RenderingLayerGroup : MonoBehaviour
 
     public void Apply()
     {
-        uint mask = (uint)renderingLayerMask;
+        uint mask = (uint)m_RenderingLayerMask;
         if (mask == 0)
         {
             Debug.LogError("Rendering Layer Group requires a non-zero rendering layer mask.", this);
             return;
         }
 
-        if (resetGameObjectLayers)
+        if (m_ResetGameObjectLayers)
         {
             Transform[] transforms = GetComponentsInChildren<Transform>(true);
             foreach (Transform child in transforms)
@@ -31,14 +32,19 @@ public sealed class RenderingLayerGroup : MonoBehaviour
 
         Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
         foreach (Renderer childRenderer in renderers)
-            childRenderer.renderingLayerMask |= mask;
+            childRenderer.renderingLayerMask = mask;
+    }
+
+    private void OnTransformChildrenChanged()
+    {
+        if (isActiveAndEnabled)
+            Apply();
     }
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if (!Application.isPlaying)
-            Apply();
+        Apply();
     }
 #endif
 }
