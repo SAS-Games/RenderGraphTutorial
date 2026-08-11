@@ -247,10 +247,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: adae828fc181b244f9fb8554e560c430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatActionGraphController
-  swordComboGraph: {fileID: 11400000, guid: f0b50ddd9b1222a40bc56365b63af92c, type: 2}
-  shieldAttackGraph: {fileID: 11400000, guid: aba4ebbb97122a44098eafcbf64cdbc9, type: 2}
-  heavyAttackGraph: {fileID: 11400000, guid: 3a2e4fc8614a4e84cbafabb30cbbf10f, type: 2}
-  shieldRushGraph: {fileID: 11400000, guid: 69c5836c653dba74ebdc66e07a55062f, type: 2}
+  actions:
+  - action: 1
+    graph: {fileID: 11400000, guid: f0b50ddd9b1222a40bc56365b63af92c, type: 2}
+    acceptsCombo: 1
+    startPhase: 1
+    releasePhase: 0
+  - action: 2
+    graph: {fileID: 11400000, guid: aba4ebbb97122a44098eafcbf64cdbc9, type: 2}
+    acceptsCombo: 0
+    startPhase: 1
+    releasePhase: 0
+  - action: 3
+    graph: {fileID: 11400000, guid: 3a2e4fc8614a4e84cbafabb30cbbf10f, type: 2}
+    acceptsCombo: 0
+    startPhase: 0
+    releasePhase: 1
+  - action: 4
+    graph: {fileID: 11400000, guid: 69c5836c653dba74ebdc66e07a55062f, type: 2}
+    acceptsCombo: 0
+    startPhase: 2
+    releasePhase: 3
   actor: {fileID: 3719959118888767273}
   signals: {fileID: 0}
   combatState: {fileID: 0}
