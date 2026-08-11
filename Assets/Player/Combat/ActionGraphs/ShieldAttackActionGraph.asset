@@ -26,21 +26,9 @@ MonoBehaviour:
         editorChildrenListCollapsed: 0
         type: 0
         children:
-        - rid: 254681187355459585
-        - rid: 254681187355459586
-    - rid: 254681187355459585
-      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        type: 0
-        children:
-        - rid: 254681187355459587
-        - rid: 254681187355459588
-        - rid: 254681187355459589
+        - rid: 254681238886940752
         - rid: 254681187355459590
+        - rid: 254681187355459586
     - rid: 254681187355459586
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
@@ -50,33 +38,6 @@ MonoBehaviour:
         editorChildrenListCollapsed: 0
         dataProvider:
           rid: 254681187355459591
-    - rid: 254681187355459587
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 254681187355459592
-    - rid: 254681187355459588
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 254681187355459593
-    - rid: 254681187355459589
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 254681187355459594
     - rid: 254681187355459590
       type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
       data:
@@ -94,46 +55,6 @@ MonoBehaviour:
         useSingleValue: 1
         data:
         - parameterName: ReturnIdle
-          resetBeforeSet:
-          - Sword01
-          - Sword02
-          - Sword03
-          - Shield03
-          - ShieldAttack
-          - ShieldRush
-          - ShieldRushImpact
-          - HeavyAttack
-          - ReturnIdle
-    - rid: 254681187355459592
-      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - key: AnimationEnded
-          valueType: 0
-          boolValue: 0
-          intValue: 0
-          floatValue: 0
-          stringValue: 
-          objectValue: {fileID: 0}
-    - rid: 254681187355459593
-      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - key: MovementRequested
-          valueType: 0
-          boolValue: 0
-          intValue: 0
-          floatValue: 0
-          stringValue: 
-          objectValue: {fileID: 0}
-    - rid: 254681187355459594
-      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - parameterName: ShieldAttack
           resetBeforeSet:
           - Sword01
           - Sword02
@@ -223,3 +144,28 @@ MonoBehaviour:
         key: MovementRequested
         expected: 1
         resultWhenMissing: 0
+    - rid: 254681238886940752
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681238886940753
+    - rid: 254681238886940753
+      type: {class: CombatBeginAttackActionProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - triggerName: ShieldAttack
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle

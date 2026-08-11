@@ -168,7 +168,8 @@ MonoBehaviour:
         type: 0
         children:
         - rid: 254681187355459621
-        - rid: 254681187355459622
+        - rid: 254681238886940754
+        - rid: 254681187355459627
     - rid: 254681187355459619
       type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
       data:
@@ -200,52 +201,12 @@ MonoBehaviour:
         editorChildrenListCollapsed: 0
         dataProvider:
           rid: 254681187355459623
-    - rid: 254681187355459622
-      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        type: 0
-        children:
-        - rid: 254681187355459624
-        - rid: 254681187355459625
-        - rid: 254681187355459626
-        - rid: 254681187355459627
     - rid: 254681187355459623
       type: {class: CombatPhaseActionProvider, ns: , asm: Assembly-CSharp}
       data:
         useSingleValue: 1
         data:
         - phase: 1
-    - rid: 254681187355459624
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 254681187355459628
-    - rid: 254681187355459625
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 254681187355459629
-    - rid: 254681187355459626
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 254681187355459630
     - rid: 254681187355459627
       type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
       data:
@@ -257,46 +218,6 @@ MonoBehaviour:
         children:
         - rid: 254681187355459631
         - rid: 254681187355459632
-    - rid: 254681187355459628
-      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - key: AnimationEnded
-          valueType: 0
-          boolValue: 0
-          intValue: 0
-          floatValue: 0
-          stringValue: 
-          objectValue: {fileID: 0}
-    - rid: 254681187355459629
-      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - key: MovementRequested
-          valueType: 0
-          boolValue: 0
-          intValue: 0
-          floatValue: 0
-          stringValue: 
-          objectValue: {fileID: 0}
-    - rid: 254681187355459630
-      type: {class: AnimatorSetTriggerProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - parameterName: ShieldRushImpact
-          resetBeforeSet:
-          - Sword01
-          - Sword02
-          - Sword03
-          - Shield03
-          - ShieldAttack
-          - ShieldRush
-          - ShieldRushImpact
-          - HeavyAttack
-          - ReturnIdle
     - rid: 254681187355459631
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
@@ -376,3 +297,28 @@ MonoBehaviour:
         key: MovementRequested
         expected: 1
         resultWhenMissing: 0
+    - rid: 254681238886940754
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorPosition: {x: 0, y: 0}
+        editorSize: {x: 0, y: 0}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 254681238886940755
+    - rid: 254681238886940755
+      type: {class: CombatBeginAttackActionProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - triggerName: ShieldRushImpact
+          resetBeforeSet:
+          - Sword01
+          - Sword02
+          - Sword03
+          - Shield03
+          - ShieldAttack
+          - ShieldRush
+          - ShieldRushImpact
+          - HeavyAttack
+          - ReturnIdle

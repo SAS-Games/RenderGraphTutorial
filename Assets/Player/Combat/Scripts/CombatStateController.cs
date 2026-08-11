@@ -14,8 +14,8 @@ public class CombatStateController : MonoBehaviour
     private readonly object movementLockSource = new object();
     private IMovementVelocityComposer movementComposer;
 
-    public bool IsActive { get; private set; }
     public CombatPhase CurrentPhase { get; private set; }
+    public bool IsActive => CurrentPhase != CombatPhase.None;
 
     private void Awake()
     {
@@ -38,17 +38,19 @@ public class CombatStateController : MonoBehaviour
         if (CurrentPhase == phase)
             return;
 
+        bool wasActive = IsActive;
         CurrentPhase = phase;
         characterController?.Actor.SetInteger(combatPhaseParameter, (int)phase);
 
-        bool shouldLockMovement = phase != CombatPhase.None;
-        if (IsActive == shouldLockMovement)
-            return;
+        if (wasActive != IsActive)
+            SetMovementLocked(IsActive);
+    }
 
-        IsActive = shouldLockMovement;
-        animationController?.SetCombatMovementLocked(shouldLockMovement);
+    private void SetMovementLocked(bool locked)
+    {
+        animationController?.SetCombatMovementLocked(locked);
 
-        if (shouldLockMovement)
+        if (locked)
         {
             movementComposer?.SetMovementVelocityContribution(
                 movementLockSource,

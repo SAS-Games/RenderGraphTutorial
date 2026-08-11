@@ -1,23 +1,28 @@
 using System;
-using System.Collections.Generic;
 using SAS.StateMachineGraph;
 using UnityEngine;
 
 [DisallowMultipleComponent]
 public class CombatActionGraphController : MonoBehaviour
 {
+    [Serializable]
+    private sealed class CombatActionDefinition
+    {
+        public CombatActionId action;
+        public ActionGraphAsset graph;
+        public bool acceptsCombo;
+        public CombatPhase startPhase;
+        public CombatPhase releasePhase;
+    }
+
     [Header("Action Graphs")]
-    [SerializeField] private ActionGraphAsset swordComboGraph;
-    [SerializeField] private ActionGraphAsset shieldAttackGraph;
-    [SerializeField] private ActionGraphAsset heavyAttackGraph;
-    [SerializeField] private ActionGraphAsset shieldRushGraph;
+    [SerializeField] private CombatActionDefinition[] actions;
 
     [Header("Runtime Services")]
     [SerializeField] private Actor actor;
     [SerializeField] private CombatActionGraphSignals signals;
     [SerializeField] private CombatStateController combatState;
 
-    private readonly Dictionary<CombatActionId, ActionGraphAsset> runtimeGraphs = new();
     private ActionGraphExecutor executor;
     private ActionContext context;
     private int executionVersion;
@@ -53,22 +58,21 @@ public class CombatActionGraphController : MonoBehaviour
     private void OnDestroy()
     {
         executor?.Dispose();
-
-        foreach (ActionGraphAsset graph in runtimeGraphs.Values)
-        {
-            if (graph != null)
-                Destroy(graph);
-        }
     }
 
     public bool SubmitSwordInput()
     {
-        return IsBusy ? signals != null && signals.TryQueue(CombatComboInput.Sword) : TryStart(CombatActionId.SwordCombo);
+        return Submit(CombatComboInput.Sword, CombatActionId.SwordCombo);
     }
 
     public bool SubmitShieldInput()
     {
-        return IsBusy ? signals != null && signals.TryQueue(CombatComboInput.Shield) : TryStart(CombatActionId.ShieldAttack);
+        return Submit(CombatComboInput.Shield, CombatActionId.ShieldAttack);
+    }
+
+    private bool Submit(CombatComboInput comboInput, CombatActionId action)
+    {
+        return IsBusy ? signals != null && signals.TryQueue(comboInput) : TryStart(action);
     }
 
     public bool TryStartHoldAction(CombatActionId action)
@@ -81,23 +85,35 @@ public class CombatActionGraphController : MonoBehaviour
 
     public void ReleaseHold(CombatActionId action)
     {
-        if (!IsBusy || CurrentAction != action)
+        if (!IsBusy || CurrentAction != action || !TryGetDefinition(action, out CombatActionDefinition definition))
             return;
 
-        // Heavy hold preserves the reference controller's movement behavior:
-        // locomotion locks only when the button is released into the attack.
-        if (action == CombatActionId.HeavyAttack)
-            combatState?.SetPhase(CombatPhase.CombatAttack);
-        else if (action == CombatActionId.ShieldRush)
-            combatState?.SetPhase(CombatPhase.Rush);
-
+        SetPhase(definition.releasePhase);
         signals?.SignalHoldReleased();
     }
 
     private bool TryStart(CombatActionId action)
     {
-        ActionGraphAsset graph = ResolveGraph(action);
-        return TryExecute(graph, action, action == CombatActionId.SwordCombo);
+        return TryGetDefinition(action, out CombatActionDefinition definition) && TryExecute(definition);
+    }
+
+    private bool TryGetDefinition(CombatActionId action, out CombatActionDefinition definition)
+    {
+        if (actions != null)
+        {
+            // Match the previous dictionary behavior: the last duplicate wins.
+            for (int i = actions.Length - 1; i >= 0; i--)
+            {
+                if (actions[i] != null && actions[i].action == action)
+                {
+                    definition = actions[i];
+                    return true;
+                }
+            }
+        }
+
+        definition = null;
+        return false;
     }
 
     private void CancelCurrentAction()
@@ -110,26 +126,28 @@ public class CombatActionGraphController : MonoBehaviour
         CompleteAction();
     }
 
-    private bool TryExecute(ActionGraphAsset graph, CombatActionId action, bool acceptsCombo)
+    private bool TryExecute(CombatActionDefinition definition)
     {
-        if (IsBusy || graph == null || executor == null)
+        if (IsBusy || definition.graph == null || executor == null)
             return false;
 
-        if (!executor.Build(graph, context))
+        if (!executor.Build(definition.graph, context))
             return false;
 
         IsBusy = true;
-        CurrentAction = action;
-        signals?.BeginAction(acceptsCombo);
-
-        if (action == CombatActionId.ShieldRush)
-            combatState?.SetPhase(CombatPhase.ShieldHold);
-        else if (action != CombatActionId.HeavyAttack)
-            combatState?.SetPhase(CombatPhase.CombatAttack);
+        CurrentAction = definition.action;
+        signals?.BeginAction(definition.acceptsCombo);
+        SetPhase(definition.startPhase);
 
         int version = ++executionVersion;
         ExecuteAsync(version);
         return true;
+    }
+
+    private void SetPhase(CombatPhase phase)
+    {
+        if (phase != CombatPhase.None)
+            combatState?.SetPhase(phase);
     }
 
     private async void ExecuteAsync(int version)
@@ -159,34 +177,5 @@ public class CombatActionGraphController : MonoBehaviour
         combatState?.ExitCombat();
         IsBusy = false;
         CurrentAction = CombatActionId.None;
-    }
-
-    private ActionGraphAsset ResolveGraph(CombatActionId action)
-    {
-        ActionGraphAsset configured = action switch
-        {
-            CombatActionId.SwordCombo => swordComboGraph,
-            CombatActionId.ShieldAttack => shieldAttackGraph,
-            CombatActionId.HeavyAttack => heavyAttackGraph,
-            CombatActionId.ShieldRush => shieldRushGraph,
-            _ => null
-        };
-
-        if (configured != null)
-            return configured;
-
-        if (runtimeGraphs.TryGetValue(action, out ActionGraphAsset runtimeGraph))
-            return runtimeGraph;
-
-        NodeConfig root = CombatActionGraphDefinition.Build(action);
-        if (root == null)
-            return null;
-
-        runtimeGraph = ScriptableObject.CreateInstance<ActionGraphAsset>();
-        runtimeGraph.name = $"Runtime {action} ActionGraph";
-        runtimeGraph.hideFlags = HideFlags.HideAndDontSave;
-        runtimeGraph.root = root;
-        runtimeGraphs[action] = runtimeGraph;
-        return runtimeGraph;
     }
 }
