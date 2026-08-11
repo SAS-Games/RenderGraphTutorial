@@ -20,22 +20,22 @@ MonoBehaviour:
     Name: Background Heavy Blur
     RenderPassEvent: 500
     MaskTextureName: _LayerHeavyBlurMask
-    MaskThreshold: 0.1
-    Opacity: 0.5
-    Downsample: 3
-    Iterations: 2
-    BlurRadius: 5
-    MaskSoftness: 0.5
+    MaskThreshold: 0.5
+    Opacity: 0.85
+    Downsample: 4
+    Iterations: 3
+    BlurRadius: 1.29
+    MaskSoftness: 0.08
   - Enabled: 1
     Name: Near Layer Light Blur
     RenderPassEvent: 500
     MaskTextureName: _LayerLightBlurMask
-    MaskThreshold: 0
-    Opacity: 0.45
+    MaskThreshold: 0.5
+    Opacity: 0.6
     Downsample: 2
-    Iterations: 3
-    BlurRadius: 3
-    MaskSoftness: 0.2
+    Iterations: 1
+    BlurRadius: 2
+    MaskSoftness: 0.05
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -109,7 +109,7 @@ MonoBehaviour:
   ProfilingName: Render To Texture
   RenderTextureOutputSettings:
   - TextureName: _LayerHeavyBlurMask
-    TextureExposure: 0
+    TextureExposure: 1
     Material: {fileID: 2100000, guid: 8268069b5f5e4a00994dcfff14cc9778, type: 2}
     MaterialPassIndex: -1
     RenderPassEvent: 300
@@ -140,7 +140,7 @@ MonoBehaviour:
     DebugColor: {r: 1, g: 1, b: 1, a: 1}
     DebugRenderPassEvent: 500
   - TextureName: _LayerLightBlurMask
-    TextureExposure: 0
+    TextureExposure: 1
     Material: {fileID: 2100000, guid: 8268069b5f5e4a00994dcfff14cc9778, type: 2}
     MaterialPassIndex: -1
     RenderPassEvent: 300
