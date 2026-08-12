@@ -6,8 +6,50 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Chapter 5/Chapter5.unity
+    guid: 6c758ae38049b2c41ad9b7391a501f8c
+  - enabled: 1
+    path: Assets/Chapter 5/ObjectsToRenderTexture Custom Tag/CustomTagCapture.unity
+    guid: df63b9d7aa8d9bc45aa664c1ae9116ea
+  - enabled: 1
+    path: Assets/Chapter 6/Chapeter 6.unity
+    guid: 232693a6e333e6240b12121fc644ddbe
+  - enabled: 1
+    path: Assets/Chapter 7/MaskOutline/MaskOutline.unity
+    guid: 312589914ba01e54e9dcb141dc2a5add
+  - enabled: 1
+    path: Assets/Chapter 8/LayerBlur/LayerBlur.unity
+    guid: 04310fa815af72a408d3f9d6fecd38a1
+  - enabled: 1
+    path: Assets/Chapter 9/MaskDistortion/MaskDistortion.unity
+    guid: e1c7a2f4d9854a529d76c3b108fa65cd
+  - enabled: 1
+    path: Assets/Chapter 10/MaskHalo/MaskHalo.unity
+    guid: 2ebf08fe6f2c1684bb1b1e4c5f1f21aa
+  - enabled: 1
+    path: Assets/Chapter 12/PortalEffect/PortalEffect.unity
+    guid: b593aeac397f4ed8816cd8ff9e376268
+  - enabled: 1
+    path: Assets/Chapter 13/StealthCloak/StealthCloak.unity
+    guid: 0f5e0b85867e42b39674452d8d978b72
+  - enabled: 1
+    path: Assets/Chapter 14/EnergyShield/EnergyShield.unity
+    guid: 44475e20afdc4a9196da197ff1551c77
+  - enabled: 1
+    path: Assets/Chapter 15/TargetScanner/TargetScanner.unity
+    guid: dfd3f21dcd6442f19ef4ea0dc57ff255
+  - enabled: 1
+    path: Assets/Chapter 16/ThermalVision/ThermalVision.unity
+    guid: d32c6ac4d2e344bd83f3780775844bf3
+  - enabled: 1
+    path: Assets/Chapter 17/TemporalTrail/TemporalTrail.unity
+    guid: ce66c3b0b3934c6d969e077acf8fd620
+  - enabled: 1
+    path: Assets/Chapter 18/SelectiveMotionBlur/SelectiveMotionBlur.unity
+    guid: 18a0000000000000000000000000000a
+  - enabled: 1
+    path: Assets/Chapter 20/DamageFreezeTimeEcho/DamageFreezeTimeEcho.unity
+    guid: 20a00000000000000000000000000007
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
