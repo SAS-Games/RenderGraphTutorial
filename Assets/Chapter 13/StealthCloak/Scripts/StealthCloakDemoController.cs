@@ -32,7 +32,12 @@ public sealed class StealthCloakDemoController : MonoBehaviour
     private void Update()
     {
         Keyboard keyboard = Keyboard.current;
-        if (cloakToggleEnabled && keyboard != null && keyboard.cKey.wasPressedThisFrame)
+        Gamepad gamepad = Gamepad.current;
+        bool togglePressed =
+            (keyboard != null && keyboard.qKey.wasPressedThisFrame) ||
+            (gamepad != null && gamepad.buttonNorth.wasPressedThisFrame);
+
+        if (cloakToggleEnabled && togglePressed)
             SetCloaked(!IsCloaked);
     }
 

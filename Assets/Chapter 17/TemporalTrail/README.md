@@ -5,7 +5,7 @@ This chapter adds a motion-compensated afterimage to selected objects without gh
 ## Behaviour
 
 - Move and attack normally to generate cyan-blue afterimages from the Player.
-- `Q` toggles whether the Player contributes new samples to the history.
+- `Q` or PlayStation `Triangle` toggles whether the Player contributes new samples to the history.
 - Turning the source off does not abruptly erase the existing trail; stored samples decay naturally.
 - Large camera jumps, resolution changes, and skipped frames invalidate history instead of smearing stale pixels across the screen.
 

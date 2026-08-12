@@ -25,7 +25,7 @@ Invisible sphere around visible character
 | Input | Action |
 | --- | --- |
 | `WASD` | Move the character relative to the camera |
-| `E` | Toggle the energy shield |
+| `Q` / PlayStation `Triangle` | Toggle the energy shield |
 
 ## Setup Contract
 

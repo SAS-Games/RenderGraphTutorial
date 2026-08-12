@@ -21,7 +21,7 @@ Target behind wall
 | Input | Action |
 | --- | --- |
 | `WASD` | Move the player relative to the camera |
-| `Q` | Toggle scanner vision |
+| `Q` / PlayStation `Triangle` | Toggle scanner vision |
 
 ## Setup Contract
 

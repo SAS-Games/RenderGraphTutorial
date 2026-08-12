@@ -42,7 +42,12 @@ public sealed class TargetScannerDemoController : MonoBehaviour
     private void Update()
     {
         Keyboard keyboard = Keyboard.current;
-        if (keyboard != null && keyboard.qKey.wasPressedThisFrame)
+        Gamepad gamepad = Gamepad.current;
+        bool togglePressed =
+            (keyboard != null && keyboard.qKey.wasPressedThisFrame) ||
+            (gamepad != null && gamepad.buttonNorth.wasPressedThisFrame);
+
+        if (togglePressed)
             SetScannerActive(!IsScannerActive);
     }
 

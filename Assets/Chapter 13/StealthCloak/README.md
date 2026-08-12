@@ -36,7 +36,7 @@ The renderer is registered as index `10` in `PC_RPAsset`, and the scene camera u
 | Input | Action |
 | --- | --- |
 | `WASD` | Move the character relative to the camera |
-| `C` | Toggle the stealth cloak |
+| `Q` / PlayStation `Triangle` | Toggle the stealth cloak |
 
 ## Starting Values
 

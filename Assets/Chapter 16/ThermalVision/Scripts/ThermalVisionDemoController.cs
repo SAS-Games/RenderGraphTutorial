@@ -67,11 +67,16 @@ public sealed class ThermalVisionDemoController : MonoBehaviour
     private void Update()
     {
         Keyboard keyboard = Keyboard.current;
+        Gamepad gamepad = Gamepad.current;
+        bool togglePressed =
+            (keyboard != null && keyboard.qKey.wasPressedThisFrame) ||
+            (gamepad != null && gamepad.buttonNorth.wasPressedThisFrame);
+
+        if (togglePressed)
+            SetThermalVisionActive(!requestedActive);
+
         if (keyboard != null)
         {
-            if (keyboard.qKey.wasPressedThisFrame)
-                SetThermalVisionActive(!requestedActive);
-
             if (keyboard.rKey.wasPressedThisFrame)
                 SetThroughWallMode(!useThroughWalls);
         }

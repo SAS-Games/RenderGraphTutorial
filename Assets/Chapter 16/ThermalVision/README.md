@@ -4,9 +4,9 @@ This chapter turns the camera into a simulated heat sensor. The environment is r
 
 ## Behaviour
 
-- `Q` toggles thermal vision with a short fade.
+- `Q` or PlayStation `Triangle` toggles thermal vision with a short fade.
 - `R` switches between physically plausible visibility and the optional game-style through-wall mode.
-- The Player and the demonstration target are configured as heat sources.
+- Only the demonstration target is configured as a heat source; the Player is preserved by the player-exclusion mask.
 - The target behind the wall is hidden in the default physical mode and revealed in through-wall mode.
 
 Real thermal cameras normally measure infrared energy arriving from a visible surface; they do not provide X-ray vision through ordinary solid walls. The through-wall option is intentionally labelled as a stylized gameplay mode.

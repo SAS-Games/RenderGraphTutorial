@@ -4,7 +4,7 @@ This example applies motion blur only to renderers selected by a Rendering Layer
 
 ## Try the demo
 
-Open `SelectiveMotionBlur.unity` and enter Play mode. Move the character and press **Q** to toggle the character's blur rendering layer.
+Open `SelectiveMotionBlur.unity` and enter Play mode. Move the character and press **Q** or PlayStation **Triangle** to toggle the character's blur rendering layer.
 
 The camera uses renderer index 21 (`SelectiveMotionBlurRenderer`). Its features must remain in this order:
 
