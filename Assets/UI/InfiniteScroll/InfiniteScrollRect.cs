@@ -183,7 +183,7 @@ namespace SAS.UI.InfiniteScroll
             base.Awake();
             ApplyScrollRectSettings();
         }
-
+#if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
@@ -191,6 +191,7 @@ namespace SAS.UI.InfiniteScroll
             m_PoolSize = Mathf.Max(3, m_PoolSize);
             ApplyScrollRectSettings();
         }
+#endif
 
         private void ApplyPosition(bool notify)
         {
