@@ -13,11 +13,12 @@ Real thermal cameras normally measure infrared energy arriving from a visible su
 
 ## Reused Pipeline
 
-1. `ThermalVisionDemoController` adds `Effect Mask Primary` to configured heat-source Renderers without changing their GameObject layers.
+1. `ThermalVisionDemoController` adds `Effect Mask Primary` to configured heat-source Renderers without changing their GameObject layers. In the included scene, only `Thermal Target` is configured; the playable `Player` keeps its original appearance.
 2. One `RenderObjectsToTextureFeature` creates two heat masks with the shared `ThermalSource` material:
    - `_ThermalVisibleMask` uses `LessEqual` depth testing.
    - `_ThermalThroughWallMask` uses `Always` depth testing.
-3. `ThermalVisionFeature` selects the appropriate mask and remaps the camera image through cool and hot palettes.
+3. The same feature creates `_ThermalPlayerMask` from Unity layer 16 (`Player`) with the shared flat `ObjectMask` material.
+4. `ThermalVisionFeature` applies the cool thermal palette to the environment and the hot palette to the selected heat mask, then restores the original camera color inside `_ThermalPlayerMask`.
 4. The existing `MaskHaloFeature` adds a soft visible-surface heat bloom; no blur implementation is duplicated.
 
 ```text

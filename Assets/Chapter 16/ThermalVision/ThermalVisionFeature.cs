@@ -42,6 +42,9 @@ public sealed class ThermalVisionFeature : ScriptableRendererFeature
         [Tooltip("Depth-independent heat mask used by the optional game-style mode.")]
         public string ThroughWallMaskTextureName = "_ThermalThroughWallMask";
 
+        [Tooltip("Depth-tested mask whose pixels keep the original camera color, used to exclude the playable character from thermal recoloring.")]
+        public string PlayerMaskTextureName = "_ThermalPlayerMask";
+
         [Tooltip("Preview strength outside Play mode. Runtime strength is controlled by ThermalVisionDemoController.")]
         [Range(0f, 1f)]
         public float EditorPreviewIntensity;
@@ -125,6 +128,7 @@ public sealed class ThermalVisionFeature : ScriptableRendererFeature
             ThermalSettings.Opacity <= 0.0001f ||
             string.IsNullOrWhiteSpace(ThermalSettings.VisibleMaskTextureName) ||
             string.IsNullOrWhiteSpace(ThermalSettings.ThroughWallMaskTextureName) ||
+            string.IsNullOrWhiteSpace(ThermalSettings.PlayerMaskTextureName) ||
             !materialCache.Ensure(CompositeMaterial))
         {
             return;

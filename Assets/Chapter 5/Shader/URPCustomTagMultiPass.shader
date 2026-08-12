@@ -37,7 +37,8 @@ Shader "Custom/URPCustomTagMultiPass"
             Tags { "LightMode" = "CustomOutlineTag" } // Your completely custom identifier
             
             Cull Front
-            ZTest Always
+            ZTest LEqual
+            ZWrite Off
             HLSLPROGRAM
             #pragma vertex OutlineVert
             #pragma fragment OutlineFrag

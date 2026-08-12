@@ -20,8 +20,8 @@ public sealed class SimpleInvertedHullOutlineFeature : ScriptableRendererFeature
     [Serializable]
     public sealed class Settings
     {
-        [Tooltip("The outline is drawn before normal opaque objects so their original materials cover the inner shell.")]
-        public RenderPassEvent RenderPassEvent = RenderPassEvent.BeforeRenderingOpaques;
+        [Tooltip("The outline is drawn after opaque objects and tested against camera depth, leaving only the visible outer shell.")]
+        public RenderPassEvent RenderPassEvent = RenderPassEvent.AfterRenderingOpaques;
 
         [Tooltip("GameObject layers that receive the outline.")]
         public LayerMask LayerMask = ~0;
@@ -126,6 +126,7 @@ public sealed class SimpleInvertedHullOutlineFeature : ScriptableRendererFeature
             builder.UseRendererList(rendererList);
             builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
             builder.SetRenderAttachment(resourceData.activeColorTexture, 0, AccessFlags.ReadWrite);
+            builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.Read);
         }
 
         private RendererListHandle CreateRendererList(RenderGraph renderGraph, ContextContainer frameData)
@@ -147,9 +148,9 @@ public sealed class SimpleInvertedHullOutlineFeature : ScriptableRendererFeature
 
         private static void ExecutePass(PassData data, RasterGraphContext context)
         {
-            context.cmd.DrawRendererList(data.RendererList);
             data.Material.SetColor(OutlineColorId, data.OutlineColor);
             data.Material.SetFloat(OutlineWidthId, data.OutlineWidth);
+            context.cmd.DrawRendererList(data.RendererList);
         }
     }
 }

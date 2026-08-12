@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
-  m_Name: CustomTagCaptureRenderer
+  m_Name: SelectiveMotionBlurRenderer
   m_EditorClassIdentifier: 
   debugShaders:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
@@ -26,7 +26,8 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
   m_RendererFeatures:
   - {fileID: 6018888855869579118}
-  m_RendererFeatureMap: 6edfa96486638753
+  - {fileID: 8180000000000000018}
+  m_RendererFeatureMap: 6edfa964866387531200b216a9328571
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -43,7 +44,7 @@ MonoBehaviour:
   m_DefaultStencilState:
     overrideStencilState: 0
     stencilReference: 1
-    stencilCompareFunction: 3
+    stencilCompareFunction: 8
     passOperation: 2
     failOperation: 0
     zFailOperation: 0
@@ -65,39 +66,67 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6dc8418175ec7794aac340c895bf30f8, type: 3}
-  m_Name: ObjectsToRenderTextureFeature
+  m_Name: RenderObjectsToTextureFeature
   m_EditorClassIdentifier: Assembly-CSharp::ObjectsToRenderTextureFeature
   m_Active: 1
-  ProfilingName: Chapter 5 Custom Tag Capture
+  ProfilingName: Selective Motion Blur Mask
   RenderTextureOutputSettings:
-  - TextureName: _Chapter5CustomOutlineMask
+  - TextureName: _SelectiveMotionBlurMask
     TextureExposure: 1
-    Material: {fileID: 2100000, guid: 1d5e0d4a6e4e4072bc0be2e8ca744c54, type: 2}
-    MaterialPassIndex: 1
+    Material: {fileID: 2100000, guid: 8268069b5f5e4a00994dcfff14cc9778, type: 2}
+    MaterialPassIndex: -1
     RenderPassEvent: 300
-    RenderPassInput: 0
+    RenderPassInput: 1
     RenderQueueLowerBound: 0
-    RenderQueueUpperBound: 2499
+    RenderQueueUpperBound: 5000
     ColorFormat: 16
     TextureSizeMode: 0
     CameraSizeMultiplier: 1
     TextureSize: {x: 1024, y: 1024}
-    FilterMode: 0
+    FilterMode: 1
     WrapMode: 1
-    SortingCriteria: 59
+    SortingCriteria: 23
     LayerMask:
       serializedVersion: 2
-      m_Bits: 65536
+      m_Bits: 4294967295
     RenderLayerMask:
       serializedVersion: 0
-      m_Bits: 1
+      m_Bits: 2
     LightMode: 15
     GlobalShaderKeywords: []
     ShaderTags: []
     Depth: 1
     WriteDepth: 0
     DepthCompare: 4
-    DebugView: 1
+    DebugView: 0
     DebugDisplayMode: 1
-    DebugColor: {r: 0.1, g: 1, b: 0.3, a: 0.9}
+    DebugColor: {r: 1, g: 0.45, b: 0.05, a: 0.8}
     DebugRenderPassEvent: 500
+--- !u!114 &8180000000000000018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18a00000000000000000000000000003, type: 3}
+  m_Name: SelectiveMotionBlurFeature
+  m_EditorClassIdentifier: Assembly-CSharp::SelectiveMotionBlurFeature
+  m_Active: 1
+  ProfilingName: Selective Motion Blur
+  MotionBlurMaterial: {fileID: 2100000, guid: 18a00000000000000000000000000006, type: 2}
+  MotionBlurSettings:
+    Enabled: 1
+    RenderPassEvent: 500
+    MaskTextureName: _SelectiveMotionBlurMask
+    ApplyToSceneView: 0
+    TileSize: 8
+    ShutterDuration: 0.033333335
+    MotionVectorScale: 2
+    MaxBlurPixels: 48
+    MaskThreshold: 0.45
+    MaskSoftness: 0.05
+    SampleCount: 16
+    Intensity: 1

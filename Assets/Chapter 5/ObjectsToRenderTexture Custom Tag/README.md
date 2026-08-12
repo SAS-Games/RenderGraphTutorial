@@ -1,52 +1,48 @@
-# Chapter 5 Subchapter - Capturing a Custom Shader Tag
+# Chapter 5 Subchapter - Capturing the Player Outline
 
-This subchapter reuses Chapter 5's existing
-`Custom/URPCustomTagMultiPass` shader with `ObjectsToRenderTextureFeature`.
-The original Chapter 5 scene, renderer, and `CustomTagRendererFeature` are not
-modified.
+Chapter 5 now demonstrates the same player-only outline through two render paths:
 
-Open `CustomTagCapture.unity` and enter Play mode. The green ring is the captured
-outline geometry drawn by the feature's debug overlay.
+1. `Chapter5.unity` draws a yellow outline directly into the camera color target
+   with `CustomTagRendererFeature`.
+2. `CustomTagCapture.unity` draws it into `_Chapter5CustomOutlineMask` with
+   `ObjectsToRenderTextureFeature`, then shows that texture with the green debug
+   overlay.
 
-## The connection
+Both renderer assets filter Unity layer 16 (`Player`), so the environment is not
+included. Both use pass 1 (`CustomOutlinePass`) from
+`Custom/URPCustomTagMultiPass` as an override material pass. The player's normal
+URP materials remain assigned and render its regular appearance.
 
-Chapter 5's second shader pass declares:
+## Why the player uses an override material
 
-```shaderlab
-Tags { "LightMode" = "CustomOutlineTag" }
-```
+The original Chapter 5 capsule used the multipass material directly, so the
+feature could select its `CustomOutlineTag` pass from the object's own material.
+The player is assembled from several renderers with regular URP materials; those
+materials do not declare `CustomOutlineTag`. Selecting only that tag would
+therefore draw nothing.
 
-The renderer asset configures:
+For the player examples, the renderer list selects the standard URP forward
+passes to find all player renderers, and then replaces the selected pass with the
+outline material's custom pass. This keeps the custom outline shader while
+preserving all original player materials.
+
+## Render-to-texture settings
 
 ```text
-Light Mode:  None
-Shader Tags: CustomOutlineTag
-Material:    None
-Texture:     _Chapter5CustomOutlineMask
-Exposure:    Frame Registry Only
+Layer Mask:    Player
+Light Mode:    Standard
+Material:      CustomTagCapture
+Material Pass: 1
+Texture:       _Chapter5CustomOutlineMask
+Exposure:      Frame Registry Only
 ```
 
-`ObjectsToRenderTextureFeature` converts `CustomOutlineTag` into a `ShaderTagId`
-and asks URP to draw only matching passes. The regular `UniversalForward` pass
-still renders the capsule normally, while the expanded, front-face-culled outline
-pass is drawn into the R8 mask texture.
+The capture material outputs white into the R8 mask. The capture runs after
+opaque rendering and reads camera depth without writing to it. Player pixels in
+the center reject the expanded back faces, while the visible outer shell becomes
+the outline mask. The debug overlay then displays that mask in green after
+transparent rendering.
 
-No override material is used. The object's assigned material and its custom pass
-provide the capture output. This subchapter uses a white `_OutlineColor` so the
-R8 mask contains visible coverage.
-
-The capture and debug preview run after prepasses but before opaque rendering.
-The captured expanded geometry is a filled silhouette; the later normal capsule
-draw covers its center on the camera, leaving the preview visible as a ring. A
-later texture consumer still receives the filled silhouette mask.
-
-## Comparison with the original Chapter 5 feature
-
-The original `CustomTagRendererFeature` draws `CustomOutlineTag` directly into
-the camera color target. This version draws the same tagged pass into a named
-texture first. That is useful when the result must be processed, shared by
-several later effects, sampled by a shader, or inspected independently.
-
-Use the original direct renderer when the pass only needs to draw its final
-pixels once. Use `ObjectsToRenderTextureFeature` when the tagged pass is producing
-intermediate data for a wider effect pipeline.
+Use the direct Chapter 5 renderer when the outline only needs to reach the final
+camera once. Use the render-to-texture version when later effects need to sample,
+process, share, or independently inspect the player mask.

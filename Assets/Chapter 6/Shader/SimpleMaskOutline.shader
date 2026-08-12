@@ -14,7 +14,7 @@ Shader "Hidden/Chapter6/SimpleOutline"
         {
             Name "Outline"
             Cull Front
-            ZTest Always
+            ZTest LEqual
             ZWrite Off
             Blend Off
 

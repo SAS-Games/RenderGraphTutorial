@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
   m_Name: ThermalVisionRenderer
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   debugShaders:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
@@ -46,6 +46,7 @@ MonoBehaviour:
   m_DefaultStencilState:
     overrideStencilState: 0
     stencilReference: 1
+    stencilCompareFunction: 8
     passOperation: 2
     failOperation: 0
     zFailOperation: 0
@@ -57,7 +58,7 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
---- !u!114 &7833122117494664109
+--- !u!114 &4967556268841796359
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -66,23 +67,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
-  m_Name: ScreenSpaceAmbientOcclusion
-  m_EditorClassIdentifier:
+  m_Script: {fileID: 11500000, guid: 0ef664606d5d49148185eb828c38354e, type: 3}
+  m_Name: MaskHaloFeature
+  m_EditorClassIdentifier: Assembly-CSharp::MaskHaloFeature
   m_Active: 1
-  m_Settings:
-    AOMethod: 0
-    Downsample: 0
-    AfterOpaque: 0
-    Source: 1
-    NormalSamples: 1
-    Intensity: 0.4
-    DirectLightingStrength: 0.25
-    Radius: 0.3
-    Samples: 1
-    BlurQuality: 0
-    Falloff: 100
-    SampleCount: -1
+  ProfilingName: Thermal Heat Bloom
+  HaloMaterial: {fileID: 2100000, guid: 41089d5580cf4e77b7ff13ea32882742, type: 2}
+  HaloSettings:
+    Enabled: 1
+    Name: Visible Heat Bloom
+    RenderPassEvent: 500
+    MaskTextureName: _ThermalVisibleMask
+    MaskThreshold: 0.35
+    Opacity: 0.75
+    Downsample: 2
+    BlurIterations: 3
+    BlurRadius: 1.5
+    MaskSoftness: 0.08
+    OuterGlowColor: {r: 1, g: 0.12, b: 0, a: 1}
+    OuterGlowIntensity: 0.3
+    OuterGlowFalloff: 0.85
+    InnerGlowColor: {r: 1.6, g: 0.55, b: 0.02, a: 1}
+    InnerGlowIntensity: 0.45
+    InnerGlowTightness: 2.8
+    RimColor: {r: 2, g: 1.6, b: 0.5, a: 1}
+    RimWidth: 1.25
+    RimIntensity: 0.5
 --- !u!114 &6018888855869579118
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,6 +170,63 @@ MonoBehaviour:
     DebugDisplayMode: 1
     DebugColor: {r: 1, g: 0.2, b: 0, a: 0.75}
     DebugRenderPassEvent: 500
+  - TextureName: _ThermalPlayerMask
+    TextureExposure: 0
+    Material: {fileID: 2100000, guid: 8268069b5f5e4a00994dcfff14cc9778, type: 2}
+    MaterialPassIndex: 0
+    RenderPassEvent: 300
+    RenderPassInput: 1
+    RenderQueueLowerBound: 0
+    RenderQueueUpperBound: 5000
+    ColorFormat: 16
+    TextureSizeMode: 0
+    CameraSizeMultiplier: 1
+    TextureSize: {x: 1024, y: 1024}
+    FilterMode: 1
+    WrapMode: 1
+    SortingCriteria: 23
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 65536
+    RenderLayerMask:
+      serializedVersion: 0
+      m_Bits: 1
+    LightMode: 15
+    GlobalShaderKeywords: []
+    ShaderTags: []
+    Depth: 1
+    WriteDepth: 0
+    DepthCompare: 4
+    DebugView: 0
+    DebugDisplayMode: 1
+    DebugColor: {r: 0, g: 0.6, b: 1, a: 0.75}
+    DebugRenderPassEvent: 500
+--- !u!114 &7833122117494664109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
+  m_Name: ScreenSpaceAmbientOcclusion
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  m_Settings:
+    AOMethod: 0
+    Downsample: 0
+    AfterOpaque: 0
+    Source: 1
+    NormalSamples: 1
+    Intensity: 0.4
+    DirectLightingStrength: 0.25
+    Radius: 0.3
+    Samples: 1
+    BlurQuality: 0
+    Falloff: 100
+    SampleCount: -1
 --- !u!114 &8160000000000000016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,6 +247,7 @@ MonoBehaviour:
     RenderPassEvent: 500
     VisibleMaskTextureName: _ThermalVisibleMask
     ThroughWallMaskTextureName: _ThermalThroughWallMask
+    PlayerMaskTextureName: _ThermalPlayerMask
     EditorPreviewIntensity: 0
     PreviewThroughWalls: 0
     Opacity: 1
@@ -198,38 +266,3 @@ MonoBehaviour:
     NoiseStrength: 0.025
     ScanlineStrength: 0.035
     ScanlineFrequency: 220
---- !u!114 &4967556268841796359
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ef664606d5d49148185eb828c38354e, type: 3}
-  m_Name: MaskHaloFeature
-  m_EditorClassIdentifier: Assembly-CSharp::MaskHaloFeature
-  m_Active: 1
-  ProfilingName: Thermal Heat Bloom
-  HaloMaterial: {fileID: 2100000, guid: 41089d5580cf4e77b7ff13ea32882742, type: 2}
-  HaloSettings:
-    Enabled: 1
-    Name: Visible Heat Bloom
-    RenderPassEvent: 500
-    MaskTextureName: _ThermalVisibleMask
-    MaskThreshold: 0.35
-    Opacity: 0.75
-    Downsample: 2
-    BlurIterations: 3
-    BlurRadius: 1.5
-    MaskSoftness: 0.08
-    OuterGlowColor: {r: 1, g: 0.12, b: 0, a: 1}
-    OuterGlowIntensity: 0.3
-    OuterGlowFalloff: 0.85
-    InnerGlowColor: {r: 1.6, g: 0.55, b: 0.02, a: 1}
-    InnerGlowIntensity: 0.45
-    InnerGlowTightness: 2.8
-    RimColor: {r: 2, g: 1.6, b: 0.5, a: 1}
-    RimWidth: 1.25
-    RimIntensity: 0.5

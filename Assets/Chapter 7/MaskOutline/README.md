@@ -2,6 +2,10 @@
 
 This folder contains a self-contained mask-based outline effect for URP Render Graph.
 
+The included demo renderer is configured for Unity layer 16 (`Player`). It
+captures only the visible player silhouette, using camera depth without writing
+to it, and composites the yellow outline after transparent rendering.
+
 The effect has two parts:
 
 1. `ObjectsToRenderTextureFeature` renders any chosen object group into a mask texture.

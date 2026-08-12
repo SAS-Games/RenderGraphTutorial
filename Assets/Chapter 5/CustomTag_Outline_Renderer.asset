@@ -68,4 +68,9 @@ MonoBehaviour:
   m_Name: CustomTagRendererFeature
   m_EditorClassIdentifier: Assembly-CSharp::CustomTagRendererFeature
   m_Active: 1
-  m_RenderPassEvent: 250
+  m_RenderPassEvent: 300
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 65536
+  m_OverrideMaterial: {fileID: 2100000, guid: c6bfe578f68af584f816a97413a5a7e1, type: 2}
+  m_OverrideMaterialPassIndex: 1

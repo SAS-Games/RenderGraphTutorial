@@ -7,6 +7,7 @@ internal sealed class ThermalVisionPass : ScriptableRenderPass
 {
     private static readonly int SourceTextureId = Shader.PropertyToID("_ThermalSourceTexture");
     private static readonly int ThroughWallMaskId = Shader.PropertyToID("_ThermalThroughWallMask");
+    private static readonly int PlayerMaskId = Shader.PropertyToID("_ThermalPlayerMask");
     private static readonly int SourceTexelSizeId = Shader.PropertyToID("_SourceTexelSize");
     private static readonly int CoolShadowId = Shader.PropertyToID("_CoolShadow");
     private static readonly int CoolMidId = Shader.PropertyToID("_CoolMid");
@@ -36,12 +37,14 @@ internal sealed class ThermalVisionPass : ScriptableRenderPass
     private bool throughWalls;
     private readonly MaskedTextureResolver visibleMaskResolver = new(nameof(ThermalVisionFeature));
     private readonly MaskedTextureResolver throughWallMaskResolver = new(nameof(ThermalVisionFeature));
+    private readonly MaskedTextureResolver playerMaskResolver = new(nameof(ThermalVisionFeature));
 
     private sealed class PassData
     {
         public TextureHandle SourceTexture;
         public TextureHandle VisibleMask;
         public TextureHandle ThroughWallMask;
+        public TextureHandle PlayerMask;
         public Material Material;
         public Vector4 SourceTexelSize;
         public Color CoolShadow;
@@ -80,6 +83,7 @@ internal sealed class ThermalVisionPass : ScriptableRenderPass
         throughWalls = useThroughWalls;
         visibleMaskResolver.SetTextureName(settings.VisibleMaskTextureName);
         throughWallMaskResolver.SetTextureName(settings.ThroughWallMaskTextureName);
+        playerMaskResolver.SetTextureName(settings.PlayerMaskTextureName);
 
         renderPassEvent = settings.RenderPassEvent;
         profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(
@@ -94,7 +98,8 @@ internal sealed class ThermalVisionPass : ScriptableRenderPass
             return;
 
         if (!visibleMaskResolver.TryResolve(frameData, out TextureHandle visibleMask, out _) ||
-            !throughWallMaskResolver.TryResolve(frameData, out TextureHandle throughWallMask, out _))
+            !throughWallMaskResolver.TryResolve(frameData, out TextureHandle throughWallMask, out _) ||
+            !playerMaskResolver.TryResolve(frameData, out TextureHandle playerMask, out _))
         {
             return;
         }
@@ -110,6 +115,7 @@ internal sealed class ThermalVisionPass : ScriptableRenderPass
         passData.SourceTexture = sourceTexture;
         passData.VisibleMask = visibleMask;
         passData.ThroughWallMask = throughWallMask;
+        passData.PlayerMask = playerMask;
         passData.Material = material;
         passData.SourceTexelSize = sourceTexelSize;
         passData.CoolShadow = settings.CoolShadow;
@@ -135,6 +141,7 @@ internal sealed class ThermalVisionPass : ScriptableRenderPass
         builder.UseTexture(sourceTexture, AccessFlags.Read);
         builder.UseTexture(visibleMask, AccessFlags.Read);
         builder.UseTexture(throughWallMask, AccessFlags.Read);
+        builder.UseTexture(playerMask, AccessFlags.Read);
         builder.SetRenderAttachment(resourceData.activeColorTexture, 0, AccessFlags.ReadWrite);
         builder.SetRenderFunc((PassData data, RasterGraphContext context) => ExecutePass(data, context));
     }
@@ -160,6 +167,7 @@ internal sealed class ThermalVisionPass : ScriptableRenderPass
     {
         data.Material.SetTexture(SourceTextureId, data.SourceTexture);
         data.Material.SetTexture(ThroughWallMaskId, data.ThroughWallMask);
+        data.Material.SetTexture(PlayerMaskId, data.PlayerMask);
         data.Material.SetVector(SourceTexelSizeId, data.SourceTexelSize);
         data.Material.SetColor(CoolShadowId, data.CoolShadow);
         data.Material.SetColor(CoolMidId, data.CoolMid);

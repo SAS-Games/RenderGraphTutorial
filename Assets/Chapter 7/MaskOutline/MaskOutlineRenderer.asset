@@ -19,8 +19,8 @@ MonoBehaviour:
     RenderPassEvent: 500
     MaskTextureName: _SelectionOutlineMask
     OutlineColor: {r: 1, g: 0.82, b: 0, a: 1}
-    OutlineWidth: 5.1
-    OutlineIntensity: 1.17
+    OutlineWidth: 2
+    OutlineIntensity: 1
     MaskThreshold: 0.404
     Mode: 0
 --- !u!114 &11400000
@@ -97,7 +97,7 @@ MonoBehaviour:
   - TextureName: _SelectionOutlineMask
     TextureExposure: 1
     Material: {fileID: 2100000, guid: 8268069b5f5e4a00994dcfff14cc9778, type: 2}
-    MaterialPassIndex: -1
+    MaterialPassIndex: 0
     RenderPassEvent: 300
     RenderPassInput: 0
     RenderQueueLowerBound: 0
@@ -111,7 +111,7 @@ MonoBehaviour:
     SortingCriteria: 59
     LayerMask:
       serializedVersion: 2
-      m_Bits: 4294967295
+      m_Bits: 65536
     RenderLayerMask:
       serializedVersion: 0
       m_Bits: 1
@@ -120,7 +120,7 @@ MonoBehaviour:
     ShaderTags: []
     Depth: 0
     WriteDepth: 0
-    DepthCompare: 4
+    DepthCompare: 0
     DebugView: 0
     DebugDisplayMode: 1
     DebugColor: {r: 1, g: 1, b: 1, a: 1}

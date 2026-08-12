@@ -32,6 +32,7 @@ Shader "Hidden/Chapter16/ThermalVision/Composite"
 
             TEXTURE2D_X(_ThermalSourceTexture);
             TEXTURE2D_X(_ThermalThroughWallMask);
+            TEXTURE2D_X(_ThermalPlayerMask);
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _SourceTexelSize;
@@ -119,7 +120,11 @@ Shader "Hidden/Chapter16/ThermalVision/Composite"
                 half scanline = sin((uv.y * _ScanlineFrequency + _TimeOffset * 4.0h) * 6.2831853h) * _ScanlineStrength;
                 thermalColor *= 1.0h + noise - abs(scanline);
 
-                half blend = saturate(_Opacity * _Activation);
+                // The environment keeps the cool thermal palette, while the
+                // player-exclusion mask restores the playable character only.
+                half playerMask = SAMPLE_TEXTURE2D_X(_ThermalPlayerMask, sampler_LinearClamp, uv).r;
+                half playerCoverage = smoothstep(0.05h, 0.1h, playerMask);
+                half blend = saturate(_Opacity * _Activation * (1.0h - playerCoverage));
                 return half4(lerp(source.rgb, thermalColor, blend), source.a);
             }
             ENDHLSL
