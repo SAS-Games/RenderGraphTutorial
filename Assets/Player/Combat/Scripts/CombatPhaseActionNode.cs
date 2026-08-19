@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
+using UnityEngine;
 
 [Serializable]
 public class CombatPhaseActionData
@@ -21,8 +21,9 @@ public class CombatPhaseActionNode : ActionNode<CombatPhaseActionData>
     {
     }
 
-    public override Task ExecuteAsync(ActionContext context, CancellationToken token)
+    public override async Awaitable ExecuteAsync(ActionContext context, CancellationToken token)
     {
+        await Awaitable.MainThreadAsync();
         token.ThrowIfCancellationRequested();
 
         CombatPhaseActionData data = _selector.GetNext();
@@ -31,7 +32,5 @@ public class CombatPhaseActionNode : ActionNode<CombatPhaseActionData>
             : null;
         if (data != null && combatState != null)
             combatState.SetPhase(data.phase);
-
-        return Task.CompletedTask;
     }
 }

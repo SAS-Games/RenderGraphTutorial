@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
 
 [Serializable]
@@ -24,8 +23,9 @@ public class CombatBeginAttackActionNode : ActionNode<CombatBeginAttackData>
     {
     }
 
-    public override Task ExecuteAsync(ActionContext context, CancellationToken token)
+    public override async Awaitable ExecuteAsync(ActionContext context, CancellationToken token)
     {
+        await Awaitable.MainThreadAsync();
         token.ThrowIfCancellationRequested();
 
         var blackboard = ActionGraphBlackboardUtility.RequireBlackboard(context);
@@ -34,14 +34,14 @@ public class CombatBeginAttackActionNode : ActionNode<CombatBeginAttackData>
 
         CombatBeginAttackData data = _selector.GetNext();
         if (data == null || string.IsNullOrEmpty(data.triggerName) || context.Owner == null)
-            return Task.CompletedTask;
+            return;
 
         Animator animator = context.Owner.GetComponentInParent<Animator>();
         if (animator == null)
             animator = context.Owner.GetComponentInChildren<Animator>();
 
         if (animator == null)
-            return Task.CompletedTask;
+            return;
 
         if (data.resetBeforeSet != null)
         {
@@ -53,6 +53,5 @@ public class CombatBeginAttackActionNode : ActionNode<CombatBeginAttackData>
         }
 
         animator.SetTrigger(data.triggerName);
-        return Task.CompletedTask;
     }
 }

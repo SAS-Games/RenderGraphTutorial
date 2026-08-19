@@ -46,7 +46,7 @@ public class CombatMovementActionNode : ActionNode<CombatMovementActionData>
     {
     }
 
-    public override async Task ExecuteAsync(ActionContext context, CancellationToken token)
+    public override async Awaitable ExecuteAsync(ActionContext context, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
 

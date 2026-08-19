@@ -20,7 +20,7 @@ MonoBehaviour:
     - rid: 254681187355459686
       type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
+        editorPosition: {x: 80, y: 120}
         editorSize: {x: 0, y: 0}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
@@ -35,8 +35,8 @@ MonoBehaviour:
     - rid: 254681187355459687
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 384, y: 120}
+        editorSize: {x: 220, y: 215.33333}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -44,8 +44,8 @@ MonoBehaviour:
     - rid: 254681187355459688
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 620, y: 120}
+        editorSize: {x: 220, y: 215.33333}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -53,8 +53,8 @@ MonoBehaviour:
     - rid: 254681187355459689
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 860, y: 120}
+        editorSize: {x: 220, y: 215.33333}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -62,8 +62,8 @@ MonoBehaviour:
     - rid: 254681187355459691
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 1946, y: 120}
+        editorSize: {x: 220, y: 215.33333}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -94,8 +94,8 @@ MonoBehaviour:
     - rid: 254681187355459698
       type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 1359.3334, y: 120}
+        editorSize: {x: 248.66663, y: 170.00002}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         type: 1
@@ -127,8 +127,8 @@ MonoBehaviour:
     - rid: 254681187355459704
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 1665.3334, y: 120}
+        editorSize: {x: 220, y: 215.33333}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -136,8 +136,8 @@ MonoBehaviour:
     - rid: 254681187355459705
       type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 1665.3334, y: 367.3333}
+        editorSize: {x: 248.66663, y: 170.00003}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         type: 0
@@ -156,8 +156,8 @@ MonoBehaviour:
     - rid: 254681187355459707
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 1946, y: 367.3333}
+        editorSize: {x: 220, y: 215.33334}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -165,8 +165,8 @@ MonoBehaviour:
     - rid: 254681187355459708
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 2207.3333, y: 367.3333}
+        editorSize: {x: 220, y: 215.33334}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -206,8 +206,8 @@ MonoBehaviour:
     - rid: 254681238886940756
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorPosition: {x: 0, y: 0}
-        editorSize: {x: 0, y: 0}
+        editorPosition: {x: 1106.6666, y: 120}
+        editorSize: {x: 220, y: 215.33333}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
