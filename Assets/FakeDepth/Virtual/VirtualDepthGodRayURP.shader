@@ -4,7 +4,6 @@ Shader "Custom/VirtualDepthGodRayURP"
     {
         [PerRendererData]
         _MainTex ("Sprite Texture", 2D) = "white" {}
-
         _EffectColor ("Light Color", Color) = (1,1,1,1)
         _Intensity ("Intensity", Range(0,5)) = 1.0
         _LightDirection ("Light Direction", Vector) = (0,0,0,0)
