@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using SAS.RenderDebugging;
 
 public sealed class MaskOutlineFeature : ScriptableRendererFeature
 {
@@ -19,6 +20,9 @@ public sealed class MaskOutlineFeature : ScriptableRendererFeature
     private MaskOutlinePass _pass;
     private readonly MaskedEffectMaterialCache _materialCache = new(nameof(MaskOutlineFeature), CompositeShaderName);
     private readonly MaskedEffectItemPool<MaskOutlineMaterialSet> _materialSets = new(source => new MaskOutlineMaterialSet(source));
+    private readonly RenderDebugSourceMarker _renderDebug = new(
+        "mask-outline",
+        "Mask Outline");
 
     public enum OutlineMode
     {
@@ -43,6 +47,10 @@ public sealed class MaskOutlineFeature : ScriptableRendererFeature
         [Range(1.0f, 16.0f)]
         public float OutlineWidth = 3.0f;
 
+        [Tooltip("Additional feather distance beyond the solid outline, in mask pixels.")]
+        [Range(0.0f, 8.0f)]
+        public float OutlineSoftness = 2.0f;
+
         [Tooltip("Brightness and alpha strength of the outline.")]
         [Range(0.0f, 5.0f)]
         public float OutlineIntensity = 1.0f;
@@ -50,6 +58,10 @@ public sealed class MaskOutlineFeature : ScriptableRendererFeature
         [Tooltip("Mask value where a pixel is considered part of the object.")]
         [Range(0.0f, 1.0f)]
         public float MaskThreshold = 0.5f;
+
+        [Tooltip("Smooth transition range around the mask threshold. Higher values soften anti-aliased mask edges.")]
+        [Range(0.001f, 0.25f)]
+        public float EdgeSoftness = 0.03f;
 
         [Tooltip("Outside draws around the silhouette, Inside draws within it, and Both draws across the edge.")]
         public OutlineMode Mode = OutlineMode.Outside;
@@ -69,6 +81,7 @@ public sealed class MaskOutlineFeature : ScriptableRendererFeature
 
         _materialSets.EnsureCount(1, _materialCache.Material, _materialCache.Version);
         _pass.Setup(ProfilingName, OutlineSettings, _materialSets[0]);
+        _pass.SetupRenderDebug(_renderDebug);
         renderer.EnqueuePass(_pass);
     }
 
@@ -76,5 +89,6 @@ public sealed class MaskOutlineFeature : ScriptableRendererFeature
     {
         _materialSets.Dispose();
         _materialCache.Dispose();
+        _renderDebug.Dispose();
     }
 }

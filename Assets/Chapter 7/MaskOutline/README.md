@@ -26,13 +26,13 @@ This is intentionally generic. It can outline hovered objects, enemies, interact
 
 ```text
 Mask
-  -> horizontal expansion and erosion
-  -> vertical expansion and erosion
+  -> horizontal solid expansion, weighted feather expansion, and erosion
+  -> vertical solid expansion, weighted feather expansion, and erosion
   -> outside, inside, or both edge selection
   -> alpha composite over camera color
 ```
 
-Expansion is stored in the red channel and erosion in the green channel of two temporary `RG8` textures. This allows every outline mode to share the same filtering work.
+Solid expansion is stored in red, weighted feather expansion in green, and erosion in blue in two temporary `RGBA8` textures. This allows every outline mode and the softened outside edge to share the same filtering work.
 
 ## Full Setup
 
@@ -113,8 +113,10 @@ Use these values:
 - `Mask Texture Name`: `_MaskOutlineMask`
 - `Outline Color`: any color you want
 - `Outline Width`: start with `3`
+- `Outline Softness`: start with `2`
 - `Outline Intensity`: start with `1`
 - `Mask Threshold`: start with `0.5`
+- `Edge Softness`: start with `0.03`
 - `Mode`: `Outside`
 
 The `Mask Texture Name` must exactly match the mask output texture name from `ObjectsToRenderTextureFeature`.
@@ -141,9 +143,11 @@ Common runtime options:
 ## Tuning
 
 - `Outline Width`: larger values create a thicker outline. Cost now grows linearly with width.
+- `Outline Softness`: adds a weighted falloff outside the solid outline. Cost grows with width plus softness.
 - `Outline Intensity`: increases brightness and alpha strength.
 - `Outline Color`: final composited outline color.
-- `Mask Threshold`: increase if the mask has soft or noisy edges.
+- `Mask Threshold`: moves the center of the mask-to-silhouette transition.
+- `Edge Softness`: widens the smooth transition around `Mask Threshold`, preserving anti-aliased mask edges.
 - `Mode`: chooses an outside outline, inside outline, or both sides of the silhouette.
 - `Camera Size Multiplier`: lower values on the mask output can make the outline cheaper but less precise.
 
@@ -154,11 +158,11 @@ The previous shader searched a circular two-dimensional neighborhood in one pass
 The optimized implementation uses a horizontal filter followed by a vertical filter:
 
 ```text
-Approximate samples per pixel = 2 * (2 * Outline Width + 1)
+Approximate samples per pixel = 2 * (2 * (Outline Width + Outline Softness) + 1)
 Total passes = 2 morphology passes + 1 composite
 ```
 
-At width `7`, the old circular search used roughly 154 samples per pixel. The separable filter uses about 30. At width `16`, the reduction is approximately 804 samples to 66.
+The shader bounds both separable loops to a maximum total radius of 24 pixels. Increasing softness therefore remains linear in sampled radius rather than returning to a two-dimensional search.
 
 The tradeoff is kernel shape. A separable max/min filter produces a slightly squarer expansion around sharp corners than a circular search. On normal character and object silhouettes this is usually subtle; use moderate widths when a perfectly round corner is important.
 

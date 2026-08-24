@@ -4,6 +4,7 @@ using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Rendering.Universal;
+using SAS.RenderDebugging;
 
 internal sealed class MaskOutlineMaterialSet : IDisposable
 {
@@ -40,7 +41,9 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
     private static readonly int MorphologyTextureId = Shader.PropertyToID("_MorphologyTexture");
     private static readonly int MaskTexelSizeId = Shader.PropertyToID("_MaskTexelSize");
     private static readonly int OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
+    private static readonly int OutlineSoftnessId = Shader.PropertyToID("_OutlineSoftness");
     private static readonly int MaskThresholdId = Shader.PropertyToID("_MaskThreshold");
+    private static readonly int EdgeSoftnessId = Shader.PropertyToID("_EdgeSoftness");
     private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
     private static readonly int OutlineIntensityId = Shader.PropertyToID("_OutlineIntensity");
     private static readonly int OutlineModeId = Shader.PropertyToID("_OutlineMode");
@@ -49,6 +52,12 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
     private MaskOutlineFeature.Settings _settings;
     private MaskOutlineMaterialSet _materials;
     private readonly MaskedTextureResolver _maskResolver = new(nameof(MaskOutlineFeature));
+    private const string RawMaskDebugStage = "Raw Character Mask";
+    private const string HorizontalDebugStage = "Horizontal Morphology";
+    private const string VerticalDebugStage = "Vertical Morphology";
+    private const string FinalResultDebugStage = "Final Result";
+
+    private RenderDebugSourceMarker _debugMarker;
 
     private sealed class MorphologyPassData
     {
@@ -56,7 +65,9 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         public Material Material;
         public Vector4 MaskTexelSize;
         public float OutlineWidth;
+        public float OutlineSoftness;
         public float MaskThreshold;
+        public float EdgeSoftness;
         public int MaterialPass;
     }
 
@@ -80,6 +91,12 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         profilingSampler = MaskedEffectRenderGraphUtility.GetOrCreateProfilingSampler(profilingName, ref _profilingName, profilingSampler);
     }
 
+    [System.Diagnostics.Conditional("RENDER_DEBUG")]
+    public void SetupRenderDebug(RenderDebugSourceMarker marker)
+    {
+        _debugMarker = marker;
+    }
+
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
     {
         if (_settings == null || _materials == null || !_materials.IsValid)
@@ -97,7 +114,20 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         AddMorphologyPass(renderGraph, $"{_profilingName} Vertical", horizontal, morphology, _materials.Vertical.Material, maskTexelSize, VerticalMorphologyPass);
 
         UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+        PublishRenderDebugIntermediates(
+            renderGraph,
+            cameraData.camera,
+            maskTexture,
+            horizontal,
+            morphology,
+            descriptor);
         AddCompositePass(renderGraph, resourceData.activeColorTexture, maskTexture, morphology);
+        _debugMarker?.Publish(
+            renderGraph,
+            FinalResultDebugStage,
+            resourceData.activeColorTexture,
+            cameraData.cameraTargetDescriptor,
+            cameraData.camera);
     }
 
     private void AddMorphologyPass(RenderGraph renderGraph, string passName, TextureHandle source, TextureHandle destination, Material material, Vector4 maskTexelSize, int materialPass)
@@ -108,7 +138,9 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         passData.Material = material;
         passData.MaskTexelSize = maskTexelSize;
         passData.OutlineWidth = Mathf.Clamp(_settings.OutlineWidth, 1.0f, 16.0f);
+        passData.OutlineSoftness = Mathf.Clamp(_settings.OutlineSoftness, 0.0f, 8.0f);
         passData.MaskThreshold = Mathf.Clamp01(_settings.MaskThreshold);
+        passData.EdgeSoftness = Mathf.Clamp(_settings.EdgeSoftness, 0.001f, 0.25f);
         passData.MaterialPass = materialPass;
 
         builder.UseTexture(source, AccessFlags.Read);
@@ -143,7 +175,8 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
     {
         descriptor.width = Mathf.Max(1, Mathf.RoundToInt(maskTexelSize.z));
         descriptor.height = Mathf.Max(1, Mathf.RoundToInt(maskTexelSize.w));
-        descriptor.graphicsFormat = GraphicsFormat.R8G8_UNorm;
+        // R = solid expansion, G = weighted feather expansion, B = erosion.
+        descriptor.graphicsFormat = GraphicsFormat.R8G8B8A8_UNorm;
         descriptor.depthBufferBits = 0;
         descriptor.msaaSamples = 1;
         descriptor.useDynamicScale = false;
@@ -155,7 +188,9 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
     {
         data.Material.SetVector(MaskTexelSizeId, data.MaskTexelSize);
         data.Material.SetFloat(OutlineWidthId, data.OutlineWidth);
+        data.Material.SetFloat(OutlineSoftnessId, data.OutlineSoftness);
         data.Material.SetFloat(MaskThresholdId, data.MaskThreshold);
+        data.Material.SetFloat(EdgeSoftnessId, data.EdgeSoftness);
 
         Blitter.BlitTexture(context.cmd, data.Source, new Vector4(1, 1, 0, 0), data.Material, data.MaterialPass);
     }
@@ -169,5 +204,37 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         data.Material.SetFloat(OutlineModeId, data.OutlineMode);
 
         Blitter.BlitTexture(context.cmd, data.MaskTexture, new Vector4(1, 1, 0, 0), data.Material, CompositePass);
+    }
+
+    [System.Diagnostics.Conditional("RENDER_DEBUG")]
+    private void PublishRenderDebugIntermediates(
+        RenderGraph renderGraph,
+        Camera camera,
+        TextureHandle maskTexture,
+        TextureHandle horizontal,
+        TextureHandle morphology,
+        in RenderTextureDescriptor descriptor)
+    {
+        if (_debugMarker == null)
+            return;
+
+        _debugMarker.Publish(
+            renderGraph,
+            RawMaskDebugStage,
+            maskTexture,
+            descriptor,
+            camera);
+        _debugMarker.Publish(
+            renderGraph,
+            HorizontalDebugStage,
+            horizontal,
+            descriptor,
+            camera);
+        _debugMarker.Publish(
+            renderGraph,
+            VerticalDebugStage,
+            morphology,
+            descriptor,
+            camera);
     }
 }
