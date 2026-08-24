@@ -1,0 +1,13 @@
+{
+  "name": "SAS.RenderDebug.Editor",
+  "rootNamespace": "SAS.RenderDebugging.Editor",
+  "references": [
+    "SAS.RenderDebug.Runtime",
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.Collections"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": true
+}

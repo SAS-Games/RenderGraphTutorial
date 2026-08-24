@@ -1,0 +1,13 @@
+{
+  "name": "SAS.RenderDebug.Tests",
+  "rootNamespace": "SAS.RenderDebugging.Tests",
+  "references": [
+    "SAS.RenderDebug.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

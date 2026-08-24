@@ -1,0 +1,9 @@
+{
+  "name": "SAS.RenderDebug.Runtime",
+  "rootNamespace": "SAS.RenderDebugging",
+  "references": [
+    "Unity.RenderPipelines.Core.Runtime",
+    "Unity.RenderPipelines.Universal.Runtime"
+  ],
+  "autoReferenced": true
+}
