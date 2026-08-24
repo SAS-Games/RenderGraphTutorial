@@ -55,7 +55,7 @@ renderDebug.Publish(renderGraph, "Raw Mask", mask, maskDescriptor, camera);
 
 Named stages are created lazily and ordered by their first publication. Call `renderDebug.Dispose()` from the renderer feature's existing `Dispose` method. Ordinary publications do not need a manual request check.
 
-Use an explicit `RenderDebugStage` only when advanced metadata such as a stable custom order, stage type, description, group, or channel labels is useful. The same `Publish(...)` overloads accept either a stage name or a descriptor.
+Use an explicit `RenderDebugStage` only when advanced metadata such as a stable custom order, description, group, or channel labels is useful. The same `Publish(...)` overloads accept either a stage name or a descriptor.
 
 The lower-level `IRenderDebugSource` and `IRenderDebugContext` contracts remain available for frameworks that need custom registration or publication control.
 

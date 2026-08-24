@@ -12,7 +12,7 @@ namespace SAS.RenderDebugging
         private readonly RenderDebugChannelInfo[] _channels;
 
         public RenderDebugStage(string id, string displayName, int order,
-            RenderDebugStageType type = RenderDebugStageType.Texture, string description = null, string group = null,
+            string description = null, string group = null,
             params RenderDebugChannelInfo[] channels)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -22,7 +22,6 @@ namespace SAS.RenderDebugging
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? id : displayName;
             Description = description ?? string.Empty;
             Group = group ?? string.Empty;
-            Type = type;
             Order = order;
             _channels = channels == null || channels.Length == 0
                 ? NoChannels
@@ -33,7 +32,6 @@ namespace SAS.RenderDebugging
         public string DisplayName { get; }
         public string Description { get; }
         public string Group { get; }
-        public RenderDebugStageType Type { get; }
         public int Order { get; }
         public IReadOnlyList<RenderDebugChannelInfo> Channels => _channels ?? NoChannels;
 
@@ -43,7 +41,6 @@ namespace SAS.RenderDebugging
                 !string.Equals(DisplayName, other.DisplayName, StringComparison.Ordinal) ||
                 !string.Equals(Description, other.Description, StringComparison.Ordinal) ||
                 !string.Equals(Group, other.Group, StringComparison.Ordinal) ||
-                Type != other.Type ||
                 Order != other.Order ||
                 Channels.Count != other.Channels.Count)
             {
@@ -70,7 +67,6 @@ namespace SAS.RenderDebugging
             {
                 int hash = Id != null ? StringComparer.Ordinal.GetHashCode(Id) : 0;
                 hash = (hash * 397) ^ Order;
-                hash = (hash * 397) ^ (int)Type;
                 return hash;
             }
         }

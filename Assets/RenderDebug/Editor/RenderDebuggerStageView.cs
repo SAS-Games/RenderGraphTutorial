@@ -66,12 +66,10 @@ namespace SAS.RenderDebugging.Editor
                         RenderDebuggerStyles.CenteredMiniLabel);
                 }
 
-                string footer = string.IsNullOrEmpty(stage.Descriptor.Group)
-                    ? stage.Descriptor.Type.ToString()
-                    : stage.Descriptor.Group;
+                string footer = BuildFooter(stage, hasUsableData, out string footerTooltip);
                 GUI.Label(
                     new Rect(cardRect.x + 4f, cardRect.yMax - 21f, cardRect.width - 8f, 17f),
-                    footer,
+                    new GUIContent(footer, footerTooltip),
                     RenderDebuggerStyles.CenteredMiniLabel);
 
                 x += CardWidth + 4f;
@@ -87,6 +85,28 @@ namespace SAS.RenderDebugging.Editor
 
             GUI.EndScrollView();
             return selectedStageId;
+        }
+
+        private static string BuildFooter(
+            RenderDebugStageRecord stage,
+            bool hasUsableData,
+            out string tooltip)
+        {
+            if (!string.IsNullOrEmpty(stage.Descriptor.Group))
+            {
+                tooltip = stage.Descriptor.Group;
+                return stage.Descriptor.Group;
+            }
+
+            if (!hasUsableData)
+            {
+                tooltip = "No texture metadata";
+                return "No data";
+            }
+
+            RenderDebugTextureMetadata metadata = stage.TextureData.Metadata;
+            tooltip = $"{metadata.Width} x {metadata.Height}  {metadata.GraphicsFormat}";
+            return $"{metadata.Width} x {metadata.Height}  {metadata.GraphicsFormat}";
         }
 
         private static bool HasUsableData(RenderDebugStageRecord stage, RenderDebugViewMode viewMode)
