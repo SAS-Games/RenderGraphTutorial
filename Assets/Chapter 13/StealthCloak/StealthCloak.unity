@@ -3718,7 +3718,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58af7e66463248fd8655d5e4ce2a0ccc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StealthCloakDemoController
-  character: {fileID: 0}
   invisibleMaterial: {fileID: 2100000, guid: 1f83c7ee8fa647aaa8d81fd00bc0f94e, type: 2}
   cloakRenderingLayerMask:
     serializedVersion: 0
@@ -4078,7 +4077,7 @@ MonoBehaviour:
   m_RequiresOpaqueTextureOption: 2
   m_CameraType: 0
   m_Cameras: []
-  m_RendererIndex: 10
+  m_RendererIndex: 11
   m_VolumeLayerMask:
     serializedVersion: 2
     m_Bits: 1
