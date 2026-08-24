@@ -15,6 +15,7 @@ namespace SAS.RenderDebugging
         public static IRenderDebugContext Context => Session.Context;
         public static RenderDebugRegistry Registry => Session.Registry;
         public static int Generation => _generation;
+        public static bool IsEnabled => _session != null && _session.IsLiveWorkEnabled;
 
         /// <summary>
         /// Raised when the last viewer closes or the debug session resets, so integrations can release optional materials.

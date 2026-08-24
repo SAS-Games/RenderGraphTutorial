@@ -31,7 +31,7 @@ Runtime and Editor code use separate assembly definitions. Player assemblies nev
 
 ## Enabling effect integration
 
-Add `RENDER_DEBUG` to **Project Settings > Player > Scripting Define Symbols** for the Editor configuration that needs capture. The generic contracts remain available, but the example effect hooks and their expensive publication calls compile away without this symbol. Do not wrap the effect itself in the symbol.
+Add `RENDER_DEBUG` to **Project Settings > Player > Scripting Define Symbols** for the Editor configuration that needs capture. `RenderDebugSourceMarker.Publish(...)` uses `Conditional("RENDER_DEBUG")`, so publication calls and their argument evaluation are removed from non-debug builds automatically. Game rendering code does not need preprocessor blocks.
 
 Open **Window > Analysis > Shader & Render Debugger**. When the window is closed, the session releases all debug textures and no stage is requested.
 
@@ -40,21 +40,17 @@ Open **Window > Analysis > Shader & Render Debugger**. When the window is closed
 Most effects should use `RenderDebugSourceMarker`. It automatically obtains the current context, registers the source and stages, survives session recreation, checks requests, and routes each resource to the correct copy path.
 
 ```csharp
-#if RENDER_DEBUG
 using SAS.RenderDebugging;
 
 private readonly RenderDebugSourceMarker renderDebug = new(
     "my-effect",
     "My Effect");
-#endif
 ```
 
 Publish a RenderGraph texture in one line. Registration and the request check are automatic:
 
 ```csharp
-#if RENDER_DEBUG
 renderDebug.Publish(renderGraph, "Raw Mask", mask, maskDescriptor, camera);
-#endif
 ```
 
 Named stages are created lazily and ordered by their first publication. Call `renderDebug.Dispose()` from the renderer feature's existing `Dispose` method. Ordinary publications do not need a manual request check.
@@ -68,14 +64,12 @@ The lower-level `IRenderDebugSource` and `IRenderDebugContext` contracts remain 
 Never store a `TextureHandle`. Publish it while recording the graph and supply the descriptor:
 
 ```csharp
-#if RENDER_DEBUG
 renderDebug.Publish(
     renderGraph,
     "Raw Mask",
     transientMask,
     maskDescriptor,
     cameraData.camera);
-#endif
 ```
 
 The context first checks `IsStageRequested`. It then imports a reusable debugger-owned `RTHandle` and records a non-culled copy pass from the transient handle. Only the external copy is placed in frame data. Live and captured resources use different ownership slots. Resizing reallocates that slot; returning to live releases captured slots; closing the viewer, source removal, play-mode changes, domain reload, and Unity shutdown release all slots.

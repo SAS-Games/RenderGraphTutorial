@@ -11,13 +11,8 @@ namespace SAS.RenderDebugging
         private static readonly RenderDebugChannelInfo[] NoChannels = Array.Empty<RenderDebugChannelInfo>();
         private readonly RenderDebugChannelInfo[] _channels;
 
-        public RenderDebugStage(
-            string id,
-            string displayName,
-            int order,
-            RenderDebugStageType type = RenderDebugStageType.Texture,
-            string description = null,
-            string group = null,
+        public RenderDebugStage(string id, string displayName, int order,
+            RenderDebugStageType type = RenderDebugStageType.Texture, string description = null, string group = null,
             params RenderDebugChannelInfo[] channels)
         {
             if (string.IsNullOrWhiteSpace(id))

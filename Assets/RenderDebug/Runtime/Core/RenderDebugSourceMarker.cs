@@ -13,30 +13,25 @@ namespace SAS.RenderDebugging
     public sealed class RenderDebugSourceMarker : IRenderDebugSource, IDisposable
     {
         private readonly RenderDebugStage[] _declaredStages;
-        private readonly Dictionary<string, RenderDebugStage> _namedStages =
-            new(StringComparer.Ordinal);
+        private Dictionary<string, RenderDebugStage> _namedStages;
         private IRenderDebugContext _context;
         private int _registeredGeneration = -1;
         private int _nextNamedStageOrder = 10;
         private bool _disposed;
 
-        public RenderDebugSourceMarker(
-            string debugId,
-            string displayName,
-            params RenderDebugStage[] stages)
+        public RenderDebugSourceMarker(string debugId, string displayName, params RenderDebugStage[] stages)
         {
             if (string.IsNullOrWhiteSpace(debugId))
                 throw new ArgumentException("A render debug source ID cannot be empty.", nameof(debugId));
 
             DebugId = debugId;
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? debugId : displayName;
-            _declaredStages = stages == null || stages.Length == 0
-                ? Array.Empty<RenderDebugStage>()
-                : (RenderDebugStage[])stages.Clone();
+            _declaredStages = stages == null || stages.Length == 0 ? Array.Empty<RenderDebugStage>() : (RenderDebugStage[])stages.Clone();
 
             for (int i = 0; i < _declaredStages.Length; i++)
             {
                 RenderDebugStage stage = _declaredStages[i];
+                _namedStages ??= new Dictionary<string, RenderDebugStage>(StringComparer.Ordinal);
                 _namedStages[stage.Id] = stage;
                 _nextNamedStageOrder = Math.Max(_nextNamedStageOrder, stage.Order + 10);
             }
@@ -51,6 +46,9 @@ namespace SAS.RenderDebugging
         /// </summary>
         public bool IsRequested(string stageName)
         {
+            if (!RenderDebugService.IsEnabled)
+                return false;
+
             RenderDebugStage stage = GetOrCreateNamedStage(stageName);
             return IsRequested(stage);
         }
@@ -58,10 +56,13 @@ namespace SAS.RenderDebugging
         /// <summary>Gets whether the viewer currently requests this stage.</summary>
         public bool IsRequested(in RenderDebugStage stage)
         {
-            return EnsureRegistered(stage) && _context.IsStageRequested(DebugId, stage.Id);
+            return RenderDebugService.IsEnabled &&
+                   EnsureRegistered(stage) &&
+                   _context.IsStageRequested(DebugId, stage.Id);
         }
 
         /// <summary>Publishes a caller-owned persistent texture when the stage is requested.</summary>
+        [System.Diagnostics.Conditional("RENDER_DEBUG")]
         public void Publish(in RenderDebugStage stage, Texture texture, Camera camera = null)
         {
             if (EnsureRegistered(stage))
@@ -69,60 +70,48 @@ namespace SAS.RenderDebugging
         }
 
         /// <summary>Publishes a persistent texture under a simple profiler-style stage name.</summary>
+        [System.Diagnostics.Conditional("RENDER_DEBUG")]
         public void Publish(string stageName, Texture texture, Camera camera = null)
         {
             RenderDebugStage stage = GetOrCreateNamedStage(stageName);
-            Publish(stage, texture, camera);
+            if (EnsureRegistered(stage))
+                _context.PublishTexture(DebugId, stage, texture, camera);
         }
 
         /// <summary>Schedules an owned debug copy of an RTHandle when the stage is requested.</summary>
-        public void Publish(
-            CommandBuffer commandBuffer,
-            in RenderDebugStage stage,
-            RTHandle texture,
-            in RenderTextureDescriptor descriptor,
-            Camera camera = null)
+        [System.Diagnostics.Conditional("RENDER_DEBUG")]
+        public void Publish(CommandBuffer commandBuffer, in RenderDebugStage stage, RTHandle texture, in RenderTextureDescriptor descriptor, Camera camera = null)
         {
             if (EnsureRegistered(stage))
                 _context.PublishRTHandle(commandBuffer, DebugId, stage, texture, descriptor, camera);
         }
 
         /// <summary>Schedules an owned debug copy under a simple profiler-style stage name.</summary>
-        public void Publish(
-            CommandBuffer commandBuffer,
-            string stageName,
-            RTHandle texture,
-            in RenderTextureDescriptor descriptor,
-            Camera camera = null)
+        [System.Diagnostics.Conditional("RENDER_DEBUG")]
+        public void Publish(CommandBuffer commandBuffer, string stageName, RTHandle texture, in RenderTextureDescriptor descriptor, Camera camera = null)
         {
             RenderDebugStage stage = GetOrCreateNamedStage(stageName);
-            Publish(commandBuffer, stage, texture, descriptor, camera);
+            if (EnsureRegistered(stage))
+                _context.PublishRTHandle(commandBuffer, DebugId, stage, texture, descriptor, camera);
         }
 
         /// <summary>
         /// Adds a RenderGraph copy into debugger-owned storage when the stage is requested.
         /// </summary>
-        public void Publish(
-            RenderGraph renderGraph,
-            in RenderDebugStage stage,
-            TextureHandle texture,
-            in RenderTextureDescriptor descriptor,
-            Camera camera = null)
+        [System.Diagnostics.Conditional("RENDER_DEBUG")]
+        public void Publish(RenderGraph renderGraph, in RenderDebugStage stage, TextureHandle texture, in RenderTextureDescriptor descriptor, Camera camera = null)
         {
             if (EnsureRegistered(stage))
                 _context.PublishRenderGraphTexture(renderGraph, DebugId, stage, texture, descriptor, camera);
         }
 
         /// <summary>Adds a requested RenderGraph copy under a simple profiler-style stage name.</summary>
-        public void Publish(
-            RenderGraph renderGraph,
-            string stageName,
-            TextureHandle texture,
-            in RenderTextureDescriptor descriptor,
-            Camera camera = null)
+        [System.Diagnostics.Conditional("RENDER_DEBUG")]
+        public void Publish(RenderGraph renderGraph, string stageName, TextureHandle texture, in RenderTextureDescriptor descriptor, Camera camera = null)
         {
             RenderDebugStage stage = GetOrCreateNamedStage(stageName);
-            Publish(renderGraph, stage, texture, descriptor, camera);
+            if (EnsureRegistered(stage))
+                _context.PublishRenderGraphTexture(renderGraph, DebugId, stage, texture, descriptor, camera);
         }
 
         /// <summary>Unregisters the source. Call from the renderer feature's Dispose method.</summary>
@@ -141,11 +130,13 @@ namespace SAS.RenderDebugging
             if (string.IsNullOrWhiteSpace(stageName))
                 throw new ArgumentException("A render debug stage name cannot be empty.", nameof(stageName));
 
-            if (_namedStages.TryGetValue(stageName, out RenderDebugStage stage))
+            if (_namedStages != null &&
+                _namedStages.TryGetValue(stageName, out RenderDebugStage stage))
                 return stage;
 
             stage = new RenderDebugStage(stageName, stageName, _nextNamedStageOrder);
             _nextNamedStageOrder += 10;
+            _namedStages ??= new Dictionary<string, RenderDebugStage>(StringComparer.Ordinal);
             _namedStages.Add(stageName, stage);
             return stage;
         }
