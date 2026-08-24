@@ -7,14 +7,7 @@ namespace SAS.RenderDebugging
     /// <summary>Describes the shape and GPU format of one published frame texture.</summary>
     public readonly struct RenderDebugTextureMetadata
     {
-        public RenderDebugTextureMetadata(
-            int width,
-            int height,
-            GraphicsFormat graphicsFormat,
-            TextureDimension dimension,
-            int volumeDepth,
-            int msaaSamples,
-            int mipCount)
+        public RenderDebugTextureMetadata(int width, int height, GraphicsFormat graphicsFormat, TextureDimension dimension, int volumeDepth, int msaaSamples, int mipCount)
         {
             Width = width;
             Height = height;
