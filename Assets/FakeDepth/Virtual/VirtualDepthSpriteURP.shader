@@ -64,6 +64,8 @@ Shader "Custom/VirtualDepthSpriteURP"
             float _VirtualDepths[MAX_DEPTH_SAMPLES];
             float _VirtualAlphas[MAX_DEPTH_SAMPLES];
 
+            #include "Assets/FakeDepth/Virtual/VirtualDepthRaster.hlsl"
+
             struct Attributes
             {
                 float4 positionOS : POSITION;
@@ -82,8 +84,10 @@ Shader "Custom/VirtualDepthSpriteURP"
             {
                 Varyings output;
 
-                output.positionOS = input.positionOS.xyz;
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                float3 rasterPositionOS = BuildVirtualDepthRasterPositionOS(input.positionOS.xyz, float2(0.0, 0.0));
+
+                output.positionOS = rasterPositionOS;
+                output.positionCS = TransformObjectToHClip(rasterPositionOS);
                 output.vertexColor = input.color;
                 return output;
             }
@@ -114,6 +118,10 @@ Shader "Custom/VirtualDepthSpriteURP"
 
                     // If this layer contributes nothing, skip all remaining work for this sample.
                     if (layerWeight <= 0.0001h)
+                        continue;
+
+                    // A plane that crossed behind the camera cannot contribute to this view.
+                    if ((virtualZ - cameraOS.z) * -cameraOS.z <= 0.000001)
                         continue;
                     // Find where the camera-to-fragment ray intersects the virtual sprite plane located at 'virtualZ'.
                     // rayT tells us how far along the ray we must travel from the camera to reach that Z depth.

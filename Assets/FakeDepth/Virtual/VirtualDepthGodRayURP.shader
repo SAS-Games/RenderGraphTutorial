@@ -69,6 +69,8 @@ Shader "Custom/VirtualDepthGodRayURP"
             float _VirtualDepths[MAX_DEPTH_SAMPLES];
             float _VirtualAlphas[MAX_DEPTH_SAMPLES];
 
+            #include "Assets/FakeDepth/Virtual/VirtualDepthRaster.hlsl"
+
 
             struct Attributes
             {
@@ -85,13 +87,14 @@ Shader "Custom/VirtualDepthGodRayURP"
                 half4 vertexColor : COLOR;
             };
 
-
             Varyings Vert(Attributes input)
             {
                 Varyings output;
 
-                output.positionOS = input.positionOS.xyz;
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                float3 rasterPositionOS = BuildVirtualDepthRasterPositionOS(input.positionOS.xyz, _LightDirection.xy);
+
+                output.positionOS = rasterPositionOS;
+                output.positionCS = TransformObjectToHClip(rasterPositionOS);
                 output.vertexColor = input.color;
                 return output;
             }
@@ -126,6 +129,11 @@ Shader "Custom/VirtualDepthGodRayURP"
 
                     // If this layer contributes nothing, skip all remaining work for this sample.
                     if (layerWeight <= 0.0001h)
+                        continue;
+
+
+                    // A plane that crossed behind the camera cannot contribute to this view.
+                    if ((virtualZ - cameraOS.z) * -cameraOS.z <= 0.000001)
                         continue;
 
 

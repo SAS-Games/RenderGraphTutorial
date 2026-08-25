@@ -33,6 +33,7 @@ public sealed class VirtualDepthGodRay : MonoBehaviour
     [Min(0.01f)] [SerializeField] private float m_MaximumTrackedSlope = 10f;
 
     private SpriteRenderer _spriteRenderer;
+    private VirtualDepthSprite _virtualDepthSprite;
     private MaterialPropertyBlock _propertyBlock;
 
     private static readonly int IntensityId = Shader.PropertyToID("_Intensity");
@@ -83,6 +84,9 @@ public sealed class VirtualDepthGodRay : MonoBehaviour
         if (_spriteRenderer == null)
             _spriteRenderer = GetComponent<SpriteRenderer>();
 
+        if (_virtualDepthSprite == null)
+            _virtualDepthSprite = GetComponent<VirtualDepthSprite>();
+
         if (_propertyBlock == null)
             _propertyBlock = new MaterialPropertyBlock();
     }
@@ -101,6 +105,10 @@ public sealed class VirtualDepthGodRay : MonoBehaviour
         _propertyBlock.SetFloat(IntensityId, m_Intensity);
         _propertyBlock.SetVector(LightDirectionId, new Vector4(lightDirection.x, lightDirection.y, 0f, 0f));
         _spriteRenderer.SetPropertyBlock(_propertyBlock);
+
+        // The mask occupies SpriteRect + lightDirection * virtualDepth on every slice.
+        // Keep those shifted planes inside the renderer's CPU-side culling bounds.
+        _virtualDepthSprite.SetBoundsOffsetPerDepth(lightDirection);
     }
 
     private Vector2 ResolveLightDirection()

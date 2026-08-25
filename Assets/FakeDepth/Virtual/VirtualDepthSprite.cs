@@ -24,6 +24,11 @@ public sealed class VirtualDepthSprite : MonoBehaviour
     private MaterialPropertyBlock _propertyBlock;
     private readonly float[] _virtualDepths = new float[MaxSlices];
     private readonly float[] _virtualAlphas = new float[MaxSlices];
+    private Vector2 _boundsOffsetPerDepth;
+    private Vector4 _spriteRect;
+#if UNITY_EDITOR
+    private Bounds _pendingRendererBounds;
+#endif
     private static readonly int SpriteRectId = Shader.PropertyToID("_SpriteRect");
     private static readonly int UVRectId = Shader.PropertyToID("_UVRect");
     private static readonly int SliceCountId = Shader.PropertyToID("_SliceCount");
@@ -35,6 +40,16 @@ public sealed class VirtualDepthSprite : MonoBehaviour
     {
         Cache();
         Apply();
+    }
+
+    private void OnDisable()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.delayCall -= ApplyPendingRendererBounds;
+#endif
+
+        if (_spriteRenderer != null)
+            _spriteRenderer.ResetLocalBounds();
     }
 
 #if UNITY_EDITOR
@@ -108,7 +123,7 @@ public sealed class VirtualDepthSprite : MonoBehaviour
         float minX = -pivot.x / pixelsPerUnit;
         float minY = -pivot.y / pixelsPerUnit;
 
-        Vector4 spriteRect = new Vector4(minX, minY, width, height);
+        _spriteRect = new Vector4(minX, minY, width, height);
         Rect textureRect = m_Sprite.textureRect;
 
         Texture texture = m_Sprite.texture;
@@ -120,12 +135,87 @@ public sealed class VirtualDepthSprite : MonoBehaviour
                 textureRect.yMax / texture.height);
 
         _spriteRenderer.GetPropertyBlock(_propertyBlock);
-        _propertyBlock.SetVector(SpriteRectId, spriteRect);
+        _propertyBlock.SetVector(SpriteRectId, _spriteRect);
         _propertyBlock.SetVector(UVRectId, uvRect);
         _propertyBlock.SetFloat(SliceCountId, m_SliceCount);
         _propertyBlock.SetFloatArray(VirtualDepthsId, _virtualDepths);
         _propertyBlock.SetFloatArray(VirtualAlphasId, _virtualAlphas);
         _propertyBlock.SetColor(EffectColorId, m_Color);
         _spriteRenderer.SetPropertyBlock(_propertyBlock);
+
+        ApplyRendererBounds();
     }
+
+    internal void SetBoundsOffsetPerDepth(Vector2 offsetPerDepth)
+    {
+        _boundsOffsetPerDepth = offsetPerDepth;
+
+        if (_spriteRenderer != null && _spriteRect.z > 0f && _spriteRect.w > 0f)
+            ApplyRendererBounds();
+    }
+
+    private void ApplyRendererBounds()
+    {
+        float minimumDepth = 0f;
+        float maximumDepth = 0f;
+        float minimumX = _spriteRect.x;
+        float maximumX = _spriteRect.x + _spriteRect.z;
+        float minimumY = _spriteRect.y;
+        float maximumY = _spriteRect.y + _spriteRect.w;
+
+        for (int slice = 0; slice < m_SliceCount; ++slice)
+        {
+            if (_virtualAlphas[slice] <= 0.0001f)
+                continue;
+
+            float virtualDepth = _virtualDepths[slice];
+            Vector2 sliceOffset = _boundsOffsetPerDepth * virtualDepth;
+
+            minimumDepth = Mathf.Min(minimumDepth, virtualDepth);
+            maximumDepth = Mathf.Max(maximumDepth, virtualDepth);
+            minimumX = Mathf.Min(minimumX, _spriteRect.x + sliceOffset.x);
+            maximumX = Mathf.Max(maximumX, _spriteRect.x + _spriteRect.z + sliceOffset.x);
+            minimumY = Mathf.Min(minimumY, _spriteRect.y + sliceOffset.y);
+            maximumY = Mathf.Max(maximumY, _spriteRect.y + _spriteRect.w + sliceOffset.y);
+        }
+
+        Vector3 boundsCenter = new Vector3(
+                (minimumX + maximumX) * 0.5f,
+                (minimumY + maximumY) * 0.5f,
+                (minimumDepth + maximumDepth) * 0.5f);
+
+        Vector3 boundsSize = new Vector3(
+                maximumX - minimumX,
+                maximumY - minimumY,
+                Mathf.Max(maximumDepth - minimumDepth, 0.001f));
+
+        SetRendererBounds(new Bounds(boundsCenter, boundsSize));
+    }
+
+    private void SetRendererBounds(Bounds bounds)
+    {
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            // Renderer.localBounds sends an internal notification that Unity forbids during
+            // OnValidate. Apply it safely on the next editor update instead.
+            _pendingRendererBounds = bounds;
+            UnityEditor.EditorApplication.delayCall -= ApplyPendingRendererBounds;
+            UnityEditor.EditorApplication.delayCall += ApplyPendingRendererBounds;
+            return;
+        }
+#endif
+
+        _spriteRenderer.localBounds = bounds;
+    }
+
+#if UNITY_EDITOR
+    private void ApplyPendingRendererBounds()
+    {
+        if (this == null || !isActiveAndEnabled || _spriteRenderer == null)
+            return;
+
+        _spriteRenderer.localBounds = _pendingRendererBounds;
+    }
+#endif
 }
