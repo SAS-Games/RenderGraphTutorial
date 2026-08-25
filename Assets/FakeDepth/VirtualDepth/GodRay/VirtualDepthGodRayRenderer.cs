@@ -6,7 +6,7 @@ using UnityEngine.Scripting.APIUpdating;
 [DisallowMultipleComponent]
 [RequireComponent(typeof(SpriteRenderer), typeof(VirtualDepthSpriteRenderer))]
 [MovedFrom(true, null, null, "VirtualDepthGodRay")]
-public sealed class VirtualDepthGodRayRenderer : MonoBehaviour
+public class VirtualDepthGodRayRenderer : MonoBehaviour
 {
     public enum LayerOffsetMode
     {
@@ -52,20 +52,20 @@ public sealed class VirtualDepthGodRayRenderer : MonoBehaviour
         }
     }
     
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
         Cache();
         Apply();
     }
 
-    private void LateUpdate()
+    protected virtual void LateUpdate()
     {
         if (m_LayerOffsetMode != LayerOffsetMode.Manual && m_LayerOffsetSource != null)
             Apply();
     }
 
 #if UNITY_EDITOR
-    private void OnValidate()
+    protected virtual void OnValidate()
     {
         m_Intensity = Mathf.Max(0f, m_Intensity);
         m_MaximumTrackedSlope = Mathf.Max(0.01f, m_MaximumTrackedSlope);
@@ -77,7 +77,7 @@ public sealed class VirtualDepthGodRayRenderer : MonoBehaviour
     }
 #endif
 
-    private void OnDidApplyAnimationProperties()
+    protected virtual void OnDidApplyAnimationProperties()
     {
         Apply();
     }
@@ -99,19 +99,28 @@ public sealed class VirtualDepthGodRayRenderer : MonoBehaviour
     {
         Cache();
 
-        if (_spriteRenderer == null)
+        if (_spriteRenderer == null || _virtualDepthSpriteRenderer == null)
             return;
 
         Vector2 layerOffsetPerDepth = ResolveLayerOffsetPerDepth();
 
-        _spriteRenderer.GetPropertyBlock(_propertyBlock);
-        _propertyBlock.SetFloat(IntensityId, m_Intensity);
-        _propertyBlock.SetVector(LayerOffsetPerDepthId, new Vector4(layerOffsetPerDepth.x, layerOffsetPerDepth.y, 0f, 0f));
-        _spriteRenderer.SetPropertyBlock(_propertyBlock);
+        ApplyShaderProperties(_spriteRenderer, layerOffsetPerDepth);
+
+        Renderer effectRenderer = _virtualDepthSpriteRenderer.EffectRenderer;
+        if (effectRenderer != null && effectRenderer != _spriteRenderer)
+            ApplyShaderProperties(effectRenderer, layerOffsetPerDepth);
 
         // Each mask occupies SpriteRect + layerOffsetPerDepth * layerDepth.
         // Keep those shifted layers inside the renderer's CPU-side culling bounds.
         _virtualDepthSpriteRenderer.SetLayerOffsetPerDepth(layerOffsetPerDepth);
+    }
+
+    private void ApplyShaderProperties(Renderer renderer, Vector2 layerOffsetPerDepth)
+    {
+        renderer.GetPropertyBlock(_propertyBlock);
+        _propertyBlock.SetFloat(IntensityId, m_Intensity);
+        _propertyBlock.SetVector(LayerOffsetPerDepthId, new Vector4(layerOffsetPerDepth.x, layerOffsetPerDepth.y, 0f, 0f));
+        renderer.SetPropertyBlock(_propertyBlock);
     }
 
     private Vector2 ResolveLayerOffsetPerDepth()

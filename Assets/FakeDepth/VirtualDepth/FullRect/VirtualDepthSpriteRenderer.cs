@@ -6,7 +6,7 @@ using UnityEngine.Scripting.APIUpdating;
 [DisallowMultipleComponent]
 [RequireComponent(typeof(SpriteRenderer))]
 [MovedFrom(true, null, null, "VirtualDepthSprite")]
-public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
+public class VirtualDepthSpriteRenderer : MonoBehaviour
 {
     private const int MaxLayerCount = 20;
 
@@ -39,30 +39,56 @@ public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
     private static readonly int LayerOpacitiesId = Shader.PropertyToID("_VirtualLayerOpacities");
     private static readonly int EffectColorId = Shader.PropertyToID("_EffectColor");
 
-    private void OnEnable()
+    protected Sprite SpriteAsset => m_Sprite;
+
+    protected SpriteRenderer SourceRenderer
+    {
+        get
+        {
+            Cache();
+            return _spriteRenderer;
+        }
+    }
+
+    protected virtual void OnEnable()
     {
         Cache();
         Apply();
     }
 
-    private void OnDisable()
+    protected virtual void OnDisable()
     {
 #if UNITY_EDITOR
+        UnityEditor.EditorApplication.delayCall -= ApplyAfterValidation;
         UnityEditor.EditorApplication.delayCall -= ApplyPendingRendererBounds;
 #endif
 
-        if (_spriteRenderer != null)
+        Renderer effectRenderer = GetEffectRenderer();
+        if (effectRenderer != null)
+            effectRenderer.ResetLocalBounds();
+
+        if (_spriteRenderer != null && effectRenderer != _spriteRenderer)
             _spriteRenderer.ResetLocalBounds();
+
+        ReleaseEffectRenderer();
     }
 
 #if UNITY_EDITOR
-    private void OnValidate()
+    protected virtual void OnValidate()
     {
         m_LayerCount = Mathf.Clamp(m_LayerCount, 1, MaxLayerCount);
-
         Cache();
 
         if (isActiveAndEnabled)
+        {
+            UnityEditor.EditorApplication.delayCall -= ApplyAfterValidation;
+            UnityEditor.EditorApplication.delayCall += ApplyAfterValidation;
+        }
+    }
+
+    private void ApplyAfterValidation()
+    {
+        if (this != null && isActiveAndEnabled)
             Apply();
     }
 #endif
@@ -80,18 +106,39 @@ public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
     public void Apply()
     {
         Cache();
-        
+
         if (m_Sprite == null)
             m_Sprite = _spriteRenderer.sprite;
 
         if (m_Sprite == null)
+        {
+            ReleaseEffectRenderer();
             return;
+        }
 
         if (_spriteRenderer.sprite != m_Sprite)
             _spriteRenderer.sprite = m_Sprite;
 
+        PrepareEffectRenderer();
         BuildVirtualLayers();
         ApplyShaderProperties();
+    }
+
+    protected virtual void PrepareEffectRenderer()
+    {
+    }
+
+    protected virtual Renderer GetEffectRenderer()
+    {
+        return _spriteRenderer;
+    }
+
+    protected virtual void ApplyEffectRendererProperties(MaterialPropertyBlock propertyBlock)
+    {
+    }
+
+    protected virtual void ReleaseEffectRenderer()
+    {
     }
 
     private void BuildVirtualLayers()
@@ -128,7 +175,6 @@ public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
 
         _spriteRect = new Vector4(minX, minY, width, height);
         Rect textureRect = m_Sprite.textureRect;
-
         Texture texture = m_Sprite.texture;
 
         Vector4 spriteUVRect = new Vector4(
@@ -146,7 +192,24 @@ public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
         _propertyBlock.SetColor(EffectColorId, m_EffectColor);
         _spriteRenderer.SetPropertyBlock(_propertyBlock);
 
+        Renderer effectRenderer = GetEffectRenderer();
+        if (effectRenderer != null && effectRenderer != _spriteRenderer)
+        {
+            _spriteRenderer.GetPropertyBlock(_propertyBlock);
+            ApplyEffectRendererProperties(_propertyBlock);
+            effectRenderer.SetPropertyBlock(_propertyBlock);
+        }
+
         ApplyRendererBounds();
+    }
+
+    internal Renderer EffectRenderer
+    {
+        get
+        {
+            Cache();
+            return GetEffectRenderer();
+        }
     }
 
     internal void SetLayerOffsetPerDepth(Vector2 layerOffsetPerDepth)
@@ -200,8 +263,6 @@ public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
 #if UNITY_EDITOR
         if (!Application.isPlaying)
         {
-            // Renderer.localBounds sends an internal notification that Unity forbids during
-            // OnValidate. Apply it safely on the next editor update instead.
             _pendingRendererBounds = bounds;
             UnityEditor.EditorApplication.delayCall -= ApplyPendingRendererBounds;
             UnityEditor.EditorApplication.delayCall += ApplyPendingRendererBounds;
@@ -209,16 +270,19 @@ public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
         }
 #endif
 
-        _spriteRenderer.localBounds = bounds;
+        Renderer effectRenderer = GetEffectRenderer();
+        if (effectRenderer != null)
+            effectRenderer.localBounds = bounds;
     }
 
 #if UNITY_EDITOR
     private void ApplyPendingRendererBounds()
     {
-        if (this == null || !isActiveAndEnabled || _spriteRenderer == null)
+        Renderer effectRenderer = GetEffectRenderer();
+        if (this == null || !isActiveAndEnabled || effectRenderer == null)
             return;
 
-        _spriteRenderer.localBounds = _pendingRendererBounds;
+        effectRenderer.localBounds = _pendingRendererBounds;
     }
 #endif
 }
