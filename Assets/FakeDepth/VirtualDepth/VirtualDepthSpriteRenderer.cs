@@ -1,39 +1,42 @@
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 [ExecuteAlways]
+[AddComponentMenu("Rendering/Virtual Depth/Sprite Renderer")]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(SpriteRenderer))]
-public sealed class VirtualDepthSprite : MonoBehaviour
+[MovedFrom(true, null, null, "VirtualDepthSprite")]
+public sealed class VirtualDepthSpriteRenderer : MonoBehaviour
 {
-    private const int MaxSlices = 20;
+    private const int MaxLayerCount = 20;
 
     [SerializeField] private Sprite m_Sprite;
-    [SerializeField] private Color m_Color = Color.black;
+    [SerializeField] private Color m_EffectColor = Color.black;
 
-    [Tooltip("Number of virtual sprite copies evaluated by the shader.")]
-    [Range(1, MaxSlices)] [SerializeField] private int m_SliceCount = 20;
+    [Tooltip("Number of virtual sprite layers evaluated by the shader.")]
+    [Range(1, MaxLayerCount)] [SerializeField] private int m_LayerCount = 20;
     [Tooltip("Total local-space Z extrusion.\n" + "For a normal 2D Unity camera placed on negative Z, " + "use a NEGATIVE value to extend toward the camera.")]
-    [SerializeField] private float m_Depth = -1.0f;
+    [SerializeField] private float m_TotalDepth = -1.0f;
 
-    [Tooltip("Controls how virtual slices are distributed through the depth.\n" + "X = normalized slice index\n" + "Y = normalized depth.")]
+    [Tooltip("Controls how virtual layers are distributed through the depth.\n" + "X = normalized layer index\n" + "Y = normalized depth.")]
     [SerializeField] private AnimationCurve m_DepthDistribution = AnimationCurve.Linear(0f, 0f, 1f, 1f);
     [Tooltip("Controls opacity through the virtual depth.\n" + "X = normalized depth\n" + "Y = alpha.")]
-    [SerializeField] private AnimationCurve m_AlphaByDepth = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+    [SerializeField] private AnimationCurve m_OpacityByDepth = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
     private SpriteRenderer _spriteRenderer;
     private MaterialPropertyBlock _propertyBlock;
-    private readonly float[] _virtualDepths = new float[MaxSlices];
-    private readonly float[] _virtualAlphas = new float[MaxSlices];
-    private Vector2 _boundsOffsetPerDepth;
+    private readonly float[] _layerDepths = new float[MaxLayerCount];
+    private readonly float[] _layerOpacities = new float[MaxLayerCount];
+    private Vector2 _layerOffsetPerDepth;
     private Vector4 _spriteRect;
 #if UNITY_EDITOR
     private Bounds _pendingRendererBounds;
 #endif
     private static readonly int SpriteRectId = Shader.PropertyToID("_SpriteRect");
-    private static readonly int UVRectId = Shader.PropertyToID("_UVRect");
-    private static readonly int SliceCountId = Shader.PropertyToID("_SliceCount");
-    private static readonly int VirtualDepthsId = Shader.PropertyToID("_VirtualDepths");
-    private static readonly int VirtualAlphasId = Shader.PropertyToID("_VirtualAlphas");
+    private static readonly int SpriteUVRectId = Shader.PropertyToID("_SpriteUVRect");
+    private static readonly int LayerCountId = Shader.PropertyToID("_VirtualLayerCount");
+    private static readonly int LayerDepthsId = Shader.PropertyToID("_VirtualLayerDepths");
+    private static readonly int LayerOpacitiesId = Shader.PropertyToID("_VirtualLayerOpacities");
     private static readonly int EffectColorId = Shader.PropertyToID("_EffectColor");
 
     private void OnEnable()
@@ -55,7 +58,7 @@ public sealed class VirtualDepthSprite : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        m_SliceCount = Mathf.Clamp(m_SliceCount, 1, MaxSlices);
+        m_LayerCount = Mathf.Clamp(m_LayerCount, 1, MaxLayerCount);
 
         Cache();
 
@@ -87,32 +90,32 @@ public sealed class VirtualDepthSprite : MonoBehaviour
         if (_spriteRenderer.sprite != m_Sprite)
             _spriteRenderer.sprite = m_Sprite;
 
-        BuildVirtualSlices();
-        ApplySpriteData();
+        BuildVirtualLayers();
+        ApplyShaderProperties();
     }
 
-    private void BuildVirtualSlices()
+    private void BuildVirtualLayers()
     {
-        for (int i = 0; i < MaxSlices; ++i)
+        for (int layerIndex = 0; layerIndex < MaxLayerCount; ++layerIndex)
         {
-            _virtualDepths[i] = 0f;
-            _virtualAlphas[i] = 0f;
+            _layerDepths[layerIndex] = 0f;
+            _layerOpacities[layerIndex] = 0f;
         }
 
-        for (int slice = 0; slice < m_SliceCount; ++slice)
+        for (int layerIndex = 0; layerIndex < m_LayerCount; ++layerIndex)
         {
-            float sliceT = m_SliceCount <= 1 ? 0f : slice / (float)(m_SliceCount - 1);
+            float normalizedLayerIndex = m_LayerCount <= 1 ? 0f : layerIndex / (float)(m_LayerCount - 1);
 
-            float depthT = Mathf.Clamp01(m_DepthDistribution.Evaluate(sliceT));
-            float virtualZ = m_Depth * depthT;
-            float alpha = Mathf.Clamp01(m_AlphaByDepth.Evaluate(depthT));
+            float normalizedDepth = Mathf.Clamp01(m_DepthDistribution.Evaluate(normalizedLayerIndex));
+            float layerDepth = m_TotalDepth * normalizedDepth;
+            float layerOpacity = Mathf.Clamp01(m_OpacityByDepth.Evaluate(normalizedDepth));
 
-            _virtualDepths[slice] = virtualZ;
-            _virtualAlphas[slice] = alpha;
+            _layerDepths[layerIndex] = layerDepth;
+            _layerOpacities[layerIndex] = layerOpacity;
         }
     }
 
-    private void ApplySpriteData()
+    private void ApplyShaderProperties()
     {
         float pixelsPerUnit = m_Sprite.pixelsPerUnit;
 
@@ -128,7 +131,7 @@ public sealed class VirtualDepthSprite : MonoBehaviour
 
         Texture texture = m_Sprite.texture;
 
-        Vector4 uvRect = new Vector4(
+        Vector4 spriteUVRect = new Vector4(
                 textureRect.xMin / texture.width,
                 textureRect.yMin / texture.height,
                 textureRect.xMax / texture.width,
@@ -136,19 +139,19 @@ public sealed class VirtualDepthSprite : MonoBehaviour
 
         _spriteRenderer.GetPropertyBlock(_propertyBlock);
         _propertyBlock.SetVector(SpriteRectId, _spriteRect);
-        _propertyBlock.SetVector(UVRectId, uvRect);
-        _propertyBlock.SetFloat(SliceCountId, m_SliceCount);
-        _propertyBlock.SetFloatArray(VirtualDepthsId, _virtualDepths);
-        _propertyBlock.SetFloatArray(VirtualAlphasId, _virtualAlphas);
-        _propertyBlock.SetColor(EffectColorId, m_Color);
+        _propertyBlock.SetVector(SpriteUVRectId, spriteUVRect);
+        _propertyBlock.SetFloat(LayerCountId, m_LayerCount);
+        _propertyBlock.SetFloatArray(LayerDepthsId, _layerDepths);
+        _propertyBlock.SetFloatArray(LayerOpacitiesId, _layerOpacities);
+        _propertyBlock.SetColor(EffectColorId, m_EffectColor);
         _spriteRenderer.SetPropertyBlock(_propertyBlock);
 
         ApplyRendererBounds();
     }
 
-    internal void SetBoundsOffsetPerDepth(Vector2 offsetPerDepth)
+    internal void SetLayerOffsetPerDepth(Vector2 layerOffsetPerDepth)
     {
-        _boundsOffsetPerDepth = offsetPerDepth;
+        _layerOffsetPerDepth = layerOffsetPerDepth;
 
         if (_spriteRenderer != null && _spriteRect.z > 0f && _spriteRect.w > 0f)
             ApplyRendererBounds();
@@ -163,20 +166,20 @@ public sealed class VirtualDepthSprite : MonoBehaviour
         float minimumY = _spriteRect.y;
         float maximumY = _spriteRect.y + _spriteRect.w;
 
-        for (int slice = 0; slice < m_SliceCount; ++slice)
+        for (int layerIndex = 0; layerIndex < m_LayerCount; ++layerIndex)
         {
-            if (_virtualAlphas[slice] <= 0.0001f)
+            if (_layerOpacities[layerIndex] <= 0.0001f)
                 continue;
 
-            float virtualDepth = _virtualDepths[slice];
-            Vector2 sliceOffset = _boundsOffsetPerDepth * virtualDepth;
+            float layerDepth = _layerDepths[layerIndex];
+            Vector2 layerOffset = _layerOffsetPerDepth * layerDepth;
 
-            minimumDepth = Mathf.Min(minimumDepth, virtualDepth);
-            maximumDepth = Mathf.Max(maximumDepth, virtualDepth);
-            minimumX = Mathf.Min(minimumX, _spriteRect.x + sliceOffset.x);
-            maximumX = Mathf.Max(maximumX, _spriteRect.x + _spriteRect.z + sliceOffset.x);
-            minimumY = Mathf.Min(minimumY, _spriteRect.y + sliceOffset.y);
-            maximumY = Mathf.Max(maximumY, _spriteRect.y + _spriteRect.w + sliceOffset.y);
+            minimumDepth = Mathf.Min(minimumDepth, layerDepth);
+            maximumDepth = Mathf.Max(maximumDepth, layerDepth);
+            minimumX = Mathf.Min(minimumX, _spriteRect.x + layerOffset.x);
+            maximumX = Mathf.Max(maximumX, _spriteRect.x + _spriteRect.z + layerOffset.x);
+            minimumY = Mathf.Min(minimumY, _spriteRect.y + layerOffset.y);
+            maximumY = Mathf.Max(maximumY, _spriteRect.y + _spriteRect.w + layerOffset.y);
         }
 
         Vector3 boundsCenter = new Vector3(

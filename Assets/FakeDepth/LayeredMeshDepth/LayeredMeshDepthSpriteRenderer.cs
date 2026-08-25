@@ -1,32 +1,35 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Scripting.APIUpdating;
 
 [ExecuteAlways]
+[AddComponentMenu("Rendering/Layered Mesh Depth/Sprite Renderer")]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-public sealed class FakeDepthSpriteRenderer : MonoBehaviour
+[MovedFrom(true, null, null, "FakeDepthSpriteRenderer")]
+public sealed class LayeredMeshDepthSpriteRenderer : MonoBehaviour
 {
-    private const int MaxSlices = 20;
+    private const int MaxLayerCount = 20;
     [SerializeField] private Sprite m_Sprite;
-    [SerializeField] private Color m_Color = Color.black;
+    [SerializeField] private Color m_Tint = Color.black;
     [SerializeField] private bool m_FlipX;
     [SerializeField] private bool m_FlipY;
     
-    [Tooltip("Number of sprite copies generated inside one mesh.")] 
-    [Range(1, MaxSlices)] [SerializeField] private int m_SliceCount = 20;
+    [Tooltip("Number of sprite layers generated inside one mesh.")] 
+    [Range(1, MaxLayerCount)] [SerializeField] private int m_LayerCount = 20;
     [Tooltip("Total local-space Z extrusion.\n" + "For a normal 2D Unity camera placed on negative Z, " + "use a NEGATIVE value to extend toward the camera.")]
-    [SerializeField] private float m_Depth = -1.0f;
+    [SerializeField] private float m_TotalDepth = -1.0f;
     
-    [Tooltip("Controls how slices are distributed through the depth.\n" + "X = normalized slice index\n" + "Y = normalized depth.")]
+    [Tooltip("Controls how layers are distributed through the depth.\n" + "X = normalized layer index\n" + "Y = normalized depth.")]
     [SerializeField] private AnimationCurve m_DepthDistribution = AnimationCurve.Linear(0f, 0f, 1f, 1f);
-    [Tooltip("Alpha through the fake depth.\n" + "X = normalized depth.\n" + "0 = base/original sprite.\n" + "1 = furthest extrusion toward camera.")]
-    [SerializeField] private AnimationCurve m_AlphaByDepth = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+    [Tooltip("Opacity through the layered depth.\n" + "X = normalized depth.\n" + "0 = base/original sprite.\n" + "1 = furthest extrusion toward camera.")]
+    [SerializeField] private AnimationCurve m_OpacityByDepth = AnimationCurve.Linear(0f, 0f, 1f, 1f);
     
     [Header("Sorting")] 
     [SerializeField] private string m_SortingLayerName = "Default";
-    [SerializeField] private int _sortingOrder;
-    [Header("Material")] [Tooltip("Use the FakeDepthSprite URP material created below.")] 
+    [SerializeField] private int m_SortingOrder;
+    [Header("Material")] [Tooltip("Use the Layered Mesh Depth Sprite material.")] 
     [SerializeField] private Material m_Material;
     
     private MeshFilter _meshFilter;
@@ -36,7 +39,7 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
     
     // Shader property IDs
     private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
-    private static readonly int ColorId = Shader.PropertyToID("_Color");
+    private static readonly int TintId = Shader.PropertyToID("_Tint");
 
     private void OnEnable()
     {
@@ -53,7 +56,7 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        m_SliceCount = Mathf.Max(1, m_SliceCount);
+        m_LayerCount = Mathf.Clamp(m_LayerCount, 1, MaxLayerCount);
 
         CacheComponents();
 
@@ -104,7 +107,7 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
 
         _mesh = new Mesh
         {
-            name = $"{name}_FakeDepthSpriteMesh",
+            name = $"{name}_LayeredMeshDepthSprite",
             hideFlags = HideFlags.HideAndDontSave
         };
 
@@ -126,8 +129,8 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
 
 
         int sourceVertexCount = sourceVertices.Length;
-        int totalVertexCount = sourceVertexCount * m_SliceCount;
-        int totalIndexCount = sourceTriangles.Length * m_SliceCount;
+        int totalVertexCount = sourceVertexCount * m_LayerCount;
+        int totalIndexCount = sourceTriangles.Length * m_LayerCount;
 
 
         // Use UInt32 only if necessary.
@@ -140,16 +143,16 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
 
 
         // Vertices
-        for (int slice = 0; slice < m_SliceCount; slice++)
+        for (int layerIndex = 0; layerIndex < m_LayerCount; layerIndex++)
         {
-            float normalizedSlice = m_SliceCount == 1 ? 0f : slice / (float)(m_SliceCount - 1);
-            float depthT = Mathf.Clamp01(m_DepthDistribution.Evaluate(normalizedSlice));
-            float localZ = m_Depth * depthT;
-            float alpha = Mathf.Clamp01(m_AlphaByDepth.Evaluate(depthT));
+            float normalizedLayerIndex = m_LayerCount == 1 ? 0f : layerIndex / (float)(m_LayerCount - 1);
+            float normalizedDepth = Mathf.Clamp01(m_DepthDistribution.Evaluate(normalizedLayerIndex));
+            float layerDepth = m_TotalDepth * normalizedDepth;
+            float layerOpacity = Mathf.Clamp01(m_OpacityByDepth.Evaluate(normalizedDepth));
 
 
             Color layerColor = Color.white;
-            layerColor.a = alpha;
+            layerColor.a = layerOpacity;
             Color32 vertexColor = layerColor;
             
             for (int vertexIndex = 0; vertexIndex < sourceVertexCount; vertexIndex++)
@@ -158,21 +161,21 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
                 float x = m_FlipX ? -sourceVertex.x : sourceVertex.x;
                 float y = m_FlipY ? -sourceVertex.y : sourceVertex.y;
                 
-                vertices.Add(new Vector3(x, y, localZ));
+                vertices.Add(new Vector3(x, y, layerDepth));
                 uvs.Add(sourceUVs[vertexIndex]);
                 colors.Add(vertexColor);
             }
         }
 
-        if (m_Depth <= 0f)
+        if (m_TotalDepth <= 0f)
         {
-            for (int slice = 0; slice < m_SliceCount; slice++)
-                AddSliceTriangles(slice, sourceVertexCount, sourceTriangles, triangles);
+            for (int layerIndex = 0; layerIndex < m_LayerCount; layerIndex++)
+                AddLayerTriangles(layerIndex, sourceVertexCount, sourceTriangles, triangles);
         }
         else
         {
-            for (int slice = m_SliceCount - 1; slice >= 0; slice--)
-                AddSliceTriangles(slice, sourceVertexCount, sourceTriangles, triangles);
+            for (int layerIndex = m_LayerCount - 1; layerIndex >= 0; layerIndex--)
+                AddLayerTriangles(layerIndex, sourceVertexCount, sourceTriangles, triangles);
         }
 
 
@@ -188,9 +191,9 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
     }
 
 
-    private static void AddSliceTriangles(int slice, int sourceVertexCount, ushort[] sourceTriangles, List<int> destination)
+    private static void AddLayerTriangles(int layerIndex, int sourceVertexCount, ushort[] sourceTriangles, List<int> destination)
     {
-        int vertexOffset = slice * sourceVertexCount;
+        int vertexOffset = layerIndex * sourceVertexCount;
         for (int i = 0; i < sourceTriangles.Length; i++)
             destination.Add(vertexOffset + sourceTriangles[i]);
     }
@@ -206,7 +209,7 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
 
 
         _meshRenderer.sortingLayerName = m_SortingLayerName;
-        _meshRenderer.sortingOrder = _sortingOrder;
+        _meshRenderer.sortingOrder = m_SortingOrder;
         _meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
         _meshRenderer.receiveShadows = false;
         _meshRenderer.lightProbeUsage = LightProbeUsage.Off;
@@ -227,7 +230,7 @@ public sealed class FakeDepthSpriteRenderer : MonoBehaviour
 
         _meshRenderer.GetPropertyBlock(_propertyBlock);
         _propertyBlock.SetTexture(MainTexId, m_Sprite.texture);
-        _propertyBlock.SetColor(ColorId, m_Color);
+        _propertyBlock.SetColor(TintId, m_Tint);
         _meshRenderer.SetPropertyBlock(_propertyBlock);
     }
 

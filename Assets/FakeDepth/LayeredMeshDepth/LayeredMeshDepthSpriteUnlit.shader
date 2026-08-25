@@ -1,10 +1,10 @@
-Shader "Custom/FakeDepthSpriteURP"
+Shader "Custom/URP/Layered Mesh Depth/Sprite Unlit"
 {
     Properties
     {
         [PerRendererData]
         _MainTex ("Sprite Texture", 2D) = "white" {}
-        _Color ("Tint", Color) = (1,1,1,1)
+        _Tint ("Tint", Color) = (1,1,1,1)
     }
 
     SubShader
@@ -19,7 +19,7 @@ Shader "Custom/FakeDepthSpriteURP"
 
         Pass
         {
-            Name "FakeDepthSprite"
+            Name "LayeredMeshDepthSpriteUnlit"
 
             Tags
             {
@@ -48,7 +48,7 @@ Shader "Custom/FakeDepthSpriteURP"
 
 
             CBUFFER_START(UnityPerMaterial)
-                float4 _Color;
+                float4 _Tint;
             CBUFFER_END
 
 
@@ -85,11 +85,9 @@ Shader "Custom/FakeDepthSpriteURP"
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
 
 
-                // Sprite texture
-                // × overall tint
-                // × per-depth vertex alpha
+                // Sprite texture * overall tint * per-layer vertex opacity.
 
-                half4 finalColor = texColor * _Color * input.color;
+                half4 finalColor = texColor * _Tint * input.color;
                 return finalColor;
             }
             ENDHLSL

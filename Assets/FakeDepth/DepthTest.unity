@@ -259,7 +259,7 @@ GameObject:
   - component: {fileID: 582280412}
   - component: {fileID: 582280411}
   m_Layer: 0
-  m_Name: FakeDepth
+  m_Name: Layered Mesh Depth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -276,7 +276,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5ced3f185608c9e4381af04c38844ef9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FakeDepthSpriteRenderer
+  m_EditorClassIdentifier: Assembly-CSharp::LayeredMeshDepthSpriteRenderer
   m_Sprite: {fileID: 21300000, guid: 76c5b3ee58966ac4983f91599b6ed2d2, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_FlipX: 0
@@ -582,7 +582,7 @@ GameObject:
   - component: {fileID: 1235592202}
   - component: {fileID: 1235592201}
   m_Layer: 0
-  m_Name: VertualDepth
+  m_Name: Virtual Depth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -599,7 +599,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 296f0ea723d2bc141ad496ccd926f503, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VirtualDepthSprite
+  m_EditorClassIdentifier: Assembly-CSharp::VirtualDepthSpriteRenderer
   m_Sprite: {fileID: 21300000, guid: 76c5b3ee58966ac4983f91599b6ed2d2, type: 3}
   m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_SliceCount: 10

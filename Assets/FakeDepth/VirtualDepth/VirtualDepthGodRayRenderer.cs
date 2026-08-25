@@ -1,43 +1,46 @@
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 [ExecuteAlways]
+[AddComponentMenu("Rendering/Virtual Depth/God Ray Renderer")]
 [DisallowMultipleComponent]
-[RequireComponent(typeof(SpriteRenderer), typeof(VirtualDepthSprite))]
-public sealed class VirtualDepthGodRay : MonoBehaviour
+[RequireComponent(typeof(SpriteRenderer), typeof(VirtualDepthSpriteRenderer))]
+[MovedFrom(true, null, null, "VirtualDepthGodRay")]
+public sealed class VirtualDepthGodRayRenderer : MonoBehaviour
 {
-    public enum LightDirectionMode
+    public enum LayerOffsetMode
     {
         Manual,
         SourceForward,
         AwayFromSource
     }
 
-    private const float MinimumDirectionZ = 0.0001f;
+    private const float MinimumTrackedDirectionZ = 0.0001f;
 
     [Tooltip("Per-renderer multiplier for the accumulated God Ray light.")]
     [Min(0f)] [SerializeField] private float m_Intensity = 1f;
 
-    [Tooltip("How the local-space light slope is calculated.")]
-    [SerializeField] private LightDirectionMode m_DirectionMode = LightDirectionMode.Manual;
+    [Tooltip("How the local-space layer offset per unit depth is calculated.")]
+    [SerializeField] private LayerOffsetMode m_LayerOffsetMode = LayerOffsetMode.Manual;
 
     [Tooltip("Local XY shift per unit of virtual Z depth. Used in Manual mode.")]
-    [SerializeField] private Vector2 m_ManualLightDirection;
+    [SerializeField] private Vector2 m_ManualLayerOffsetPerDepth;
 
     [Tooltip("Optional scene light or transform used by Source Forward and Away From Source modes.")]
-    [SerializeField] private Transform m_DirectionSource;
+    [SerializeField] private Transform m_LayerOffsetSource;
 
     [Tooltip("Reverses the resolved XY slope without changing the source transform.")]
-    [SerializeField] private bool m_InvertDirection;
+    [SerializeField] private bool m_InvertLayerOffset;
 
     [Tooltip("Limits near-parallel tracked directions so they cannot create an extreme virtual offset.")]
     [Min(0.01f)] [SerializeField] private float m_MaximumTrackedSlope = 10f;
 
     private SpriteRenderer _spriteRenderer;
-    private VirtualDepthSprite _virtualDepthSprite;
+    private VirtualDepthSpriteRenderer _virtualDepthSpriteRenderer;
     private MaterialPropertyBlock _propertyBlock;
 
     private static readonly int IntensityId = Shader.PropertyToID("_Intensity");
-    private static readonly int LightDirectionId = Shader.PropertyToID("_LightDirection");
+    private static readonly int LayerOffsetPerDepthId = Shader.PropertyToID("_LayerOffsetPerDepth");
 
     public float Intensity
     {
@@ -57,7 +60,7 @@ public sealed class VirtualDepthGodRay : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (m_DirectionMode != LightDirectionMode.Manual && m_DirectionSource != null)
+        if (m_LayerOffsetMode != LayerOffsetMode.Manual && m_LayerOffsetSource != null)
             Apply();
     }
 
@@ -84,8 +87,8 @@ public sealed class VirtualDepthGodRay : MonoBehaviour
         if (_spriteRenderer == null)
             _spriteRenderer = GetComponent<SpriteRenderer>();
 
-        if (_virtualDepthSprite == null)
-            _virtualDepthSprite = GetComponent<VirtualDepthSprite>();
+        if (_virtualDepthSpriteRenderer == null)
+            _virtualDepthSpriteRenderer = GetComponent<VirtualDepthSpriteRenderer>();
 
         if (_propertyBlock == null)
             _propertyBlock = new MaterialPropertyBlock();
@@ -99,36 +102,36 @@ public sealed class VirtualDepthGodRay : MonoBehaviour
         if (_spriteRenderer == null)
             return;
 
-        Vector2 lightDirection = ResolveLightDirection();
+        Vector2 layerOffsetPerDepth = ResolveLayerOffsetPerDepth();
 
         _spriteRenderer.GetPropertyBlock(_propertyBlock);
         _propertyBlock.SetFloat(IntensityId, m_Intensity);
-        _propertyBlock.SetVector(LightDirectionId, new Vector4(lightDirection.x, lightDirection.y, 0f, 0f));
+        _propertyBlock.SetVector(LayerOffsetPerDepthId, new Vector4(layerOffsetPerDepth.x, layerOffsetPerDepth.y, 0f, 0f));
         _spriteRenderer.SetPropertyBlock(_propertyBlock);
 
-        // The mask occupies SpriteRect + lightDirection * virtualDepth on every slice.
-        // Keep those shifted planes inside the renderer's CPU-side culling bounds.
-        _virtualDepthSprite.SetBoundsOffsetPerDepth(lightDirection);
+        // Each mask occupies SpriteRect + layerOffsetPerDepth * layerDepth.
+        // Keep those shifted layers inside the renderer's CPU-side culling bounds.
+        _virtualDepthSpriteRenderer.SetLayerOffsetPerDepth(layerOffsetPerDepth);
     }
 
-    private Vector2 ResolveLightDirection()
+    private Vector2 ResolveLayerOffsetPerDepth()
     {
-        Vector2 lightDirection;
+        Vector2 layerOffsetPerDepth;
 
-        if (m_DirectionMode == LightDirectionMode.Manual || m_DirectionSource == null)
+        if (m_LayerOffsetMode == LayerOffsetMode.Manual || m_LayerOffsetSource == null)
         {
-            lightDirection = m_ManualLightDirection;
+            layerOffsetPerDepth = m_ManualLayerOffsetPerDepth;
         }
         else
         {
-            Vector3 worldDirection = m_DirectionMode == LightDirectionMode.SourceForward ? m_DirectionSource.forward : transform.position - m_DirectionSource.position;
-            lightDirection = WorldDirectionToLocalSlope(worldDirection);
+            Vector3 worldDirection = m_LayerOffsetMode == LayerOffsetMode.SourceForward ? m_LayerOffsetSource.forward : transform.position - m_LayerOffsetSource.position;
+            layerOffsetPerDepth = ConvertWorldDirectionToLocalOffsetSlope(worldDirection);
         }
 
-        return m_InvertDirection ? -lightDirection : lightDirection;
+        return m_InvertLayerOffset ? -layerOffsetPerDepth : layerOffsetPerDepth;
     }
 
-    private Vector2 WorldDirectionToLocalSlope(Vector3 worldDirection)
+    private Vector2 ConvertWorldDirectionToLocalOffsetSlope(Vector3 worldDirection)
     {
         if (worldDirection.sqrMagnitude <= Mathf.Epsilon)
             return Vector2.zero;
@@ -137,7 +140,7 @@ public sealed class VirtualDepthGodRay : MonoBehaviour
         Vector2 localXY = new Vector2(localDirection.x, localDirection.y);
 
         Vector2 slope;
-        if (Mathf.Abs(localDirection.z) < MinimumDirectionZ)
+        if (Mathf.Abs(localDirection.z) < MinimumTrackedDirectionZ)
             slope = localXY.sqrMagnitude <= Mathf.Epsilon ? Vector2.zero : localXY.normalized * m_MaximumTrackedSlope;
         else
             slope = localXY / localDirection.z;
