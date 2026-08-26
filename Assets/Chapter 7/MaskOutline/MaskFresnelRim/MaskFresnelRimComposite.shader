@@ -7,9 +7,14 @@ Shader "Hidden/RenderTextureFeature/MaskFresnelRim/Composite"
         _RimThreshold("Rim Threshold", Range(0, 1)) = 0.4
         _RimSoftness("Rim Softness", Range(0.001, 0.5)) = 0.12
         _RimIntensity("Rim Intensity", Range(0, 10)) = 1.5
+        _PlanarProjection("Planar Projection", Range(0, 1)) = 1
+        _PlanarPlaneZ("Planar Plane Z", Float) = 0
+        _PlanarGateStrength("Planar Facing Influence", Range(0, 1)) = 1
         _MaskThreshold("Mask Threshold", Range(0, 1)) = 0.5
         _MaskEdgeSoftness("Mask Edge Softness", Range(0.001, 0.25)) = 0.1
         _NormalSmoothing("Normal Smoothing", Range(0, 2)) = 0.75
+        [HideInInspector] _DebugView("Debug View", Float) = 0
+        [HideInInspector] _DestinationBlend("Destination Blend", Float) = 1
     }
 
     SubShader
@@ -27,7 +32,7 @@ Shader "Hidden/RenderTextureFeature/MaskFresnelRim/Composite"
         Pass
         {
             Name "MaskFresnelRim"
-            Blend One One
+            Blend One [_DestinationBlend]
             ColorMask RGB
 
             HLSLPROGRAM
@@ -49,9 +54,13 @@ Shader "Hidden/RenderTextureFeature/MaskFresnelRim/Composite"
                 float _RimThreshold;
                 float _RimSoftness;
                 float _RimIntensity;
+                float _PlanarProjection;
+                float _PlanarPlaneZ;
+                float _PlanarGateStrength;
                 float _MaskThreshold;
                 float _MaskEdgeSoftness;
                 float _NormalSmoothing;
+                float _DebugView;
             CBUFFER_END
 
             half SampleSelectionMask(float2 uv)
@@ -76,6 +85,10 @@ Shader "Hidden/RenderTextureFeature/MaskFresnelRim/Composite"
 
                 float2 uv = input.texcoord;
                 half selection = SampleSelectionMask(uv);
+
+                if (_DebugView == 1.0)
+                    return half4(selection.xxx, 0.0h);
+
                 if (selection <= 0.0001h)
                     return 0.0h;
 
@@ -100,6 +113,10 @@ Shader "Hidden/RenderTextureFeature/MaskFresnelRim/Composite"
                     return 0.0h;
 
                 float3 normalWS = normalSum * rsqrt(normalLengthSquared);
+
+                if (_DebugView == 2.0)
+                    return half4(normalWS * 0.5 + 0.5, 0.0h);
+
                 float rawDepth = SampleSceneDepth(uv, sampler_PointClamp);
 
                 #if UNITY_REVERSED_Z
@@ -115,11 +132,35 @@ Shader "Hidden/RenderTextureFeature/MaskFresnelRim/Composite"
                 float3 positionWS = ComputeWorldSpacePosition(uv,deviceDepth,UNITY_MATRIX_I_VP);
                 float3 viewDirectionWS = normalize(GetWorldSpaceViewDir(positionWS));
 
+                float3 planarCameraPosition = GetCurrentViewPosition();
+                planarCameraPosition.z = lerp(planarCameraPosition.z, _PlanarPlaneZ, _PlanarProjection);
+                float3 planarViewDirection = SafeNormalize(planarCameraPosition - positionWS);
+
                 float normalDotView = saturate(dot(normalWS, viewDirectionWS));
                 float fresnel = pow(saturate(1.0 - normalDotView),_RimPower);
-                float antialiasing = max(fwidth(fresnel), 0.0001);
+                float planarFacing = saturate(dot(normalWS, planarViewDirection));
+                float planarGate = lerp(1.0, planarFacing, _PlanarGateStrength);
+                float gatedFresnel = fresnel * planarGate;
+
+                if (_DebugView == 3.0)
+                    return half4(fresnel.xxx, 0.0h);
+
+                if (_DebugView == 4.0)
+                    return half4(planarFacing.xxx, 0.0h);
+
+                if (_DebugView == 5.0)
+                    return half4(gatedFresnel.xxx, 0.0h);
+
+                float antialiasing = max(fwidth(gatedFresnel), 0.0001);
                 float softness = max(_RimSoftness, antialiasing);
-                half rim = smoothstep(_RimThreshold - softness,_RimThreshold + softness,fresnel);
+                half rim = smoothstep(
+                    _RimThreshold - softness,
+                    _RimThreshold + softness,
+                    gatedFresnel
+                );
+
+                if (_DebugView == 6.0)
+                    return half4(rim.xxx, 0.0h);
 
                 half strength = selection * rim *_RimColor.a * _RimIntensity;
                 return half4(_RimColor.rgb * strength, 0.0h);

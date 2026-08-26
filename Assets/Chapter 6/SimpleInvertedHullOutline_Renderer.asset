@@ -97,7 +97,10 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 65536
     RimColor: {r: 1, g: 1, b: 1, a: 1}
-    RimPower: 7.5
-    RimThreshold: 0.034
-    RimSoftness: 0.001
-    RimIntensity: 10
+    RimPower: 3.81
+    RimThreshold: 0.17
+    RimSoftness: 0.161
+    RimIntensity: 6.69
+    PlanarProjection: 0.377
+    PlanarPlaneZ: 0.05
+    PlanarGateStrength: 1

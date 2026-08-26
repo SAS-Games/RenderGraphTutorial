@@ -20,18 +20,59 @@ public sealed class MaskFresnelRimFeature : ScriptableRendererFeature
     [Serializable]
     public sealed class Settings
     {
+        public enum DebugView
+        {
+            FinalRim = 0,
+            SelectionMask = 1,
+            SmoothedNormal = 2,
+            StandardFresnel = 3,
+            PlanarFacing = 4,
+            GatedFresnel = 5,
+            ThresholdedRim = 6
+        }
+
         [Tooltip("When the rim is composited. This must run after the mask texture is produced.")]
         public RenderPassEvent RenderPassEvent = RenderPassEvent.AfterRenderingTransparents;
 
         [Tooltip("Texture name produced by RenderObjectsToTextureFeature.")]
         public string MaskTextureName = "_SelectionOutlineMask";
 
-        [ColorUsage(true, true)] public Color RimColor = new(1.0f, 0.85f, 0.75f, 1.0f);
+        [InspectorName("Debug View")]
+        [Tooltip("Selects the final composite or an intermediate value. Debug views replace the scene with an opaque visualization; switch back to Final Rim for additive rendering.")]
+        public DebugView DebugOutput = DebugView.FinalRim;
 
-        [Range(0.25f, 8.0f)] public float RimPower = 3.0f;
-        [Range(0.0f, 1.0f)] public float RimThreshold = 0.4f;
-        [Range(0.001f, 0.5f)] public float RimSoftness = 0.12f;
-        [Range(0.0f, 10.0f)] public float RimIntensity = 1.5f;
+        [Tooltip("HDR additive rim tint. RGB controls the tint, while alpha multiplies brightness together with Rim Intensity; alpha does not behave as transparency in this additive pass.")]
+        [ColorUsage(true, true)]
+        public Color RimColor = new(1.0f, 0.85f, 0.75f, 1.0f);
+
+        [InspectorName("Rim Tightness")]
+        [Tooltip("Controls the standard Fresnel falloff before the planar-facing influence and threshold. Higher values produce a thinner, tighter rim; lower values produce a wider rim.")]
+        [Range(0.25f, 8.0f)]
+        public float RimPower = 3.0f;
+
+        [Tooltip("Cuts off the gated Fresnel value. Higher values reveal less rim; lower values reveal more. Rim Softness controls how gradually this cutoff is crossed.")]
+        [Range(0.0f, 1.0f)]
+        public float RimThreshold = 0.4f;
+
+        [Tooltip("Half-width of the transition around Rim Threshold. Higher values produce a softer transition; lower values produce a sharper edge.")]
+        [Range(0.001f, 0.5f)]
+        public float RimSoftness = 0.12f;
+
+        [Tooltip("Scales brightness after thresholding. It does not change the mathematical rim width, although additive HDR brightness can make the rim appear wider. Zero disables the pass.")]
+        [Range(0.0f, 10.0f)]
+        public float RimIntensity = 1.5f;
+
+        [Tooltip("Blends the camera Z position toward Planar Plane Z for the directional mask. Zero uses the real camera position; one uses a fully planar direction. It has no visible effect when Planar Facing Influence is zero.")]
+        [Range(0.0f, 1.0f)]
+        public float PlanarProjection = 1.0f;
+
+        [Tooltip("World-space Z coordinate used when projecting the camera for the directional gate. Match this to the gameplay plane. Its influence increases with Planar Projection.")]
+        public float PlanarPlaneZ = 0.0f;
+
+        [InspectorName("Planar Facing Influence")]
+        [Tooltip("Blends between standard Fresnel and the planar-facing mask before Rim Threshold. Zero disables the directional mask; one applies it fully.")]
+        [Range(0.0f, 1.0f)]
+        public float PlanarGateStrength = 1.0f;
 
         [Tooltip("Mask value where a pixel belongs to the selected object.")] [Range(0.0f, 1.0f)]
         public float MaskThreshold = 0.5f;
@@ -53,7 +94,10 @@ public sealed class MaskFresnelRimFeature : ScriptableRendererFeature
     {
         RimSettings ??= new Settings();
 
-        if (string.IsNullOrWhiteSpace(RimSettings.MaskTextureName) || RimSettings.RimIntensity <= 0.0001f ||
+        bool finalRimDisabled = RimSettings.DebugOutput == Settings.DebugView.FinalRim &&
+                                RimSettings.RimIntensity <= 0.0001f;
+
+        if (string.IsNullOrWhiteSpace(RimSettings.MaskTextureName) || finalRimDisabled ||
             !_materialCache.Ensure(CompositeMaterial))
             return;
 
@@ -78,10 +122,15 @@ internal sealed class MaskFresnelRimPass : ScriptableRenderPass
     private static readonly int RimThresholdId = Shader.PropertyToID("_RimThreshold");
     private static readonly int RimSoftnessId = Shader.PropertyToID("_RimSoftness");
     private static readonly int RimIntensityId = Shader.PropertyToID("_RimIntensity");
+    private static readonly int PlanarProjectionId = Shader.PropertyToID("_PlanarProjection");
+    private static readonly int PlanarPlaneZId = Shader.PropertyToID("_PlanarPlaneZ");
+    private static readonly int PlanarGateStrengthId = Shader.PropertyToID("_PlanarGateStrength");
     private static readonly int MaskThresholdId = Shader.PropertyToID("_MaskThreshold");
 
     private static readonly int MaskEdgeSoftnessId = Shader.PropertyToID("_MaskEdgeSoftness");
     private static readonly int NormalSmoothingId = Shader.PropertyToID("_NormalSmoothing");
+    private static readonly int DebugViewId = Shader.PropertyToID("_DebugView");
+    private static readonly int DestinationBlendId = Shader.PropertyToID("_DestinationBlend");
     private readonly MaskedTextureResolver _maskResolver = new(nameof(MaskFresnelRimFeature));
 
     private string _profilingName;
@@ -101,9 +150,13 @@ internal sealed class MaskFresnelRimPass : ScriptableRenderPass
         public float RimThreshold;
         public float RimSoftness;
         public float RimIntensity;
+        public float PlanarProjection;
+        public float PlanarPlaneZ;
+        public float PlanarGateStrength;
         public float MaskThreshold;
         public float MaskEdgeSoftness;
         public float NormalSmoothing;
+        public MaskFresnelRimFeature.Settings.DebugView DebugView;
     }
 
     public MaskFresnelRimPass()
@@ -160,9 +213,13 @@ internal sealed class MaskFresnelRimPass : ScriptableRenderPass
         passData.RimThreshold = Mathf.Clamp01(_settings.RimThreshold);
         passData.RimSoftness = Mathf.Clamp(_settings.RimSoftness, 0.001f, 0.5f);
         passData.RimIntensity = Mathf.Max(0.0f, _settings.RimIntensity);
+        passData.PlanarProjection = Mathf.Clamp01(_settings.PlanarProjection);
+        passData.PlanarPlaneZ = _settings.PlanarPlaneZ;
+        passData.PlanarGateStrength = Mathf.Clamp01(_settings.PlanarGateStrength);
         passData.MaskThreshold = Mathf.Clamp01(_settings.MaskThreshold);
         passData.MaskEdgeSoftness = Mathf.Clamp(_settings.MaskEdgeSoftness, 0.001f, 0.25f);
         passData.NormalSmoothing = Mathf.Clamp(_settings.NormalSmoothing, 0.0f, 2.0f);
+        passData.DebugView = _settings.DebugOutput;
 
         builder.UseTexture(maskTexture, AccessFlags.Read);
         builder.UseTexture(normalsTexture, AccessFlags.Read);
@@ -181,9 +238,19 @@ internal sealed class MaskFresnelRimPass : ScriptableRenderPass
         data.Material.SetFloat(RimThresholdId, data.RimThreshold);
         data.Material.SetFloat(RimSoftnessId, data.RimSoftness);
         data.Material.SetFloat(RimIntensityId, data.RimIntensity);
+        data.Material.SetFloat(PlanarProjectionId, data.PlanarProjection);
+        data.Material.SetFloat(PlanarPlaneZId, data.PlanarPlaneZ);
+        data.Material.SetFloat(PlanarGateStrengthId, data.PlanarGateStrength);
         data.Material.SetFloat(MaskThresholdId, data.MaskThreshold);
         data.Material.SetFloat(MaskEdgeSoftnessId, data.MaskEdgeSoftness);
         data.Material.SetFloat(NormalSmoothingId, data.NormalSmoothing);
+        data.Material.SetFloat(DebugViewId, (float)data.DebugView);
+        data.Material.SetFloat(
+            DestinationBlendId,
+            data.DebugView == MaskFresnelRimFeature.Settings.DebugView.FinalRim
+                ? (float)BlendMode.One
+                : (float)BlendMode.Zero
+        );
 
         Blitter.BlitTexture(context.cmd, data.MaskTexture, new Vector4(1, 1, 0, 0), data.Material, 0);
     }

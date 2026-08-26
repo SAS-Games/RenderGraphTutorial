@@ -102,11 +102,15 @@ MonoBehaviour:
   RimSettings:
     RenderPassEvent: 500
     MaskTextureName: _SelectionOutlineMask
+    DebugOutput: 0
     RimColor: {r: 1, g: 0.85, b: 0.75, a: 1}
     RimPower: 3.08
     RimThreshold: 0.415
     RimSoftness: 0.12
     RimIntensity: 1.5
+    PlanarProjection: 1
+    PlanarPlaneZ: 0
+    PlanarGateStrength: 1
     MaskThreshold: 0.5
     MaskEdgeSoftness: 0.1
     NormalSmoothing: 0.75
@@ -134,6 +138,9 @@ MonoBehaviour:
     RimThreshold: 0.5
     RimSoftness: 0.1
     RimIntensity: 2
+    PlanarProjection: 1
+    PlanarPlaneZ: 0
+    PlanarGateStrength: 1
 --- !u!114 &5319349183542380552
 MonoBehaviour:
   m_ObjectHideFlags: 0
