@@ -1,5 +1,6 @@
-Shader "Hidden/RenderTextureFeature/MaskOutline/Composite"
+Shader "Hidden/RenderTextureFeature/OuterMaskOutline/Composite"
 {
+    // Produces an outside-only outline from the Chapter 7 selection mask.
     Properties
     {
         _OutlineColor("Outline Color", Color) = (1, 0.82, 0, 1)
@@ -8,13 +9,7 @@ Shader "Hidden/RenderTextureFeature/MaskOutline/Composite"
         _OutlineIntensity("Outline Intensity", Range(0, 5)) = 1
         _MaskThreshold("Mask Threshold", Range(0, 1)) = 0.5
         _EdgeSoftness("Edge Softness", Range(0.001, 0.25)) = 0.03
-
-        // 0 = Outside
-        // 1 = Inside
-        // 2 = Both
-        _OutlineMode("Outline Mode", Float) = 0
     }
-
 
     SubShader
     {
@@ -28,10 +23,10 @@ Shader "Hidden/RenderTextureFeature/MaskOutline/Composite"
         ZWrite Off
         Cull Off
 
-
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+        #include "Assets/Chapter 7/MaskOutline/Shader/MorphologyUtils.hlsl"
 
         #define MAX_OUTLINE_RADIUS 24
 
@@ -45,109 +40,110 @@ Shader "Hidden/RenderTextureFeature/MaskOutline/Composite"
             float _OutlineIntensity;
             float _MaskThreshold;
             float _EdgeSoftness;
-            float _OutlineMode;
         CBUFFER_END
 
-        #include "MorphologyUtils.hlsl"
-
-        // Shader-specific entry points bind material properties to the shared kernels.
         half4 HorizontalMorphologyFragment(Varyings input) : SV_Target
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-            half3 morphology = FeatheredMorphology1D(
-                TEXTURE2D_X_ARGS(_BlitTexture, sampler_LinearClamp), input.texcoord, _MaskTexelSize.xy,
-                float2(1.0, 0.0), _OutlineWidth, _OutlineSoftness,MAX_OUTLINE_RADIUS, _MaskThreshold, _EdgeSoftness,
+            half2 morphology = FeatheredDilation1D(
+                TEXTURE2D_X_ARGS(_BlitTexture, sampler_LinearClamp),
+                input.texcoord,
+                _MaskTexelSize.xy,
+                float2(1.0, 0.0),
+                _OutlineWidth,
+                _OutlineSoftness,
+                MAX_OUTLINE_RADIUS,
+                _MaskThreshold,
+                _EdgeSoftness,
                 false
             );
 
-            return half4(morphology, 1.0h);
+            return half4(morphology, 0.0h, 1.0h);
         }
 
         half4 VerticalMorphologyFragment(Varyings input) : SV_Target
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-            half3 morphology = FeatheredMorphology1D(
-                TEXTURE2D_X_ARGS(_BlitTexture, sampler_LinearClamp), input.texcoord, _MaskTexelSize.xy,
-                float2(0.0, 1.0), _OutlineWidth,
-                _OutlineSoftness,MAX_OUTLINE_RADIUS, _MaskThreshold, _EdgeSoftness, true);
+            half2 morphology = FeatheredDilation1D(
+                TEXTURE2D_X_ARGS(_BlitTexture, sampler_LinearClamp),
+                input.texcoord,
+                _MaskTexelSize.xy,
+                float2(0.0, 1.0),
+                _OutlineWidth,
+                _OutlineSoftness,
+                MAX_OUTLINE_RADIUS,
+                _MaskThreshold,
+                _EdgeSoftness,
+                true
+            );
 
-            return half4(morphology, 1.0h);
+            return half4(morphology, 0.0h, 1.0h);
         }
 
         half4 CompositeFragment(Varyings input) : SV_Target
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
             float2 uv = input.texcoord;
-
             half center = ApplyMaskThreshold(
-                SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).r,
+                SAMPLE_TEXTURE2D_X(
+                    _BlitTexture,
+                    sampler_LinearClamp,
+                    uv
+                ).r,
                 _MaskThreshold,
-                _EdgeSoftness);
-            half3 morphology = SAMPLE_TEXTURE2D_X(_MorphologyTexture, sampler_LinearClamp, uv).rgb;
+                _EdgeSoftness
+            );
+            half2 morphology = SAMPLE_TEXTURE2D_X(
+                _MorphologyTexture,
+                sampler_LinearClamp,
+                uv
+            ).rg;
 
+            half solidOutside = saturate(morphology.r - center);
+            half featheredOutside = saturate(morphology.g - center);
+            half edge = max(solidOutside, featheredOutside);
 
-            half solidExpanded = morphology.r;
-            half weightedExpanded = morphology.g;
-            half eroded = morphology.b;
-
-            // Fully solid outline.
-            half solidOutside = saturate(solidExpanded - center);
-            half featheredOutside = saturate(weightedExpanded - center);
-
-
-            // We always preserve the full-opacity solid outline.Outside of it, weightedExpanded naturally
-            // creates the gradient.
-
-            half outsideEdge = max(solidOutside, featheredOutside);
-            // INSIDE OUTLINE
-            half insideEdge = saturate(center - eroded);
-
-            // SELECT MODE
-            half edge = outsideEdge;
-            // Both
-
-            if (_OutlineMode >= 1.5)
-                edge = max(outsideEdge, insideEdge);
-            else if (_OutlineMode >= 0.5) // Inside
-                edge = insideEdge;
-
-            // FINAL COLOR
-            half alpha = saturate(edge * _OutlineColor.a * _OutlineIntensity);
+            half alpha = saturate(
+                edge * _OutlineColor.a * _OutlineIntensity
+            );
             half3 color = _OutlineColor.rgb * _OutlineIntensity;
             return half4(color, alpha);
         }
         ENDHLSL
 
-        // PASS 0
         Pass
         {
             Name "HorizontalMorphology"
             Blend Off
-            ColorMask RGB
+            ColorMask RG
+
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment HorizontalMorphologyFragment
             ENDHLSL
         }
-        // PASS 1
+
         Pass
         {
             Name "VerticalMorphology"
             Blend Off
-            ColorMask RGB
+            ColorMask RG
+
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment VerticalMorphologyFragment
             ENDHLSL
         }
-        // PASS 2
+
         Pass
         {
-            Name "OutlineComposite"
+            Name "OuterOutlineComposite"
             Blend SrcAlpha OneMinusSrcAlpha
             ColorMask RGB
+
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment CompositeFragment

@@ -25,7 +25,8 @@ Shader "Hidden/Chapter6/SideScrollerFresnelRim"
             ZTest LEqual
             ZWrite Off
 
-            Blend SrcAlpha One
+            Blend One One
+            ColorMask RGB
 
             HLSLPROGRAM
             #pragma vertex RimVertex
@@ -107,8 +108,8 @@ Shader "Hidden/Chapter6/SideScrollerFresnelRim"
                 rim *= _RimIntensity;
 
                 // Additive glowing rim
-                half3 color = _RimColor.rgb * rim;
-                return half4(color, rim * _RimColor.a);
+                half3 color = _RimColor.rgb * (rim * _RimColor.a);
+                return half4(color, 0.0h);
             }
             ENDHLSL
         }

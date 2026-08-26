@@ -79,6 +79,7 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         public Color OutlineColor;
         public float OutlineIntensity;
         public float MaskThreshold;
+        public float EdgeSoftness;
         public float OutlineMode;
     }
 
@@ -158,6 +159,7 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         passData.OutlineColor = _settings.OutlineColor;
         passData.OutlineIntensity = Mathf.Max(0.0f, _settings.OutlineIntensity);
         passData.MaskThreshold = Mathf.Clamp01(_settings.MaskThreshold);
+        passData.EdgeSoftness = Mathf.Clamp(_settings.EdgeSoftness, 0.001f, 0.25f);
         passData.OutlineMode = (float)_settings.Mode;
 
         builder.UseTexture(maskTexture, AccessFlags.Read);
@@ -201,6 +203,7 @@ internal sealed class MaskOutlinePass : ScriptableRenderPass
         data.Material.SetColor(OutlineColorId, data.OutlineColor);
         data.Material.SetFloat(OutlineIntensityId, data.OutlineIntensity);
         data.Material.SetFloat(MaskThresholdId, data.MaskThreshold);
+        data.Material.SetFloat(EdgeSoftnessId, data.EdgeSoftness);
         data.Material.SetFloat(OutlineModeId, data.OutlineMode);
 
         Blitter.BlitTexture(context.cmd, data.MaskTexture, new Vector4(1, 1, 0, 0), data.Material, CompositePass);
