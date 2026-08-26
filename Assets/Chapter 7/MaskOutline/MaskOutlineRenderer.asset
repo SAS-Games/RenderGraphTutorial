@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f82c2ab9370a440384491b2d3d13b04d, type: 3}
   m_Name: MaskOutlineFeature
   m_EditorClassIdentifier: Assembly-CSharp::MaskOutlineFeature
-  m_Active: 0
+  m_Active: 1
   ProfilingName: Mask Outline
   CompositeMaterial: {fileID: 2100000, guid: a992fa90e5ff44c690e888fc57007286, type: 2}
   OutlineSettings:
@@ -25,80 +25,6 @@ MonoBehaviour:
     MaskThreshold: 0.275
     EdgeSoftness: 0.04
     Mode: 0
---- !u!114 &5319349183542380552
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9781e53cfca348199b6dda02bdafd54e, type: 3}
-  m_Name: OuterMaskOutlineFeature
-  m_EditorClassIdentifier: Assembly-CSharp::OuterMaskOutlineFeature
-  m_Active: 1
-  ProfilingName: Outer Mask Outline
-  CompositeMaterial: {fileID: 2100000, guid: d29a7d23a256491aad8b053aeb2f264c, type: 2}
-  OutlineSettings:
-    RenderPassEvent: 500
-    MaskTextureName: _SelectionOutlineMask
-    OutlineColor: {r: 0.9559748, g: 0.33092073, b: 0.0330682, a: 1}
-    OutlineWidth: 2
-    OutlineSoftness: 4.52
-    OutlineIntensity: 1.71
-    MaskThreshold: 0.275
-    EdgeSoftness: 0.04
---- !u!114 &1827723506963097883
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8e9f82b1662411ab37adb33f112bb2d, type: 3}
-  m_Name: FresnelRimFeature
-  m_EditorClassIdentifier: Assembly-CSharp::FresnelRimFeature
-  m_Active: 0
-  RimShader: {fileID: 4800000, guid: 287a0c6e7ae07114e80c353270bc92f3, type: 3}
-  RimSettings:
-    RenderPassEvent: 300
-    LayerMask:
-      serializedVersion: 2
-      m_Bits: 65536
-    RimColor: {r: 1, g: 0.85, b: 0.75, a: 1}
-    RimPower: 3
-    RimThreshold: 0.5
-    RimSoftness: 0.1
-    RimIntensity: 2
---- !u!114 &562123808891601187
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1c838471851c19a04994b1f6d6c5d38, type: 3}
-  m_Name: MaskFresnelRimFeature
-  m_EditorClassIdentifier: Assembly-CSharp::MaskFresnelRimFeature
-  m_Active: 1
-  ProfilingName: Mask Fresnel Rim
-  CompositeMaterial: {fileID: 2100000, guid: 84a4897765ecca5eba2b7c04c58af8f9, type: 2}
-  RimSettings:
-    RenderPassEvent: 500
-    MaskTextureName: _SelectionOutlineMask
-    RimColor: {r: 1, g: 0.85, b: 0.75, a: 1}
-    RimPower: 3
-    RimThreshold: 0.4
-    RimSoftness: 0.12
-    RimIntensity: 1.5
-    MaskThreshold: 0.5
-    MaskEdgeSoftness: 0.1
-    NormalSmoothing: 0.75
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -158,6 +84,80 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
+--- !u!114 &562123808891601187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c838471851c19a04994b1f6d6c5d38, type: 3}
+  m_Name: MaskFresnelRimFeature
+  m_EditorClassIdentifier: Assembly-CSharp::MaskFresnelRimFeature
+  m_Active: 1
+  ProfilingName: Mask Fresnel Rim
+  CompositeMaterial: {fileID: 2100000, guid: 84a4897765ecca5eba2b7c04c58af8f9, type: 2}
+  RimSettings:
+    RenderPassEvent: 500
+    MaskTextureName: _SelectionOutlineMask
+    RimColor: {r: 1, g: 0.85, b: 0.75, a: 1}
+    RimPower: 3.08
+    RimThreshold: 0.415
+    RimSoftness: 0.12
+    RimIntensity: 1.5
+    MaskThreshold: 0.5
+    MaskEdgeSoftness: 0.1
+    NormalSmoothing: 0.75
+--- !u!114 &1827723506963097883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8e9f82b1662411ab37adb33f112bb2d, type: 3}
+  m_Name: FresnelRimFeature
+  m_EditorClassIdentifier: Assembly-CSharp::FresnelRimFeature
+  m_Active: 0
+  RimShader: {fileID: 4800000, guid: 287a0c6e7ae07114e80c353270bc92f3, type: 3}
+  RimSettings:
+    RenderPassEvent: 300
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 65536
+    RimColor: {r: 1, g: 0.85, b: 0.75, a: 1}
+    RimPower: 3
+    RimThreshold: 0.5
+    RimSoftness: 0.1
+    RimIntensity: 2
+--- !u!114 &5319349183542380552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9781e53cfca348199b6dda02bdafd54e, type: 3}
+  m_Name: OuterMaskOutlineFeature
+  m_EditorClassIdentifier: Assembly-CSharp::OuterMaskOutlineFeature
+  m_Active: 0
+  ProfilingName: Outer Mask Outline
+  CompositeMaterial: {fileID: 2100000, guid: d29a7d23a256491aad8b053aeb2f264c, type: 2}
+  OutlineSettings:
+    RenderPassEvent: 500
+    MaskTextureName: _SelectionOutlineMask
+    OutlineColor: {r: 0.9559748, g: 0.33092073, b: 0.0330682, a: 1}
+    OutlineWidth: 2
+    OutlineSoftness: 4.52
+    OutlineIntensity: 1.71
+    MaskThreshold: 0.275
+    EdgeSoftness: 0.04
 --- !u!114 &6018888855869579118
 MonoBehaviour:
   m_ObjectHideFlags: 0

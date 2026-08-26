@@ -30,22 +30,16 @@ Shader "Custom/URP/Layered Mesh Depth/Sprite Unlit"
 
             ZWrite Off
             ZTest LEqual
-
             Cull Off
-
 
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
-
             #pragma target 2.0
-
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
-
+            
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
-
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _Tint;
@@ -83,10 +77,6 @@ Shader "Custom/URP/Layered Mesh Depth/Sprite Unlit"
             half4 Frag(Varyings input) : SV_Target
             {
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
-
-
-                // Sprite texture * overall tint * per-layer vertex opacity.
-
                 half4 finalColor = texColor * _Tint * input.color;
                 return finalColor;
             }

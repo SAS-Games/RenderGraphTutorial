@@ -36,16 +36,15 @@ Shader "Custom/URP/Virtual Depth/Sprite Unlit"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
-
             #pragma target 3.0
-
+            
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/FakeDepth/ShaderLibrary/VirtualDepthProxyProjection.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _EffectColor;
             CBUFFER_END
 
-            #include "Assets/FakeDepth/ShaderLibrary/VirtualDepthProxyProjection.hlsl"
 
             struct Attributes
             {

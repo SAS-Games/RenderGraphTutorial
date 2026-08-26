@@ -57,7 +57,6 @@ public sealed class LayeredMeshDepthSpriteRenderer : MonoBehaviour
     private void OnValidate()
     {
         m_LayerCount = Mathf.Clamp(m_LayerCount, 1, MaxLayerCount);
-
         CacheComponents();
 
         if (!isActiveAndEnabled)
@@ -131,10 +130,8 @@ public sealed class LayeredMeshDepthSpriteRenderer : MonoBehaviour
         int sourceVertexCount = sourceVertices.Length;
         int totalVertexCount = sourceVertexCount * m_LayerCount;
         int totalIndexCount = sourceTriangles.Length * m_LayerCount;
-
-
-        // Use UInt32 only if necessary.
-        _mesh.indexFormat = totalVertexCount > ushort.MaxValue ? IndexFormat.UInt32 : IndexFormat.UInt16;
+        
+        _mesh.indexFormat = IndexFormat.UInt16;
         
         var vertices = new List<Vector3>(totalVertexCount);
         var uvs = new List<Vector2>(totalVertexCount);
@@ -183,8 +180,7 @@ public sealed class LayeredMeshDepthSpriteRenderer : MonoBehaviour
         _mesh.SetUVs(0, uvs);
         _mesh.SetColors(colors);
         _mesh.SetTriangles(triangles, 0, true);
-
-
+        
         // Normals aren't needed by our unlit shader.
         _mesh.RecalculateBounds();
         _meshFilter.sharedMesh = _mesh;

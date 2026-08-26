@@ -21,30 +21,6 @@ MonoBehaviour:
       m_Bits: 65536
     Color: {r: 1, g: 0.82, b: 0, a: 1}
     Width: 0.072
---- !u!114 &5423795740921140845
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8e9f82b1662411ab37adb33f112bb2d, type: 3}
-  m_Name: FresnelRimFeature
-  m_EditorClassIdentifier: Assembly-CSharp::FresnelRimFeature
-  m_Active: 1
-  RimShader: {fileID: 4800000, guid: 287a0c6e7ae07114e80c353270bc92f3, type: 3}
-  RimSettings:
-    RenderPassEvent: 300
-    LayerMask:
-      serializedVersion: 2
-      m_Bits: 65536
-    RimColor: {r: 1, g: 0.85, b: 0.75, a: 1}
-    RimPower: 3
-    RimThreshold: 0.5
-    RimSoftness: 0.1
-    RimIntensity: 2
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -101,3 +77,27 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
+--- !u!114 &5423795740921140845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8e9f82b1662411ab37adb33f112bb2d, type: 3}
+  m_Name: FresnelRimFeature
+  m_EditorClassIdentifier: Assembly-CSharp::FresnelRimFeature
+  m_Active: 1
+  RimShader: {fileID: 4800000, guid: 287a0c6e7ae07114e80c353270bc92f3, type: 3}
+  RimSettings:
+    RenderPassEvent: 300
+    LayerMask:
+      serializedVersion: 2
+      m_Bits: 65536
+    RimColor: {r: 1, g: 1, b: 1, a: 1}
+    RimPower: 7.5
+    RimThreshold: 0.034
+    RimSoftness: 0.001
+    RimIntensity: 10
