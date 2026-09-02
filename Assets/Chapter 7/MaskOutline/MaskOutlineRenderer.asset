@@ -96,7 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1c838471851c19a04994b1f6d6c5d38, type: 3}
   m_Name: MaskFresnelRimFeature
   m_EditorClassIdentifier: Assembly-CSharp::MaskFresnelRimFeature
-  m_Active: 1
+  m_Active: 0
   ProfilingName: Mask Fresnel Rim
   CompositeMaterial: {fileID: 2100000, guid: 84a4897765ecca5eba2b7c04c58af8f9, type: 2}
   RimSettings:

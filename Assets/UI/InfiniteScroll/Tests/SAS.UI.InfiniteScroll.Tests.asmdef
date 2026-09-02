@@ -1,0 +1,13 @@
+{
+  "name": "SAS.UI.InfiniteScroll.Tests",
+  "rootNamespace": "SAS.UI.InfiniteScroll.Tests",
+  "references": [
+    "SAS.UI.InfiniteScroll"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

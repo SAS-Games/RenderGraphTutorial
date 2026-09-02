@@ -7,7 +7,8 @@ namespace SAS.UI.InfiniteScroll
             if (count <= 0)
                 throw new System.ArgumentOutOfRangeException(nameof(count), "Modulo count must be greater than zero.");
 
-            return ((value % count) + count) % count;
+            int result = value % count;
+            return result < 0 ? result + count : result;
         }
 
         public static int Mod(long value, int count)
