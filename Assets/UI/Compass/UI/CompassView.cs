@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using SAS.UI.InfiniteScroll;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace SAS.UI.Compass
@@ -11,18 +10,18 @@ namespace SAS.UI.Compass
     [RequireComponent(typeof(RectTransform), typeof(InfiniteScrollRect))]
     public sealed class CompassView : MonoBehaviour, ICompassView
     {
-        [FormerlySerializedAs("directionScrollRect")]
-        [Header("Optional authored hierarchy")]
-        [SerializeField] private InfiniteScrollRect m_DirectionScrollRect;
-        [FormerlySerializedAs("viewport")] [SerializeField] private RectTransform m_Viewport;
-        [FormerlySerializedAs("content")] [SerializeField] private RectTransform m_Content;
-        [FormerlySerializedAs("markerLayer")] [SerializeField] private RectTransform m_MarkerLayer;
-        [FormerlySerializedAs("centerIndicator")] [SerializeField] private TMP_Text m_CenterIndicator;
+        [Header("Optional authored hierarchy")] [SerializeField]
+        private InfiniteScrollRect m_DirectionScrollRect;
 
-        private readonly List<RectTransform> _directionItems = new ();
-        private readonly Dictionary<RectTransform, CompassDirectionView> _directionViews = new ();
-        private readonly Dictionary<int, CompassMarkerView> _activeMarkerViews = new ();
-        private readonly Stack<CompassMarkerView> _markerPool = new ();
+        [SerializeField] private RectTransform m_Viewport;
+        [SerializeField] private RectTransform m_Content;
+        [SerializeField] private RectTransform m_MarkerLayer;
+        [SerializeField] private TMP_Text m_CenterIndicator;
+
+        private readonly List<RectTransform> _directionItems = new();
+        private readonly Dictionary<RectTransform, CompassDirectionView> _directionViews = new();
+        private readonly Dictionary<int, CompassMarkerView> _activeMarkerViews = new();
+        private readonly Stack<CompassMarkerView> _markerPool = new();
 
         private CompassVisualSettings _settings;
         private int _nextMarkerHandle;

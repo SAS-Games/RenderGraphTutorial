@@ -8,16 +8,16 @@ namespace SAS.UI.InfiniteScroll
     [RequireComponent(typeof(RectTransform), typeof(RectMask2D))]
     public sealed class RectMaskEdgeFade : MonoBehaviour
     {
-        [SerializeField, Range(0f, 0.45f)] private float horizontalFadeFraction = 0.12f;
-        [SerializeField, Range(0f, 0.45f)] private float verticalFadeFraction;
+        [SerializeField, Range(0f, 0.45f)] private float m_HorizontalFadeFraction = 0.12f;
+        [SerializeField, Range(0f, 0.45f)] private float m_VerticalFadeFraction;
 
-        private RectTransform rectTransform;
-        private RectMask2D rectMask;
+        private RectTransform _rectTransform;
+        private RectMask2D _rectMask;
 
         public void Configure(float horizontalFraction, float verticalFraction = 0f)
         {
-            horizontalFadeFraction = Mathf.Clamp(horizontalFraction, 0f, 0.45f);
-            verticalFadeFraction = Mathf.Clamp(verticalFraction, 0f, 0.45f);
+            m_HorizontalFadeFraction = Mathf.Clamp(horizontalFraction, 0f, 0.45f);
+            m_VerticalFadeFraction = Mathf.Clamp(verticalFraction, 0f, 0.45f);
             CacheComponents();
             ApplySoftness();
         }
@@ -30,8 +30,8 @@ namespace SAS.UI.InfiniteScroll
 
         private void OnValidate()
         {
-            horizontalFadeFraction = Mathf.Clamp(horizontalFadeFraction, 0f, 0.45f);
-            verticalFadeFraction = Mathf.Clamp(verticalFadeFraction, 0f, 0.45f);
+            m_HorizontalFadeFraction = Mathf.Clamp(m_HorizontalFadeFraction, 0f, 0.45f);
+            m_VerticalFadeFraction = Mathf.Clamp(m_VerticalFadeFraction, 0f, 0.45f);
             CacheComponents();
             ApplySoftness();
         }
@@ -44,22 +44,22 @@ namespace SAS.UI.InfiniteScroll
 
         private void CacheComponents()
         {
-            if (rectTransform == null)
-                rectTransform = (RectTransform)transform;
+            if (_rectTransform == null)
+                _rectTransform = (RectTransform)transform;
 
-            if (rectMask == null)
-                rectMask = GetComponent<RectMask2D>();
+            if (_rectMask == null)
+                _rectMask = GetComponent<RectMask2D>();
         }
 
         private void ApplySoftness()
         {
-            if (rectTransform == null || rectMask == null)
+            if (_rectTransform == null || _rectMask == null)
                 return;
 
-            Rect rect = rectTransform.rect;
-            int horizontalSoftness = Mathf.RoundToInt(rect.width * horizontalFadeFraction);
-            int verticalSoftness = Mathf.RoundToInt(rect.height * verticalFadeFraction);
-            rectMask.softness = new Vector2Int(horizontalSoftness, verticalSoftness);
+            Rect rect = _rectTransform.rect;
+            int horizontalSoftness = Mathf.RoundToInt(rect.width * m_HorizontalFadeFraction);
+            int verticalSoftness = Mathf.RoundToInt(rect.height * m_VerticalFadeFraction);
+            _rectMask.softness = new Vector2Int(horizontalSoftness, verticalSoftness);
         }
     }
 }

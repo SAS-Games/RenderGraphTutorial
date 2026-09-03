@@ -1,21 +1,25 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SAS.UI.Compass
 {
     [Serializable]
     public struct CompassDirectionDefinition
     {
-        [SerializeField] private string label;
-        [SerializeField, Range(0f, 360f)] private float heading;
+        [FormerlySerializedAs("label")] [SerializeField]
+        private string m_Label;
+
+        [FormerlySerializedAs("heading")] [SerializeField, Range(0f, 360f)]
+        private float m_Heading;
 
         public CompassDirectionDefinition(string label, float heading)
         {
-            this.label = label;
-            this.heading = heading;
+            this.m_Label = label;
+            this.m_Heading = heading;
         }
 
-        public string Label => label;
-        public float Heading => heading;
+        public string Label => m_Label;
+        public float Heading => m_Heading;
     }
 }

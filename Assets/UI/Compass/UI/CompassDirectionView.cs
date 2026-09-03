@@ -28,7 +28,8 @@ namespace SAS.UI.Compass
             RectTransform labelRect = m_Label.rectTransform;
             labelRect.anchorMin = labelRect.anchorMax = new Vector2(0.5f, 0.5f);
             labelRect.pivot = new Vector2(0.5f, 0.5f);
-            labelRect.anchoredPosition = new Vector2(0f, settings.DirectionVerticalOffset + settings.MajorTickHeight + 12f);
+            labelRect.anchoredPosition =
+                new Vector2(0f, settings.DirectionVerticalOffset + settings.MajorTickHeight + 12f);
             labelRect.sizeDelta = new Vector2(80f, settings.DirectionFontSize + 8f);
 
             ConfigureTicks(settings, itemSpacing, anglePerDirection);
@@ -72,7 +73,8 @@ namespace SAS.UI.Compass
                 RectTransform tickRect = image.rectTransform;
                 tickRect.anchorMin = tickRect.anchorMax = new Vector2(0.5f, 0.5f);
                 tickRect.pivot = new Vector2(0.5f, 0.5f);
-                tickRect.anchoredPosition = new Vector2(itemSpacing * i / intervalCount, settings.DirectionVerticalOffset);
+                tickRect.anchoredPosition =
+                    new Vector2(itemSpacing * i / intervalCount, settings.DirectionVerticalOffset);
                 tickRect.sizeDelta = new Vector2(
                     settings.TickWidth,
                     isMajor ? settings.MajorTickHeight : settings.MinorTickHeight);

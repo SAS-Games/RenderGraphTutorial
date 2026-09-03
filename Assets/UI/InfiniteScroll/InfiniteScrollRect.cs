@@ -20,24 +20,16 @@ namespace SAS.UI.InfiniteScroll
     {
         private const double MaxExactInteger = 9007199254740991d;
 
-        [Header("Infinite Scroll")] [SerializeField]
-        private InfiniteScrollLayoutMode m_LayoutMode = InfiniteScrollLayoutMode.Horizontal;
-
-        [FormerlySerializedAs("itemSpacing")] [SerializeField, Min(1f)]
-        private float m_ItemSpacing = 100f;
+        [Header("Infinite Scroll")] 
+        [SerializeField] private InfiniteScrollLayoutMode m_LayoutMode = InfiniteScrollLayoutMode.Horizontal;
+        [SerializeField, Min(1f)] private float m_ItemSpacing = 100f;
 
         [SerializeField, Min(1f)] private float m_CrossAxisSpacing = 100f;
         [SerializeField, Min(1)] private int m_CrossAxisCount = 1;
         [SerializeField, Min(2)] private int m_ExtraBufferGroups = 2;
-
-        [FormerlySerializedAs("poolSize")] [SerializeField, Min(3)]
-        private int m_PoolSize = 9;
-
-        [FormerlySerializedAs("itemPrefab")] [SerializeField]
-        private RectTransform m_ItemPrefab;
-
-        [FormerlySerializedAs("allowUserInteraction")] [SerializeField]
-        private bool m_AllowUserInteraction = true;
+        [SerializeField, Min(3)] private int m_PoolSize = 9;
+        [SerializeField] private RectTransform m_ItemPrefab;
+        [SerializeField] private bool m_AllowUserInteraction = true;
 
         private readonly List<ScrollItem> _scrollItems = new List<ScrollItem>();
         private readonly List<ScrollItem> _recycleBuffer = new List<ScrollItem>();
@@ -69,16 +61,12 @@ namespace SAS.UI.InfiniteScroll
         public int CrossAxisCount => _effectiveCrossAxisCount;
         public int PhysicalItemCount => _scrollItems.Count;
 
-        public void Configure(RectTransform targetViewport, RectTransform targetContent, float targetItemSpacing,
-            int targetPoolSize, bool userInteraction)
+        public void Configure(RectTransform targetViewport, RectTransform targetContent, float targetItemSpacing, int targetPoolSize, bool userInteraction)
         {
-            Configure(targetViewport, targetContent, InfiniteScrollLayoutMode.Horizontal, targetItemSpacing,
-                targetItemSpacing, 1, targetPoolSize, userInteraction);
+            Configure(targetViewport, targetContent, InfiniteScrollLayoutMode.Horizontal, targetItemSpacing, targetItemSpacing, 1, targetPoolSize, userInteraction);
         }
 
-        public void Configure(RectTransform targetViewport, RectTransform targetContent,
-            InfiniteScrollLayoutMode layoutMode, float mainAxisSpacing, float crossAxisSpacing, int crossAxisCount,
-            int targetPoolSize, bool userInteraction)
+        public void Configure(RectTransform targetViewport, RectTransform targetContent, InfiniteScrollLayoutMode layoutMode, float mainAxisSpacing, float crossAxisSpacing, int crossAxisCount, int targetPoolSize, bool userInteraction)
         {
             viewport = targetViewport;
             content = targetContent;
@@ -401,8 +389,7 @@ namespace SAS.UI.InfiniteScroll
             int remainder = _scrollItems.Count % crossAxisCount;
             if (remainder != 0 && m_ItemPrefab == null)
             {
-                throw new InvalidOperationException(
-                    $"InfiniteScrollRect grid pools must contain a multiple of {crossAxisCount} views.  The current pool contains {_scrollItems.Count} views and no Item Prefab can complete the group.");
+                throw new InvalidOperationException($"InfiniteScrollRect grid pools must contain a multiple of {crossAxisCount} views.  The current pool contains {_scrollItems.Count} views and no Item Prefab can complete the group.");
             }
 
             int configuredGroups = Mathf.CeilToInt(m_PoolSize / (float)crossAxisCount);
@@ -412,18 +399,13 @@ namespace SAS.UI.InfiniteScroll
 
             long targetItemCountLong = (long)targetGroups * crossAxisCount;
             if (remainder != 0)
-                targetItemCountLong =
-                    Math.Max(targetItemCountLong, (long)_scrollItems.Count + crossAxisCount - remainder);
+                targetItemCountLong = Math.Max(targetItemCountLong, (long)_scrollItems.Count + crossAxisCount - remainder);
             if (targetItemCountLong > int.MaxValue)
-                throw new InvalidOperationException(
-                    "The requested InfiniteScrollRect pool exceeds Unity collection limits.");
+                throw new InvalidOperationException("The requested InfiniteScrollRect pool exceeds Unity collection limits.");
 
             int targetItemCount = (int)targetItemCountLong;
             if (_scrollItems.Count < targetItemCount && m_ItemPrefab == null)
-            {
-                throw new InvalidOperationException(
-                    $"InfiniteScrollRect needs at least {targetItemCount} physical views to cover the viewport, but only {_scrollItems.Count} were supplied. Add views or assign an Item Prefab.");
-            }
+                throw new InvalidOperationException($"InfiniteScrollRect needs at least {targetItemCount} physical views to cover the viewport, but only {_scrollItems.Count} were supplied. Add views or assign an Item Prefab.");
 
             while (_scrollItems.Count < targetItemCount)
             {
@@ -589,8 +571,7 @@ namespace SAS.UI.InfiniteScroll
                 return;
             }
 
-            throw new InvalidOperationException(
-                $"InfiniteScrollRect does not support the active layout group type {_layoutGroup.GetType().Name}.");
+            throw new InvalidOperationException($"InfiniteScrollRect does not support the active layout group type {_layoutGroup.GetType().Name}.");
         }
 
         private void ResolveGridLayoutConfiguration(GridLayoutGroup gridLayout)
@@ -598,36 +579,25 @@ namespace SAS.UI.InfiniteScroll
             bool startsHorizontally = gridLayout.startAxis == GridLayoutGroup.Axis.Horizontal;
             if (startsHorizontally && gridLayout.constraint == GridLayoutGroup.Constraint.FixedRowCount)
             {
-                throw new InvalidOperationException(
-                    "A vertically scrolling GridLayoutGroup must use Flexible or Fixed Column Count constraint.");
+                throw new InvalidOperationException("A vertically scrolling GridLayoutGroup must use Flexible or Fixed Column Count constraint.");
             }
 
             if (!startsHorizontally && gridLayout.constraint == GridLayoutGroup.Constraint.FixedColumnCount)
             {
-                throw new InvalidOperationException(
-                    "A horizontally scrolling GridLayoutGroup must use Flexible or Fixed Row Count constraint.");
+                throw new InvalidOperationException("A horizontally scrolling GridLayoutGroup must use Flexible or Fixed Row Count constraint.");
             }
 
-            m_LayoutMode = startsHorizontally
-                ? InfiniteScrollLayoutMode.VerticalGrid
-                : InfiniteScrollLayoutMode.HorizontalGrid;
+            m_LayoutMode = startsHorizontally ? InfiniteScrollLayoutMode.VerticalGrid : InfiniteScrollLayoutMode.HorizontalGrid;
             _effectiveCrossAxisCount = ResolveGridCrossAxisCount(gridLayout, startsHorizontally);
             m_CrossAxisCount = _effectiveCrossAxisCount;
-            _effectiveItemSpacing = startsHorizontally
-                ? gridLayout.cellSize.y + gridLayout.spacing.y
-                : gridLayout.cellSize.x + gridLayout.spacing.x;
-            _effectiveCrossAxisSpacing = startsHorizontally
-                ? gridLayout.cellSize.x + gridLayout.spacing.x
-                : gridLayout.cellSize.y + gridLayout.spacing.y;
+            _effectiveItemSpacing = startsHorizontally ? gridLayout.cellSize.y + gridLayout.spacing.y : gridLayout.cellSize.x + gridLayout.spacing.x;
+            _effectiveCrossAxisSpacing = startsHorizontally ? gridLayout.cellSize.x + gridLayout.spacing.x : gridLayout.cellSize.y + gridLayout.spacing.y;
 
             if (_effectiveItemSpacing <= 0f || _effectiveCrossAxisSpacing <= 0f)
-                throw new InvalidOperationException(
-                    "GridLayoutGroup cell size plus spacing must be greater than zero on both axes.");
+                throw new InvalidOperationException("GridLayoutGroup cell size plus spacing must be greater than zero on both axes.");
 
-            bool startsOnRight = gridLayout.startCorner == GridLayoutGroup.Corner.UpperRight ||
-                                 gridLayout.startCorner == GridLayoutGroup.Corner.LowerRight;
-            bool startsOnBottom = gridLayout.startCorner == GridLayoutGroup.Corner.LowerLeft ||
-                                  gridLayout.startCorner == GridLayoutGroup.Corner.LowerRight;
+            bool startsOnRight = gridLayout.startCorner == GridLayoutGroup.Corner.UpperRight || gridLayout.startCorner == GridLayoutGroup.Corner.LowerRight;
+            bool startsOnBottom = gridLayout.startCorner == GridLayoutGroup.Corner.LowerLeft || gridLayout.startCorner == GridLayoutGroup.Corner.LowerRight;
             Vector2 horizontalDirection = startsOnRight ? Vector2.left : Vector2.right;
             Vector2 verticalDirection = startsOnBottom ? Vector2.up : Vector2.down;
             _mainAxisDirection = startsHorizontally ? verticalDirection : horizontalDirection;
@@ -647,8 +617,7 @@ namespace SAS.UI.InfiniteScroll
             {
                 float pitch = gridLayout.cellSize.x + gridLayout.spacing.x;
                 if (pitch <= 0f)
-                    throw new InvalidOperationException(
-                        "GridLayoutGroup horizontal cell size plus spacing must be greater than zero.");
+                    throw new InvalidOperationException("GridLayoutGroup horizontal cell size plus spacing must be greater than zero.");
 
                 float width = content.rect.width - gridLayout.padding.horizontal;
                 return Mathf.Max(1, Mathf.FloorToInt((width + gridLayout.spacing.x + 0.001f) / pitch));
@@ -656,8 +625,7 @@ namespace SAS.UI.InfiniteScroll
 
             float verticalPitch = gridLayout.cellSize.y + gridLayout.spacing.y;
             if (verticalPitch <= 0f)
-                throw new InvalidOperationException(
-                    "GridLayoutGroup vertical cell size plus spacing must be greater than zero.");
+                throw new InvalidOperationException("GridLayoutGroup vertical cell size plus spacing must be greater than zero.");
 
             float height = content.rect.height - gridLayout.padding.vertical;
             return Mathf.Max(1, Mathf.FloorToInt((height + gridLayout.spacing.y + 0.001f) / verticalPitch));
@@ -700,30 +668,25 @@ namespace SAS.UI.InfiniteScroll
                 }
 
                 if (!isManaged)
-                    throw new InvalidOperationException(
-                        $"The active {_layoutGroup.GetType().Name} contains unmanaged child '{child.name}'. Pass every layout child to Initialize or mark decorative children Ignore Layout.");
+                    throw new InvalidOperationException($"The active {_layoutGroup.GetType().Name} contains unmanaged child '{child.name}'. Pass every layout child to Initialize or mark decorative children Ignore Layout.");
             }
         }
 
         private void ValidatePool()
         {
             if (_scrollItems.Count < _effectiveCrossAxisCount * 3)
-                throw new InvalidOperationException(
-                    "InfiniteScrollRect requires at least three complete physical item groups.");
+                throw new InvalidOperationException("InfiniteScrollRect requires at least three complete physical item groups.");
             if (_scrollItems.Count % _effectiveCrossAxisCount != 0)
                 throw new InvalidOperationException("InfiniteScrollRect contains an incomplete physical grid group.");
 
             int requiredItemCount = GetMinimumPoolGroupCount() * _effectiveCrossAxisCount;
             if (_scrollItems.Count < requiredItemCount)
-                throw new InvalidOperationException(
-                    $"InfiniteScrollRect requires {requiredItemCount} physical views to cover the viewport, but only {_scrollItems.Count} are available.");
+                throw new InvalidOperationException($"InfiniteScrollRect requires {requiredItemCount} physical views to cover the viewport, but only {_scrollItems.Count} are available.");
         }
 
         private int GetMinimumPoolGroupCount()
         {
-            float viewportLength = IsHorizontalMode(m_LayoutMode)
-                ? ResolveViewport().rect.width
-                : ResolveViewport().rect.height;
+            float viewportLength = IsHorizontalMode(m_LayoutMode) ? ResolveViewport().rect.width : ResolveViewport().rect.height;
             int visibleGroupCount = Mathf.CeilToInt(viewportLength / _effectiveItemSpacing);
             return Mathf.Max(3, visibleGroupCount + m_ExtraBufferGroups);
         }
@@ -745,8 +708,7 @@ namespace SAS.UI.InfiniteScroll
             Vector2 secondCenter = GetLocalCenter(_scrollItems[_effectiveCrossAxisCount].View);
             float measuredSpacing = Vector2.Dot(secondCenter - firstCenter, _mainAxisDirection);
             if (measuredSpacing <= 0.01f)
-                throw new InvalidOperationException(
-                    "The active LayoutGroup did not produce a positive item stride along the scrolling axis.");
+                throw new InvalidOperationException("The active LayoutGroup did not produce a positive item stride along the scrolling axis.");
 
             _effectiveItemSpacing = measuredSpacing;
             m_ItemSpacing = measuredSpacing;
@@ -760,8 +722,7 @@ namespace SAS.UI.InfiniteScroll
                 Vector2 currentCenter = GetLocalCenter(_scrollItems[currentIndex].View);
                 float stride = Vector2.Dot(currentCenter - previousCenter, _mainAxisDirection);
                 if (Mathf.Abs(stride - measuredSpacing) > tolerance)
-                    throw new InvalidOperationException(
-                        "InfiniteScrollRect requires uniformly sized items along the scrolling axis. Use fixed item sizes and spacing in the attached LayoutGroup.");
+                    throw new InvalidOperationException("InfiniteScrollRect requires uniformly sized items along the scrolling axis. Use fixed item sizes and spacing in the attached LayoutGroup.");
             }
         }
 
@@ -802,8 +763,7 @@ namespace SAS.UI.InfiniteScroll
         {
             double limit = GetLogicalPositionLimit();
             if (position < -limit || position > limit)
-                throw new ArgumentOutOfRangeException(nameof(position),
-                    $"Logical position must remain between {-limit:R} and {limit:R} so indices stay exact and overflow-safe.");
+                throw new ArgumentOutOfRangeException(nameof(position), $"Logical position must remain between {-limit:R} and {limit:R} so indices stay exact and overflow-safe.");
         }
 
         private double GetLogicalPositionLimit()
@@ -828,14 +788,12 @@ namespace SAS.UI.InfiniteScroll
 
         private static bool IsHorizontalMode(InfiniteScrollLayoutMode layoutMode)
         {
-            return layoutMode == InfiniteScrollLayoutMode.Horizontal ||
-                   layoutMode == InfiniteScrollLayoutMode.HorizontalGrid;
+            return layoutMode == InfiniteScrollLayoutMode.Horizontal || layoutMode == InfiniteScrollLayoutMode.HorizontalGrid;
         }
 
         private static bool IsGridMode(InfiniteScrollLayoutMode layoutMode)
         {
-            return layoutMode == InfiniteScrollLayoutMode.HorizontalGrid ||
-                   layoutMode == InfiniteScrollLayoutMode.VerticalGrid;
+            return layoutMode == InfiniteScrollLayoutMode.HorizontalGrid || layoutMode == InfiniteScrollLayoutMode.VerticalGrid;
         }
 
         private static long FloorToLong(double value)

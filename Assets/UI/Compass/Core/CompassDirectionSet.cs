@@ -1,11 +1,12 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace SAS.UI.Compass
 {
     [CreateAssetMenu(fileName = "CompassDirectionSet", menuName = "SAS/UI/Compass Direction Set")]
     public sealed class CompassDirectionSet : ScriptableObject
     {
-        [SerializeField] private CompassDirectionDefinition[] directions =
+        [FormerlySerializedAs("directions")] [SerializeField] private CompassDirectionDefinition[] m_Directions =
         {
             new("N", 0f),
             new("NE", 45f),
@@ -17,7 +18,7 @@ namespace SAS.UI.Compass
             new("NW", 315f)
         };
 
-        public int Count => directions != null ? directions.Length : 0;
+        public int Count => m_Directions != null ? m_Directions.Length : 0;
         public float AnglePerDirection => Count > 0 ? 360f / Count : 0f;
 
         public CompassDirectionDefinition GetDirection(int index)
@@ -25,7 +26,7 @@ namespace SAS.UI.Compass
             if (index < 0 || index >= Count)
                 throw new System.ArgumentOutOfRangeException(nameof(index));
 
-            return directions[index];
+            return m_Directions[index];
         }
     }
 }
