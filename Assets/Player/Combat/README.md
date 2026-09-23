@@ -59,10 +59,12 @@ The binding calls `Submit(actionId, inputActionName)`, so the first press starts
 the graph and later presses are automatically published to its input buffer.
 In the included Player prefab that action ID is `SwordCombo`.
 
-The Animator needs an integer parameter named `QueuedAttackCount`. Animation
-events on attacks one, two, and three call `SignalInteger`, use
-`CompletedAttackCount` as the string value, and pass `1`, `2`, or `3` as the
-integer value. The relay must be beside the Animator.
+The Animator needs an integer parameter named `QueuedAttackCount`. Attach a
+`TaggedObservableStateMachineTrigger` to attacks one, two, and three, assign a
+stable tag to each state, and configure its completion threshold. Configure the
+`CombatActionGraphAnimationRelay` beside the Animator to map those tags to
+`CompletedAttackCount` values `1`, `2`, and `3`. No clip Animation Event is
+required for combo completion.
 
 The counter graph has no dependency on `SwordAndShieldCombatSignals` or
 `CombatStateController`.

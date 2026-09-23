@@ -732,6 +732,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatActionGraphAnimationRelay
   actionController: {fileID: 3339015714462502089}
+  animator: {fileID: 4951787504884708779}
+  stateIntegerSignals:
+  - actionId: SwordCombo
+    stateName: SwordAttack1
+    blackboardKey: CompletedAttackCount
+    completedValue: 1
+    cancelActionOnInterruption: 1
+  - actionId: SwordCombo
+    stateName: SwordAttack2
+    blackboardKey: CompletedAttackCount
+    completedValue: 2
+    cancelActionOnInterruption: 1
+  - actionId: SwordCombo
+    stateName: SwordAttack3
+    blackboardKey: CompletedAttackCount
+    completedValue: 3
+    cancelActionOnInterruption: 1
 --- !u!114 &770000000000000011
 MonoBehaviour:
   m_ObjectHideFlags: 0
