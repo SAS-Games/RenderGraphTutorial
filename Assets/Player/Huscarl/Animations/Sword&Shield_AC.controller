@@ -8,9 +8,9 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: ReturnIdle
-    m_EventTreshold: 0
+  - m_ConditionMode: 4
+    m_ConditionEvent: QueuedAttackCount
+    m_EventTreshold: 2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -6166578942591975322}
   m_Solo: 0
@@ -19,8 +19,8 @@ AnimatorStateTransition:
   serializedVersion: 3
   m_TransitionDuration: 0.16777378
   m_TransitionOffset: 0
-  m_ExitTime: 0.8132826
-  m_HasExitTime: 0
+  m_ExitTime: 0.95
+  m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 2
   m_OrderedInterruption: 1
@@ -32,10 +32,7 @@ AnimatorStateTransition:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 
-  m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: ReturnIdle
-    m_EventTreshold: 0
+  m_Conditions: []
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -6166578942591975322}
   m_Solo: 0
@@ -44,8 +41,8 @@ AnimatorStateTransition:
   serializedVersion: 3
   m_TransitionDuration: 0.25
   m_TransitionOffset: 0
-  m_ExitTime: 0.85
-  m_HasExitTime: 0
+  m_ExitTime: 0.95
+  m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 2
   m_OrderedInterruption: 1
@@ -58,9 +55,9 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: Sword02
-    m_EventTreshold: 0
+  - m_ConditionMode: 3
+    m_ConditionEvent: QueuedAttackCount
+    m_EventTreshold: 1
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -2094480256168915350}
   m_Solo: 0
@@ -69,8 +66,8 @@ AnimatorStateTransition:
   serializedVersion: 3
   m_TransitionDuration: 0.0030578375
   m_TransitionOffset: 0
-  m_ExitTime: 0.99617755
-  m_HasExitTime: 0
+  m_ExitTime: 0.95
+  m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
@@ -160,7 +157,8 @@ AnimatorState:
   m_Transitions:
   - {fileID: -7916163664079509597}
   - {fileID: -9073298238432066404}
-  m_StateMachineBehaviours: []
+  m_StateMachineBehaviours:
+  - {fileID: 114000000000000001}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -293,9 +291,9 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: Sword03
-    m_EventTreshold: 0
+  - m_ConditionMode: 3
+    m_ConditionEvent: QueuedAttackCount
+    m_EventTreshold: 2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 8901402626526244930}
   m_Solo: 0
@@ -304,12 +302,57 @@ AnimatorStateTransition:
   serializedVersion: 3
   m_TransitionDuration: 0.017470062
   m_TransitionOffset: 0
-  m_ExitTime: 0.98984694
-  m_HasExitTime: 0
+  m_ExitTime: 0.95
+  m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &114000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1cdfd527fa92854486dcc9dbcae6cfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: AssemblyCore::TaggedObservableStateMachineTrigger
+  stateName: SwordAttack1
+  requireCompletionThreshold: 1
+  minimumNormalizedTime: 0.9
+--- !u!114 &114000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1cdfd527fa92854486dcc9dbcae6cfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: AssemblyCore::TaggedObservableStateMachineTrigger
+  stateName: SwordAttack2
+  requireCompletionThreshold: 1
+  minimumNormalizedTime: 0.9
+--- !u!114 &114000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1cdfd527fa92854486dcc9dbcae6cfb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: AssemblyCore::TaggedObservableStateMachineTrigger
+  stateName: SwordAttack3
+  requireCompletionThreshold: 1
+  minimumNormalizedTime: 0.9
 --- !u!1102 &-3910759407164276895
 AnimatorState:
   serializedVersion: 6
@@ -368,8 +411,8 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: Sword01
+  - m_ConditionMode: 3
+    m_ConditionEvent: QueuedAttackCount
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -6600377328080536561}
@@ -426,7 +469,8 @@ AnimatorState:
   - {fileID: 4370762196470025736}
   - {fileID: -4009087319078452619}
   - {fileID: 9222663105460807507}
-  m_StateMachineBehaviours: []
+  m_StateMachineBehaviours:
+  - {fileID: 114000000000000002}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -590,6 +634,12 @@ AnimatorController:
     m_Controller: {fileID: 9100000}
   - m_Name: Sword01
     m_Type: 9
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: QueuedAttackCount
+    m_Type: 3
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
@@ -774,9 +824,9 @@ AnimatorStateTransition:
   m_PrefabAsset: {fileID: 0}
   m_Name: 
   m_Conditions:
-  - m_ConditionMode: 1
-    m_ConditionEvent: ReturnIdle
-    m_EventTreshold: 0
+  - m_ConditionMode: 4
+    m_ConditionEvent: QueuedAttackCount
+    m_EventTreshold: 3
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -6166578942591975322}
   m_Solo: 0
@@ -785,8 +835,8 @@ AnimatorStateTransition:
   serializedVersion: 3
   m_TransitionDuration: 0.073444635
   m_TransitionOffset: 0
-  m_ExitTime: 0.85713387
-  m_HasExitTime: 0
+  m_ExitTime: 0.95
+  m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 2
   m_OrderedInterruption: 1
@@ -935,7 +985,8 @@ AnimatorState:
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -8561407550540657706}
-  m_StateMachineBehaviours: []
+  m_StateMachineBehaviours:
+  - {fileID: 114000000000000003}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
