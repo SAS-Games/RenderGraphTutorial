@@ -1,22 +1,17 @@
 using UnityEngine;
 
 /// <summary>
-/// Animation Events are delivered only to components beside the Animator.
-/// The combat receiver lives on the Weapon sibling, so this component forwards
-/// clip events without forcing combat orchestration back onto the character root.
+/// Optional adapter for the legacy Sword/Shield animation-event protocol.
 /// </summary>
 [DisallowMultipleComponent]
-public sealed class CombatAnimationEventRelay : MonoBehaviour
+public sealed class SwordAndShieldAnimationEventRelay : MonoBehaviour
 {
-    [SerializeField] private CombatActionGraphSignals signals;
+    [SerializeField] private SwordAndShieldCombatSignals signals;
 
     private void Awake()
     {
         if (signals == null)
-            signals = transform.root.GetComponentInChildren<CombatActionGraphSignals>(true);
-
-        if (signals == null)
-            Debug.LogError("Combat animation relay could not find CombatActionGraphSignals.", this);
+            signals = transform.root.GetComponentInChildren<SwordAndShieldCombatSignals>(true);
     }
 
     public void OpenComboWindow()
@@ -37,6 +32,11 @@ public sealed class CombatAnimationEventRelay : MonoBehaviour
     public void EndCombo()
     {
         signals?.EndCombo();
+    }
+
+    public void EndQueuedComboStep(int attackIndex)
+    {
+        signals?.EndQueuedComboStep(attackIndex);
     }
 
     public void RequestMovement(int movementEvent)

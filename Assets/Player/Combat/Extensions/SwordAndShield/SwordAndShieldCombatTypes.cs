@@ -1,10 +1,9 @@
-public enum CombatActionId
+public static class SwordAndShieldActionIds
 {
-    None,
-    SwordCombo,
-    ShieldAttack,
-    HeavyAttack,
-    ShieldRush
+    public const string SwordCombo = "SwordCombo";
+    public const string ShieldAttack = "ShieldAttack";
+    public const string HeavyAttack = "HeavyAttack";
+    public const string ShieldRush = "ShieldRush";
 }
 
 public enum CombatComboInput
@@ -24,6 +23,8 @@ public enum CombatPhase
 
 public static class CombatGraphKeys
 {
+    public const string QueuedAttackCount = "QueuedAttackCount";
+    public const string CompletedAttackCount = "CompletedAttackCount";
     public const string ComboInput = "ComboInput";
     public const string ComboStep = "ComboStep";
     public const string ComboDecisionReady = "ComboDecisionReady";

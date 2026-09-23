@@ -4,10 +4,11 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
-public class CombatInputBinding : MonoBehaviour
+public class SwordAndShieldCombatInputBinding : MonoBehaviour
 {
     [FieldRequiresParent] private InputHandler _inputHandler;
     [FieldRequiresSelf] private CombatActionGraphController _combatController;
+    [SerializeField] private SwordAndShieldCombatSignals _legacySignals;
     [FormerlySerializedAs("heavyHoldThreshold")] [SerializeField] private float _heavyHoldThreshold = 0.25f;
     [FormerlySerializedAs("shieldHoldThreshold")] [SerializeField] private float _shieldHoldThreshold = 0.25f;
     [FormerlySerializedAs("enablePrimaryAttack")] [SerializeField] private bool _enablePrimaryAttack = true;
@@ -25,6 +26,9 @@ public class CombatInputBinding : MonoBehaviour
     private void Awake()
     {
         this.Initialize();
+
+        if (_legacySignals == null)
+            _legacySignals = GetComponent<SwordAndShieldCombatSignals>();
     }
 
     private void Start()
@@ -42,10 +46,10 @@ public class CombatInputBinding : MonoBehaviour
     private void Update()
     {
         if (_primaryHeld && !_primaryConsumedByActiveAction && !_heavyActionStarted && !_combatController.IsBusy && Time.time - _primaryDownTime >= _heavyHoldThreshold)
-            _heavyActionStarted = _combatController.TryStartHoldAction(CombatActionId.HeavyAttack);
+            _heavyActionStarted = _combatController.TryStart(SwordAndShieldActionIds.HeavyAttack);
 
         if (_secondaryHeld && !_secondaryConsumedByActiveAction && !_shieldRushActionStarted && !_combatController.IsBusy && Time.time - _secondaryDownTime >= _shieldHoldThreshold)
-            _shieldRushActionStarted = _combatController.TryStartHoldAction(CombatActionId.ShieldRush);
+            _shieldRushActionStarted = _combatController.TryStart(SwordAndShieldActionIds.ShieldRush);
     }
 
     private void OnDisable()
@@ -60,7 +64,7 @@ public class CombatInputBinding : MonoBehaviour
 
     private void OnPrimaryStarted()
     {
-        if (_combatController.CurrentAction == CombatActionId.ShieldRush)
+        if (_combatController.CurrentActionId == SwordAndShieldActionIds.ShieldRush)
             return;
 
         _primaryHeld = true;
@@ -69,7 +73,7 @@ public class CombatInputBinding : MonoBehaviour
         _primaryConsumedByActiveAction = _combatController.IsBusy;
 
         if (_primaryConsumedByActiveAction)
-            _combatController.SubmitSwordInput();
+            SubmitBufferedInput("PrimaryAttack", CombatComboInput.Sword);
     }
 
     private void OnPrimaryCanceled()
@@ -82,16 +86,16 @@ public class CombatInputBinding : MonoBehaviour
         if (_primaryConsumedByActiveAction)
             _primaryConsumedByActiveAction = false;
         else if (_heavyActionStarted)
-            _combatController.ReleaseHold(CombatActionId.HeavyAttack);
+            _combatController.Signal(CombatGraphKeys.HoldReleased);
         else
-            _combatController.SubmitSwordInput();
+            SubmitAction(SwordAndShieldActionIds.SwordCombo, "PrimaryAttack", CombatComboInput.Sword);
 
         _heavyActionStarted = false;
     }
 
     private void OnSecondaryStarted()
     {
-        if (_combatController.CurrentAction == CombatActionId.ShieldRush)
+        if (_combatController.CurrentActionId == SwordAndShieldActionIds.ShieldRush)
             return;
 
         _secondaryHeld = true;
@@ -100,7 +104,7 @@ public class CombatInputBinding : MonoBehaviour
         _secondaryConsumedByActiveAction = _combatController.IsBusy;
 
         if (_secondaryConsumedByActiveAction)
-            _combatController.SubmitShieldInput();
+            SubmitBufferedInput("SecondaryAttack", CombatComboInput.Shield);
     }
 
     private void OnSecondaryCanceled()
@@ -113,10 +117,24 @@ public class CombatInputBinding : MonoBehaviour
         if (_secondaryConsumedByActiveAction)
             _secondaryConsumedByActiveAction = false;
         else if (_shieldRushActionStarted)
-            _combatController.ReleaseHold(CombatActionId.ShieldRush);
+            _combatController.Signal(CombatGraphKeys.HoldReleased);
         else
-            _combatController.SubmitShieldInput();
+            SubmitAction(SwordAndShieldActionIds.ShieldAttack, "SecondaryAttack", CombatComboInput.Shield);
 
         _shieldRushActionStarted = false;
+    }
+
+    private void SubmitAction(string actionId, string inputName, CombatComboInput legacyInput)
+    {
+        if (_combatController.IsBusy)
+            SubmitBufferedInput(inputName, legacyInput);
+        else
+            _combatController.TryStart(actionId);
+    }
+
+    private void SubmitBufferedInput(string inputName, CombatComboInput legacyInput)
+    {
+        _combatController.PublishInput(inputName);
+        _legacySignals?.TryQueue(legacyInput);
     }
 }

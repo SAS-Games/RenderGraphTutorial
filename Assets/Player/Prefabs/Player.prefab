@@ -210,9 +210,12 @@ GameObject:
   m_Component:
   - component: {fileID: 6528538835153549162}
   - component: {fileID: 3339015714462502089}
-  - component: {fileID: 3006613747871007150}
   - component: {fileID: 3297713155508615076}
   - component: {fileID: 7183904509182841111}
+  - component: {fileID: 8181416606542518272}
+  - component: {fileID: 8181416606542518273}
+  - component: {fileID: 3006613747871007150}
+  - component: {fileID: 289116710325968470}
   m_Layer: 0
   m_Name: Weapon
   m_TagString: Untagged
@@ -248,47 +251,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatActionGraphController
   actions:
-  - action: 1
-    graph: {fileID: 11400000, guid: f0b50ddd9b1222a40bc56365b63af92c, type: 2}
-    acceptsCombo: 1
-    startPhase: 1
-    releasePhase: 0
-  - action: 2
+  - actionId: SwordCombo
+    graph: {fileID: 11400000, guid: 61b03db15d94484f826f886e5f7e7d13, type: 2}
+  - actionId: ShieldAttack
     graph: {fileID: 11400000, guid: aba4ebbb97122a44098eafcbf64cdbc9, type: 2}
-    acceptsCombo: 0
-    startPhase: 1
-    releasePhase: 0
-  - action: 3
+  - actionId: HeavyAttack
     graph: {fileID: 11400000, guid: 3a2e4fc8614a4e84cbafabb30cbbf10f, type: 2}
-    acceptsCombo: 0
-    startPhase: 0
-    releasePhase: 1
-  - action: 4
+  - actionId: ShieldRush
     graph: {fileID: 11400000, guid: 69c5836c653dba74ebdc66e07a55062f, type: 2}
-    acceptsCombo: 0
-    startPhase: 2
-    releasePhase: 3
-  actor: {fileID: 3719959118888767273}
-  signals: {fileID: 0}
-  combatState: {fileID: 0}
---- !u!114 &3006613747871007150
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8181416606542518271}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3cf4bfca3b4091048ba25535f3854788, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CombatInputBinding
-  inputHandler: {fileID: 3511421163113381256}
-  combatController: {fileID: 0}
-  heavyHoldThreshold: 0.25
-  shieldHoldThreshold: 0.25
-  enablePrimaryAttack: 1
-  enableSecondaryAttack: 1
+  actionOwner: {fileID: 0}
+  actionBlackboard: {fileID: 8181416606542518272}
+  inputBuffer: {fileID: 8181416606542518273}
 --- !u!114 &3297713155508615076
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -299,12 +272,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d102b203c304d405e506f607a708b809, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::CombatStateController
-  characterController: {fileID: 7741954779662780768}
-  animationController: {fileID: 2138588084976954242}
-  combatPhaseParameter: CombatPhase
-  movementLockPriority: 100
+  m_ActionController: {fileID: 3339015714462502089}
+  m_CharacterController: {fileID: 0}
+  m_AnimationController: {fileID: 0}
+  m_CombatPhaseParameter: CombatPhase
+  m_MovementLockPriority: 100
+  m_ActionPhases:
+  - actionId: SwordCombo
+    startPhase: 1
+    releasePhase: 0
+  - actionId: ShieldAttack
+    startPhase: 1
+    releasePhase: 0
+  - actionId: HeavyAttack
+    startPhase: 0
+    releasePhase: 1
+  - actionId: ShieldRush
+    startPhase: 2
+    releasePhase: 3
 --- !u!114 &7183904509182841111
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -316,10 +303,70 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b102b203c304d405e506f607a708b809, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CombatActionGraphSignals
-  actor: {fileID: 3719959118888767273}
-  combatState: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::SwordAndShieldCombatSignals
+  actionController: {fileID: 3339015714462502089}
+  combatState: {fileID: 3297713155508615076}
+  comboActionIds:
+  - SwordCombo
   showDebug: 0
+--- !u!114 &8181416606542518272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8181416606542518271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df4fe90d8df6f3e4db7d70d1be5c0942, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: AssemblyCore::ActionGraphBlackboardComponent
+--- !u!114 &8181416606542518273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8181416606542518271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1713da564e74897a28a6f2480b45cf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ActionGraphInputBuffer
+  safetyCapacity: 16
+--- !u!114 &3006613747871007150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8181416606542518271}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cf4bfca3b4091048ba25535f3854788, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SwordAndShieldCombatInputBinding
+  _legacySignals: {fileID: 7183904509182841111}
+  _heavyHoldThreshold: 0.25
+  _shieldHoldThreshold: 0.25
+  _enablePrimaryAttack: 1
+  _enableSecondaryAttack: 1
+--- !u!114 &289116710325968470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8181416606542518271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e842ea73c684bf6acb76d22e928165d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CombatInputBinding
+  _bindings:
+  - inputActionName: PrimaryAttack
+    actionId: SwordCombo
+    submitPhase: 0
 --- !u!1001 &7850677363523590417
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -641,6 +688,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7192792723899452590, guid: 927100624703d274b88fac0696e70ab8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 770000000000000010}
+    - targetCorrespondingSourceObject: {fileID: 7192792723899452590, guid: 927100624703d274b88fac0696e70ab8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 770000000000000011}
   m_SourcePrefab: {fileID: 100100000, guid: 927100624703d274b88fac0696e70ab8, type: 3}
 --- !u!1 &1090675575318418879 stripped
 GameObject:
@@ -680,7 +730,20 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 518d697f76a746bb9b5de085f616fa57, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CombatAnimationEventRelay
+  m_EditorClassIdentifier: Assembly-CSharp::CombatActionGraphAnimationRelay
+  actionController: {fileID: 3339015714462502089}
+--- !u!114 &770000000000000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1090675575318418879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d70f69e4b724bc88c536b4d9c9eb82a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SwordAndShieldAnimationEventRelay
   signals: {fileID: 7183904509182841111}
 --- !u!4 &2242414583779315576 stripped
 Transform:

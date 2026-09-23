@@ -1,0 +1,120 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89528923cf4cf4f48843187ab98866ca, type: 3}
+  m_Name: CounterSwordComboActionGraph
+  m_EditorClassIdentifier: AssemblyCore::ActionGraphAsset
+  root:
+    rid: 819370114258000001
+  references:
+    version: 2
+    RefIds:
+    - rid: 819370114258000001
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: 
+        editorPosition: {x: 80, y: 120}
+        editorSize: {x: 260, y: 260}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 819370114258000002
+        - rid: 819370114258000003
+        - rid: 819370114258000004
+        - rid: 819370114258000005
+    - rid: 819370114258000002
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: 
+        editorPosition: {x: 166.66667, y: 103.33334}
+        editorSize: {x: 311.3333, y: 438}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000006
+    - rid: 819370114258000003
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: 
+        editorPosition: {x: 520.6667, y: 108}
+        editorSize: {x: 470.66663, y: 442.6667}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000007
+    - rid: 819370114258000004
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: 
+        editorPosition: {x: 834.6667, y: 108}
+        editorSize: {x: 220, y: 338}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000008
+    - rid: 819370114258000005
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: 
+        editorPosition: {x: 1116, y: 108}
+        editorSize: {x: 350, y: 438}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000009
+    - rid: 819370114258000006
+      type: {class: CollectBufferedInputCountProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - inputName: PrimaryAttack
+          outputKey: QueuedAttackCount
+          completionKey: CompletedAttackCount
+          animatorParameterName: QueuedAttackCount
+          duration: 0.5
+          initialCount: 1
+          maximumCount: 3
+          useUnscaledTime: 0
+    - rid: 819370114258000007
+      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - condition:
+            rid: 819370114258000010
+          timeoutSeconds: -1
+          throwOnTimeout: 0
+    - rid: 819370114258000008
+      type: {class: AnimatorSetIntegerProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - parameterName: QueuedAttackCount
+          value: 0
+    - rid: 819370114258000009
+      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
+      data:
+        useSingleValue: 1
+        data:
+        - key: QueuedAttackCount
+          valueType: 1
+          boolValue: 0
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+          objectValue: {fileID: 0}
+    - rid: 819370114258000010
+      type: {class: BufferedInputCompletionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        completedCountKey: CompletedAttackCount
+        queuedCountKey: QueuedAttackCount
+        resultWhenMissing: 0
