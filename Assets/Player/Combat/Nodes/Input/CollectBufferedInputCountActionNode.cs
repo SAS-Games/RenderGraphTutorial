@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using SAS.Core.BlackboardSystem;
 using UnityEngine;
 
 [Serializable]
@@ -32,8 +33,7 @@ public sealed class CollectBufferedInputCountProvider : ActionDataProvider<Colle
 [ActionNodeMenu("Input/Collect Buffered Input Count")]
 public sealed class CollectBufferedInputCountActionNode : ActionNode<CollectBufferedInputCountData>
 {
-    public CollectBufferedInputCountActionNode(ActionDataProvider<CollectBufferedInputCountData> dataProvider)
-        : base(dataProvider)
+    public CollectBufferedInputCountActionNode(ActionDataProvider<CollectBufferedInputCountData> dataProvider) : base(dataProvider)
     {
     }
 
@@ -47,22 +47,14 @@ public sealed class CollectBufferedInputCountActionNode : ActionNode<CollectBuff
             return;
 
         var blackboard = ActionGraphBlackboardUtility.RequireBlackboard(context);
-        if (!ActionGraphBlackboardUtility.TryGet(
-                context,
-                ActionGraphInputBuffer.BlackboardKey,
-                out ActionGraphInputBuffer inputBuffer) || inputBuffer == null)
-        {
-            throw new InvalidOperationException(
-                "Collect Buffered Input Count requires an ActionGraphInputBuffer registered on the graph blackboard.");
-        }
+        if (!ActionGraphBlackboardUtility.TryGet(context, ActionGraphInputBuffer.BlackboardKey, out ActionGraphInputBuffer inputBuffer) || inputBuffer == null)
+            throw new InvalidOperationException("Collect Buffered Input Count requires an ActionGraphInputBuffer registered on the graph blackboard.");
 
         Animator animator = ResolveAnimator(context);
-        int animatorParameterHash = string.IsNullOrWhiteSpace(data.animatorParameterName)
-            ? 0
-            : Animator.StringToHash(data.animatorParameterName);
-
+        int animatorParameterHash = string.IsNullOrWhiteSpace(data.animatorParameterName) ? 0 : Animator.StringToHash(data.animatorParameterName);
         int maximumCount = Mathf.Max(1, data.maximumCount);
         int count = Mathf.Clamp(data.initialCount, 0, maximumCount);
+        
         if (!string.IsNullOrWhiteSpace(data.completionKey))
             blackboard.SetValue(data.completionKey, 0);
         ApplyCount(blackboard, animator, animatorParameterHash, data.outputKey, count);
@@ -99,12 +91,7 @@ public sealed class CollectBufferedInputCountActionNode : ActionNode<CollectBuff
         return useUnscaledTime ? Time.unscaledTime : Time.time;
     }
 
-    private static void ApplyCount(
-        SAS.Core.BlackboardSystem.Blackboard blackboard,
-        Animator animator,
-        int animatorParameterHash,
-        string outputKey,
-        int count)
+    private static void ApplyCount(Blackboard blackboard, Animator animator, int animatorParameterHash, string outputKey, int count)
     {
         blackboard.SetValue(outputKey, count);
 
@@ -122,11 +109,8 @@ public sealed class BufferedInputCompletionCondition : ICondition
 
     public bool Evaluate(ActionContext context)
     {
-        if (!ActionGraphBlackboardUtility.TryGet(context, completedCountKey, out int completedCount) ||
-            !ActionGraphBlackboardUtility.TryGet(context, queuedCountKey, out int queuedCount))
-        {
+        if (!ActionGraphBlackboardUtility.TryGet(context, completedCountKey, out int completedCount) || !ActionGraphBlackboardUtility.TryGet(context, queuedCountKey, out int queuedCount))
             return resultWhenMissing;
-        }
 
         return queuedCount > 0 && completedCount >= queuedCount;
     }

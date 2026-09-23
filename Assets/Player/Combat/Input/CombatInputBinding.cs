@@ -2,6 +2,7 @@ using System;
 using SAS.Core.TagSystem;
 using SAS.StateMachineCharacterController;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum CombatInputSubmitPhase
 {
@@ -23,7 +24,8 @@ public sealed class CombatInputBinding : MonoBehaviour
 {
     [FieldRequiresParent] private InputHandler _inputHandler;
     [FieldRequiresSelf] private CombatActionGraphController _combatController;
-    [SerializeField] private CombatInputActionDefinition[] _bindings =
+
+    [FormerlySerializedAs("_bindings")] [SerializeField] private CombatInputActionDefinition[] m_Bindings =
     {
         new CombatInputActionDefinition()
     };
@@ -35,29 +37,26 @@ public sealed class CombatInputBinding : MonoBehaviour
 
     private void Start()
     {
-        if (_inputHandler == null || _combatController == null || _bindings == null)
+        if (_inputHandler == null || _combatController == null || m_Bindings == null)
             return;
 
-        foreach (CombatInputActionDefinition binding in _bindings)
+        foreach (CombatInputActionDefinition binding in m_Bindings)
         {
-            if (binding == null || string.IsNullOrWhiteSpace(binding.inputActionName) || string.IsNullOrWhiteSpace(binding.actionId))
+            if (binding == null || string.IsNullOrWhiteSpace(binding.inputActionName) ||
+                string.IsNullOrWhiteSpace(binding.actionId))
             {
                 continue;
             }
 
             if (!_combatController.HasAction(binding.actionId))
             {
-                Debug.LogError(
-                    $"Combat input '{binding.inputActionName}' references unknown action ID '{binding.actionId}'. " +
-                    "Add the same action ID to CombatActionGraphController.",
-                    this);
+                Debug.LogError($"Combat input '{binding.inputActionName}' references unknown action ID '{binding.actionId}'. Add the same action ID to CombatActionGraphController.", this);
                 continue;
             }
 
             CombatInputActionDefinition capturedBinding = binding;
             Action onStarted = capturedBinding.submitPhase == CombatInputSubmitPhase.Started ? () => Submit(capturedBinding) : null;
             Action onCanceled = capturedBinding.submitPhase == CombatInputSubmitPhase.Canceled ? () => Submit(capturedBinding) : null;
-
             _inputHandler.RegisterInputCommand(capturedBinding.inputActionName, new CombatAttackCommand(capturedBinding.inputActionName, onStarted, onCanceled), true);
         }
     }

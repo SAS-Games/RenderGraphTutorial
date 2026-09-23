@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Forwards animation events to the active combat ActionGraph blackboard.
-/// This relay has no dependency on a particular weapon or combat extension.
-/// </summary>
 [DisallowMultipleComponent]
 public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
 {

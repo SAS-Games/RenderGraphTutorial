@@ -1,6 +1,7 @@
 using System;
 using SAS.Core.BlackboardSystem;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public class CombatActionGraphController : MonoBehaviour
@@ -15,14 +16,10 @@ public class CombatActionGraphController : MonoBehaviour
         public ActionGraphAsset graph;
     }
 
-    [Header("Action Graphs")] [SerializeField]
-    private CombatActionDefinition[] actions;
-
-    [Header("Runtime Context")] [SerializeField]
-    private GameObject actionOwner;
-
-    [SerializeField] private ActionGraphBlackboardComponent actionBlackboard;
-    [SerializeField] private ActionGraphInputBuffer inputBuffer;
+    [FormerlySerializedAs("actions")] [Header("Action Graphs")] [SerializeField] private CombatActionDefinition[] m_Actions;
+    [FormerlySerializedAs("actionOwner")] [Header("Runtime Context")] [SerializeField] private GameObject m_ActionOwner;
+    [FormerlySerializedAs("actionBlackboard")] [SerializeField] private ActionGraphBlackboardComponent m_ActionBlackboard;
+    [FormerlySerializedAs("inputBuffer")] [SerializeField] private ActionGraphInputBuffer m_InputBuffer;
 
     private ActionGraphExecutor executor;
     private ActionContext context;
@@ -40,26 +37,26 @@ public class CombatActionGraphController : MonoBehaviour
 
     private void Awake()
     {
-        if (actionBlackboard == null)
-            actionBlackboard = GetComponent<ActionGraphBlackboardComponent>();
+        if (m_ActionBlackboard == null)
+            m_ActionBlackboard = GetComponent<ActionGraphBlackboardComponent>();
 
-        if (inputBuffer == null)
-            inputBuffer = GetComponent<ActionGraphInputBuffer>();
+        if (m_InputBuffer == null)
+            m_InputBuffer = GetComponent<ActionGraphInputBuffer>();
 
-        if (inputBuffer == null)
-            inputBuffer = gameObject.AddComponent<ActionGraphInputBuffer>();
+        if (m_InputBuffer == null)
+            m_InputBuffer = gameObject.AddComponent<ActionGraphInputBuffer>();
 
-        Blackboard = actionBlackboard != null ? actionBlackboard.Blackboard : null;
+        Blackboard = m_ActionBlackboard != null ? m_ActionBlackboard.Blackboard : null;
         if (Blackboard == null)
             Debug.LogError("CombatActionGraphController requires an ActionGraphBlackboardComponent.", this);
         else
         {
-            Blackboard.SetValue(ActionGraphInputBuffer.BlackboardKey, inputBuffer);
+            Blackboard.SetValue(ActionGraphInputBuffer.BlackboardKey, m_InputBuffer);
             Blackboard.SetValue(ActionRunningBlackboardKey, false);
             Blackboard.SetValue(CurrentActionBlackboardKey, string.Empty);
         }
 
-        GameObject owner = actionOwner != null ? actionOwner : transform.root.gameObject;
+        GameObject owner = m_ActionOwner != null ? m_ActionOwner : transform.root.gameObject;
         executor = new ActionGraphExecutor();
         context = new ActionContext
         {
@@ -85,7 +82,7 @@ public class CombatActionGraphController : MonoBehaviour
 
     public bool PublishInput(string inputName)
     {
-        return inputBuffer != null && inputBuffer.Publish(inputName);
+        return m_InputBuffer != null && m_InputBuffer.Publish(inputName);
     }
 
     public bool Signal(string signalName)
@@ -135,12 +132,12 @@ public class CombatActionGraphController : MonoBehaviour
 
     private bool TryGetDefinition(string actionId, out CombatActionDefinition definition)
     {
-        if (!string.IsNullOrWhiteSpace(actionId) && actions != null)
+        if (!string.IsNullOrWhiteSpace(actionId) && m_Actions != null)
         {
             // The last duplicate wins, matching the previous controller behavior.
-            for (int i = actions.Length - 1; i >= 0; i--)
+            for (int i = m_Actions.Length - 1; i >= 0; i--)
             {
-                CombatActionDefinition candidate = actions[i];
+                CombatActionDefinition candidate = m_Actions[i];
                 if (candidate != null && string.Equals(candidate.actionId, actionId, StringComparison.Ordinal))
                 {
                     definition = candidate;
@@ -161,7 +158,7 @@ public class CombatActionGraphController : MonoBehaviour
         if (!executor.Build(definition.graph, context))
             return false;
 
-        inputBuffer?.Clear();
+        m_InputBuffer?.Clear();
         IsBusy = true;
         CurrentActionId = definition.actionId;
         Blackboard.SetValue(ActionRunningBlackboardKey, true);
@@ -203,7 +200,7 @@ public class CombatActionGraphController : MonoBehaviour
     {
         string endedActionId = CurrentActionId;
 
-        inputBuffer?.Clear();
+        m_InputBuffer?.Clear();
         IsBusy = false;
         CurrentActionId = string.Empty;
 
