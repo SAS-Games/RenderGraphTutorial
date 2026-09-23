@@ -20,9 +20,9 @@ MonoBehaviour:
     - rid: 819370114258000001
       type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorDescription: 
-        editorPosition: {x: 80, y: 120}
-        editorSize: {x: 260, y: 260}
+        editorDescription: Three-step combo lifecycle
+        editorPosition: {x: 60, y: 100}
+        editorSize: {x: 300, y: 280}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         type: 0
@@ -30,91 +30,156 @@ MonoBehaviour:
         - rid: 819370114258000002
         - rid: 819370114258000003
         - rid: 819370114258000004
-        - rid: 819370114258000005
     - rid: 819370114258000002
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorDescription: 
-        editorPosition: {x: 166.66667, y: 103.33334}
-        editorSize: {x: 311.3333, y: 438}
+        editorDescription: Initialize combo state
+        editorPosition: {x: 239.33333, y: 5.333336}
+        editorSize: {x: 226.00002, y: 378}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
-          rid: 819370114258000006
+          rid: 819370114258000010
     - rid: 819370114258000003
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      type: {class: LoopNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorDescription: 
-        editorPosition: {x: 520.6667, y: 108}
-        editorSize: {x: 470.66663, y: 442.6667}
+        editorDescription: Execute one graph iteration per attack
+        editorPosition: {x: 496.66666, y: 5.333336}
+        editorSize: {x: 302.66666, y: 280}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 819370114258000007
+        maxIterations: 3
+        conditionTiming: 1
+        condition:
+          rid: 819370114258000011
+        child:
+          rid: 819370114258000005
     - rid: 819370114258000004
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorDescription: 
-        editorPosition: {x: 834.6667, y: 108}
-        editorSize: {x: 220, y: 338}
+        editorDescription: Clear combo state and Animator queue
+        editorPosition: {x: 1130.6666, y: 5.333336}
+        editorSize: {x: 243.33337, y: 378}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
-          rid: 819370114258000008
+          rid: 819370114258000012
     - rid: 819370114258000005
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: Current attack step
+        editorPosition: {x: 831.3333, y: 244.00002}
+        editorSize: {x: 248.66669, y: 307.33334}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 819370114258000006
+        - rid: 819370114258000007
+        - rid: 819370114258000008
+    - rid: 819370114258000006
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
-        editorDescription: 
-        editorPosition: {x: 1116, y: 108}
-        editorSize: {x: 350, y: 438}
+        editorDescription: Publish current attack count
+        editorPosition: {x: 420, y: 860}
+        editorSize: {x: 330, y: 350}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
-          rid: 819370114258000009
-    - rid: 819370114258000006
-      type: {class: CollectBufferedInputCountProvider, ns: , asm: Assembly-CSharp}
+          rid: 819370114258000013
+    - rid: 819370114258000007
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: Observe input while animation is playing
+        editorPosition: {x: 788.6667, y: 860}
+        editorSize: {x: 249.33331, y: 253.33331}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 1
+        children:
+        - rid: 819370114258000009
+        - rid: 819370114258000014
+    - rid: 819370114258000008
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: Advance when input branch accepted a press
+        editorPosition: {x: 1180, y: 860}
+        editorSize: {x: 320, y: 300}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000015
+    - rid: 819370114258000009
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: 0.5 second buffered-input window
+        editorPosition: {x: 394, y: 1190.6666}
+        editorSize: {x: 580, y: 415.33337}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000016
+    - rid: 819370114258000010
+      type: {class: CombatComboResetProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - queuedCountKey: QueuedAttackCount
+          completedCountKey: CompletedAttackCount
+          comboStepKey: ComboStep
+          animatorParameterName: QueuedAttackCount
+    - rid: 819370114258000011
+      type: {class: CombatComboInputAcceptedCondition, ns: , asm: Assembly-CSharp}
+      data:
+        expected: 1
+    - rid: 819370114258000012
+      type: {class: CombatComboResetProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - queuedCountKey: QueuedAttackCount
+          completedCountKey: CompletedAttackCount
+          comboStepKey: ComboStep
+          animatorParameterName: QueuedAttackCount
+    - rid: 819370114258000013
+      type: {class: CombatComboBeginCurrentAttackProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - queuedCountKey: QueuedAttackCount
+          comboStepKey: ComboStep
+          animatorParameterName: QueuedAttackCount
+    - rid: 819370114258000014
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: Wait for tagged state completion
+        editorPosition: {x: 1200.6666, y: 1190.6666}
+        editorSize: {x: 237.33337, y: 298}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000017
+    - rid: 819370114258000015
+      type: {class: CombatComboAdvanceProvider, ns: , asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - comboCount: 3
+          comboStepKey: ComboStep
+    - rid: 819370114258000016
+      type: {class: CombatComboWaitInputProvider, ns: , asm: Assembly-CSharp}
       data:
         useSingleValue: 1
         data:
         - inputName: PrimaryAttack
-          outputKey: QueuedAttackCount
-          completionKey: CompletedAttackCount
+          queuedCountKey: QueuedAttackCount
           animatorParameterName: QueuedAttackCount
+          comboCount: 3
           duration: 0.5
-          initialCount: 1
-          maximumCount: 3
           useUnscaledTime: 0
-    - rid: 819370114258000007
-      type: {class: WaitUntilConditionNodeProvider, ns: , asm: AssemblyCore}
+    - rid: 819370114258000017
+      type: {class: CombatComboWaitForCompletionProvider, ns: , asm: Assembly-CSharp}
       data:
         useSingleValue: 1
         data:
-        - condition:
-            rid: 819370114258000010
-          timeoutSeconds: -1
-          throwOnTimeout: 0
-    - rid: 819370114258000008
-      type: {class: AnimatorSetIntegerProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - parameterName: QueuedAttackCount
-          value: 0
-    - rid: 819370114258000009
-      type: {class: ActionGraphSetBlackboardValueProvider, ns: , asm: AssemblyCore}
-      data:
-        useSingleValue: 1
-        data:
-        - key: QueuedAttackCount
-          valueType: 1
-          boolValue: 0
-          intValue: 0
-          floatValue: 0
-          stringValue: 
-          objectValue: {fileID: 0}
-    - rid: 819370114258000010
-      type: {class: BufferedInputCompletionCondition, ns: , asm: Assembly-CSharp}
-      data:
-        completedCountKey: CompletedAttackCount
-        queuedCountKey: QueuedAttackCount
-        resultWhenMissing: 0
+        - completedCountKey: CompletedAttackCount

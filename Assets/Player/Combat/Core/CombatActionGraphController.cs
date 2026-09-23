@@ -1,7 +1,53 @@
 using System;
 using SAS.Core.BlackboardSystem;
 using UnityEngine;
-using UnityEngine.Serialization;
+
+public sealed class CombatActionContext : ActionContext
+{
+    private Action comboCleanup;
+
+    public Animator Animator { get; internal set; }
+    public ActionGraphInputBuffer InputBuffer { get; internal set; }
+    public int CurrentAttackIndex { get; private set; }
+    public bool ComboInputAccepted { get; set; }
+
+    public void ResetCombo()
+    {
+        CurrentAttackIndex = 0;
+        ComboInputAccepted = false;
+    }
+
+    public void ConfigureComboCleanup(Action cleanup)
+    {
+        comboCleanup = cleanup;
+    }
+
+    public void ClearComboRuntime()
+    {
+        ResetCombo();
+        comboCleanup?.Invoke();
+    }
+
+    public void EndExecution()
+    {
+        ClearComboRuntime();
+        comboCleanup = null;
+    }
+
+    public void BeginCurrentAttack()
+    {
+        ComboInputAccepted = false;
+    }
+
+    public void AdvanceCombo(int comboCount)
+    {
+        if (!ComboInputAccepted)
+            return;
+
+        int maximumIndex = Math.Max(0, comboCount - 1);
+        CurrentAttackIndex = Math.Min(CurrentAttackIndex + 1, maximumIndex);
+    }
+}
 
 [DisallowMultipleComponent]
 public class CombatActionGraphController : MonoBehaviour
@@ -16,13 +62,13 @@ public class CombatActionGraphController : MonoBehaviour
         public ActionGraphAsset graph;
     }
 
-    [FormerlySerializedAs("actions")] [Header("Action Graphs")] [SerializeField] private CombatActionDefinition[] m_Actions;
-    [FormerlySerializedAs("actionOwner")] [Header("Runtime Context")] [SerializeField] private GameObject m_ActionOwner;
-    [FormerlySerializedAs("actionBlackboard")] [SerializeField] private ActionGraphBlackboardComponent m_ActionBlackboard;
-    [FormerlySerializedAs("inputBuffer")] [SerializeField] private ActionGraphInputBuffer m_InputBuffer;
+    [SerializeField] private CombatActionDefinition[] m_Actions;
+    [Header("Runtime Context")] [SerializeField] private GameObject m_ActionOwner;
+    [SerializeField] private ActionGraphBlackboardComponent m_ActionBlackboard;
+    [SerializeField] private ActionGraphInputBuffer m_InputBuffer;
 
     private ActionGraphExecutor executor;
-    private ActionContext context;
+    private CombatActionContext context;
     private int executionVersion;
 
     public bool IsBusy { get; private set; }
@@ -58,10 +104,12 @@ public class CombatActionGraphController : MonoBehaviour
 
         GameObject owner = m_ActionOwner != null ? m_ActionOwner : transform.root.gameObject;
         executor = new ActionGraphExecutor();
-        context = new ActionContext
+        context = new CombatActionContext
         {
             Owner = owner,
-            Blackboard = Blackboard
+            Blackboard = Blackboard,
+            Animator = ResolveAnimator(owner),
+            InputBuffer = m_InputBuffer
         };
     }
 
@@ -201,6 +249,7 @@ public class CombatActionGraphController : MonoBehaviour
         string endedActionId = CurrentActionId;
 
         m_InputBuffer?.Clear();
+        context?.EndExecution();
         IsBusy = false;
         CurrentActionId = string.Empty;
 
@@ -225,6 +274,15 @@ public class CombatActionGraphController : MonoBehaviour
                 ActionFailed?.Invoke(endedActionId, failure);
                 break;
         }
+    }
+
+    private static Animator ResolveAnimator(GameObject owner)
+    {
+        if (owner == null)
+            return null;
+
+        Animator animator = owner.GetComponentInParent<Animator>();
+        return animator != null ? animator : owner.GetComponentInChildren<Animator>(true);
     }
 
     private enum ActionEndReason

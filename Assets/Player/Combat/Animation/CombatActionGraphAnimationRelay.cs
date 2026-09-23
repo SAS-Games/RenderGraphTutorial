@@ -15,24 +15,24 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
         public bool cancelActionOnInterruption = true;
     }
 
-    [SerializeField] private CombatActionGraphController actionController;
-    [SerializeField] private Animator animator;
-    [SerializeField] private StateIntegerSignalBinding[] stateIntegerSignals;
+    [SerializeField] private CombatActionGraphController m_ActionController;
+    [SerializeField] private Animator m_Animator;
+    [SerializeField] private StateIntegerSignalBinding[] m_StateIntegerSignals;
 
     private CompositeDisposable stateSubscriptions;
 
     private void Awake()
     {
-        if (actionController == null)
-            actionController = transform.root.GetComponentInChildren<CombatActionGraphController>(true);
+        if (m_ActionController == null)
+            m_ActionController = transform.root.GetComponentInChildren<CombatActionGraphController>(true);
 
-        if (actionController == null)
+        if (m_ActionController == null)
             Debug.LogError("Combat animation relay could not find a CombatActionGraphController.", this);
 
-        if (animator == null)
-            animator = GetComponent<Animator>();
+        if (m_Animator == null)
+            m_Animator = GetComponent<Animator>();
 
-        if (animator == null)
+        if (m_Animator == null)
             Debug.LogError("Combat animation relay requires an Animator on the same GameObject.", this);
     }
 
@@ -49,7 +49,7 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
 
     public void Signal(string signalName)
     {
-        actionController?.Signal(signalName);
+        m_ActionController?.Signal(signalName);
     }
 
     public void EndCombo()
@@ -67,10 +67,10 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
         stateSubscriptions?.Dispose();
         stateSubscriptions = new CompositeDisposable();
 
-        if (animator == null || stateIntegerSignals == null)
+        if (m_Animator == null || m_StateIntegerSignals == null)
             return;
 
-        foreach (StateIntegerSignalBinding binding in stateIntegerSignals)
+        foreach (StateIntegerSignalBinding binding in m_StateIntegerSignals)
         {
             if (binding == null || string.IsNullOrWhiteSpace(binding.stateName) || string.IsNullOrWhiteSpace(binding.blackboardKey))
             {
@@ -81,10 +81,10 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
 
             try
             {
-                animator.OnStateCompletedAsObservable(capturedBinding.stateName).Subscribe(_ => PublishCompletedState(capturedBinding)).AddTo(stateSubscriptions);
+                m_Animator.OnStateCompletedAsObservable(capturedBinding.stateName).Subscribe(_ => PublishCompletedState(capturedBinding)).AddTo(stateSubscriptions);
 
                 if (capturedBinding.cancelActionOnInterruption)
-                    animator.OnStateInterruptedAsObservable(capturedBinding.stateName).Subscribe(_ => CancelInterruptedAction(capturedBinding)).AddTo(stateSubscriptions);
+                    m_Animator.OnStateInterruptedAsObservable(capturedBinding.stateName).Subscribe(_ => CancelInterruptedAction(capturedBinding)).AddTo(stateSubscriptions);
             }
             catch (Exception exception)
             {
@@ -98,17 +98,17 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
         if (!IsBindingActionActive(binding))
             return;
 
-        actionController.SetBlackboardValue(binding.blackboardKey, binding.completedValue);
+        m_ActionController.SetBlackboardValue(binding.blackboardKey, binding.completedValue);
     }
 
     private void CancelInterruptedAction(StateIntegerSignalBinding binding)
     {
         if (IsBindingActionActive(binding))
-            actionController.CancelCurrentAction();
+            m_ActionController.CancelCurrentAction();
     }
 
     private bool IsBindingActionActive(StateIntegerSignalBinding binding)
     {
-        return actionController != null && actionController.IsBusy && (string.IsNullOrWhiteSpace(binding.actionId) || string.Equals(actionController.CurrentActionId, binding.actionId, StringComparison.Ordinal));
+        return m_ActionController != null && m_ActionController.IsBusy && (string.IsNullOrWhiteSpace(binding.actionId) || string.Equals(m_ActionController.CurrentActionId, binding.actionId, StringComparison.Ordinal));
     }
 }

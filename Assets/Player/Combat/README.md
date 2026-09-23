@@ -34,8 +34,10 @@ events. The same state is published to `Combat.ActionRunning` and
 ## Nodes
 
 `Nodes/` contains optional combat nodes grouped by responsibility. The counter
-combo uses `CollectBufferedInputCountActionNode` and
-`BufferedInputCompletionCondition` from `Nodes/Input/`.
+combo uses the Blade-of-Dawn-style lifecycle nodes in
+`Nodes/Input/CollectBufferedInputCountActionNode.cs`: reset, begin current
+attack, wait for buffered input and tagged animation completion in parallel,
+conditionally advance, and repeat.
 
 Only broadly reusable ActionGraph primitives remain in `SASPackages-Core`.
 
@@ -56,8 +58,12 @@ The host GameObject needs `CombatActionGraphController`,
 `CombatInputBinding`. Register the graph under an action ID, then configure the
 binding with `PrimaryAttack`, the same action ID, and the `Started` submit phase.
 The binding calls `Submit(actionId, inputActionName)`, so the first press starts
-the graph and later presses are automatically published to its input buffer.
-In the included Player prefab that action ID is `SwordCombo`.
+attack index zero and later presses are automatically published to its input
+buffer. Each loop iteration represents one attack. Its parallel branch waits
+for one buffered press during a 0.5-second window and for the current tagged
+animation state to complete. Accepted input advances the context index and the
+loop; otherwise the combo ends. In the included Player prefab that action ID is
+`SwordCombo`.
 
 The Animator needs an integer parameter named `QueuedAttackCount`. Attach a
 `TaggedObservableStateMachineTrigger` to attacks one, two, and three, assign a
