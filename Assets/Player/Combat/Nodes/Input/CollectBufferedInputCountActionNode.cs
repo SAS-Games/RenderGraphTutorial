@@ -137,6 +137,7 @@ public sealed class CombatComboResetData
     public string queuedCountKey = "QueuedAttackCount";
     public string completedCountKey = "CompletedAttackCount";
     public string comboStepKey = "ComboStep";
+    public string[] additionalIntegerKeys = Array.Empty<string>();
     public string animatorParameterName = "QueuedAttackCount";
 }
 
@@ -167,6 +168,12 @@ public sealed class CombatComboResetActionNode : CombatComboActionNode<CombatCom
             SetInteger(blackboard, data.queuedCountKey, 0);
             SetInteger(blackboard, data.completedCountKey, 0);
             SetInteger(blackboard, data.comboStepKey, 0);
+
+            if (data.additionalIntegerKeys != null)
+            {
+                for (int i = 0; i < data.additionalIntegerKeys.Length; i++)
+                    SetInteger(blackboard, data.additionalIntegerKeys[i], 0);
+            }
 
             if (combatContext.Animator != null && !string.IsNullOrWhiteSpace(data.animatorParameterName))
                 combatContext.Animator.SetInteger(data.animatorParameterName, 0);

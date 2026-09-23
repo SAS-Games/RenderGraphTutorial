@@ -749,6 +749,22 @@ MonoBehaviour:
     blackboardKey: CompletedAttackCount
     completedValue: 3
     cancelActionOnInterruption: 1
+  m_StateCueIntegerSignals:
+  - actionId: SwordCombo
+    stateName: SwordAttack1
+    cueName: Projectile
+    blackboardKey: ProjectileCueCount
+    publishedValue: 1
+  - actionId: SwordCombo
+    stateName: SwordAttack2
+    cueName: Projectile
+    blackboardKey: ProjectileCueCount
+    publishedValue: 2
+  - actionId: SwordCombo
+    stateName: SwordAttack3
+    cueName: Projectile
+    blackboardKey: ProjectileCueCount
+    publishedValue: 3
 --- !u!114 &770000000000000011
 MonoBehaviour:
   m_ObjectHideFlags: 0

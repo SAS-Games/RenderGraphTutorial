@@ -1,6 +1,7 @@
 using System;
 using SAS.Core.BlackboardSystem;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public sealed class CombatActionContext : ActionContext
 {
@@ -8,8 +9,20 @@ public sealed class CombatActionContext : ActionContext
 
     public Animator Animator { get; internal set; }
     public ActionGraphInputBuffer InputBuffer { get; internal set; }
+    public Transform FirePoint { get; internal set; }
     public int CurrentAttackIndex { get; private set; }
     public bool ComboInputAccepted { get; set; }
+
+    public Transform OriginTransform
+    {
+        get
+        {
+            if (FirePoint != null)
+                return FirePoint;
+
+            return Owner != null ? Owner.transform : null;
+        }
+    }
 
     public void ResetCombo()
     {
@@ -62,10 +75,12 @@ public class CombatActionGraphController : MonoBehaviour
         public ActionGraphAsset graph;
     }
 
-    [SerializeField] private CombatActionDefinition[] m_Actions;
-    [Header("Runtime Context")] [SerializeField] private GameObject m_ActionOwner;
-    [SerializeField] private ActionGraphBlackboardComponent m_ActionBlackboard;
-    [SerializeField] private ActionGraphInputBuffer m_InputBuffer;
+    [FormerlySerializedAs("actions")] [SerializeField] private CombatActionDefinition[] m_Actions;
+    [FormerlySerializedAs("actionOwner")] [Header("Runtime Context")] [SerializeField] private GameObject m_ActionOwner;
+    [FormerlySerializedAs("actionBlackboard")] [SerializeField] private ActionGraphBlackboardComponent m_ActionBlackboard;
+    [FormerlySerializedAs("inputBuffer")] [SerializeField] private ActionGraphInputBuffer m_InputBuffer;
+    [Tooltip("Optional source used by projectile nodes. Falls back to the action owner's transform.")]
+    [SerializeField] private Transform m_ActionOrigin;
 
     private ActionGraphExecutor executor;
     private CombatActionContext context;
@@ -109,7 +124,8 @@ public class CombatActionGraphController : MonoBehaviour
             Owner = owner,
             Blackboard = Blackboard,
             Animator = ResolveAnimator(owner),
-            InputBuffer = m_InputBuffer
+            InputBuffer = m_InputBuffer,
+            FirePoint = m_ActionOrigin
         };
     }
 

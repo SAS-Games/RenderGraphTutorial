@@ -25,6 +25,7 @@ public static class CombatGraphKeys
 {
     public const string QueuedAttackCount = "QueuedAttackCount";
     public const string CompletedAttackCount = "CompletedAttackCount";
+    public const string ProjectileCueCount = "ProjectileCueCount";
     public const string ComboInput = "ComboInput";
     public const string ComboStep = "ComboStep";
     public const string ComboDecisionReady = "ComboDecisionReady";

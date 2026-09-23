@@ -1,6 +1,7 @@
 using System;
 using UniRx;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
@@ -15,9 +16,20 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
         public bool cancelActionOnInterruption = true;
     }
 
-    [SerializeField] private CombatActionGraphController m_ActionController;
-    [SerializeField] private Animator m_Animator;
-    [SerializeField] private StateIntegerSignalBinding[] m_StateIntegerSignals;
+    [Serializable]
+    private sealed class StateCueIntegerSignalBinding
+    {
+        public string actionId;
+        public string stateName;
+        public string cueName = "Projectile";
+        public string blackboardKey = "ProjectileCueCount";
+        public int publishedValue;
+    }
+
+    [FormerlySerializedAs("actionController")] [SerializeField] private CombatActionGraphController m_ActionController;
+    [FormerlySerializedAs("animator")] [SerializeField] private Animator m_Animator;
+    [FormerlySerializedAs("stateIntegerSignals")] [SerializeField] private StateIntegerSignalBinding[] m_StateIntegerSignals;
+    [SerializeField] private StateCueIntegerSignalBinding[] m_StateCueIntegerSignals;
 
     private CompositeDisposable stateSubscriptions;
 
@@ -67,24 +79,50 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
         stateSubscriptions?.Dispose();
         stateSubscriptions = new CompositeDisposable();
 
-        if (m_Animator == null || m_StateIntegerSignals == null)
+        if (m_Animator == null)
             return;
 
-        foreach (StateIntegerSignalBinding binding in m_StateIntegerSignals)
+        if (m_StateIntegerSignals != null)
         {
-            if (binding == null || string.IsNullOrWhiteSpace(binding.stateName) || string.IsNullOrWhiteSpace(binding.blackboardKey))
+            foreach (StateIntegerSignalBinding binding in m_StateIntegerSignals)
+            {
+                if (binding == null || string.IsNullOrWhiteSpace(binding.stateName) || string.IsNullOrWhiteSpace(binding.blackboardKey))
+                    continue;
+
+                StateIntegerSignalBinding capturedBinding = binding;
+
+                try
+                {
+                    m_Animator.OnStateCompletedAsObservable(capturedBinding.stateName).Subscribe(_ => PublishCompletedState(capturedBinding)).AddTo(stateSubscriptions);
+
+                    if (capturedBinding.cancelActionOnInterruption)
+                        m_Animator.OnStateInterruptedAsObservable(capturedBinding.stateName).Subscribe(_ => CancelInterruptedAction(capturedBinding)).AddTo(stateSubscriptions);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception, this);
+                }
+            }
+        }
+
+        if (m_StateCueIntegerSignals == null)
+            return;
+
+        foreach (StateCueIntegerSignalBinding binding in m_StateCueIntegerSignals)
+        {
+            if (binding == null || string.IsNullOrWhiteSpace(binding.stateName) ||
+                string.IsNullOrWhiteSpace(binding.cueName) || string.IsNullOrWhiteSpace(binding.blackboardKey))
             {
                 continue;
             }
 
-            StateIntegerSignalBinding capturedBinding = binding;
+            StateCueIntegerSignalBinding capturedBinding = binding;
 
             try
             {
-                m_Animator.OnStateCompletedAsObservable(capturedBinding.stateName).Subscribe(_ => PublishCompletedState(capturedBinding)).AddTo(stateSubscriptions);
-
-                if (capturedBinding.cancelActionOnInterruption)
-                    m_Animator.OnStateInterruptedAsObservable(capturedBinding.stateName).Subscribe(_ => CancelInterruptedAction(capturedBinding)).AddTo(stateSubscriptions);
+                m_Animator.OnStateCueAsObservable(capturedBinding.stateName, capturedBinding.cueName)
+                    .Subscribe(_ => PublishCue(capturedBinding))
+                    .AddTo(stateSubscriptions);
             }
             catch (Exception exception)
             {
@@ -107,8 +145,21 @@ public sealed class CombatActionGraphAnimationRelay : MonoBehaviour
             m_ActionController.CancelCurrentAction();
     }
 
+    private void PublishCue(StateCueIntegerSignalBinding binding)
+    {
+        if (IsBindingActionActive(binding.actionId))
+            m_ActionController.SetBlackboardValue(binding.blackboardKey, binding.publishedValue);
+    }
+
     private bool IsBindingActionActive(StateIntegerSignalBinding binding)
     {
-        return m_ActionController != null && m_ActionController.IsBusy && (string.IsNullOrWhiteSpace(binding.actionId) || string.Equals(m_ActionController.CurrentActionId, binding.actionId, StringComparison.Ordinal));
+        return IsBindingActionActive(binding.actionId);
+    }
+
+    private bool IsBindingActionActive(string actionId)
+    {
+        return m_ActionController != null && m_ActionController.IsBusy &&
+               (string.IsNullOrWhiteSpace(actionId) ||
+                string.Equals(m_ActionController.CurrentActionId, actionId, StringComparison.Ordinal));
     }
 }

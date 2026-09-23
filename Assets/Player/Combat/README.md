@@ -74,3 +74,22 @@ required for combo completion.
 
 The counter graph has no dependency on `SwordAndShieldCombatSignals` or
 `CombatStateController`.
+
+## Projectile cue branch
+
+Each sword state uses `CombatAnimationCueStateMachineTrigger`, derived from
+`TaggedObservableStateMachineTrigger`. Its `Projectile` cue is currently set
+to normalized time `0.35`. The animation relay publishes that cue as
+`ProjectileCueCount` values 1, 2, and 3.
+
+Inside each combo iteration, the graph runs a third parallel branch:
+`Wait For Animation Cue -> Spawn Pooled Projectiles`. The projectile provider
+contains three indexed data entries selected through
+`CombatActionContext.CurrentAttackIndex`. Assign a
+`ComponentPoolSO<Poolable>` to each entry in the graph inspector before
+testing actual projectile spawning. The configured spawn offset currently
+defaults to `(0, 1, 1)`.
+
+`CombatActionGraphController.m_ActionOrigin` can optionally reference a weapon
+or fire-point transform. If it is unassigned, projectile offsets are relative
+to the action owner's root transform.

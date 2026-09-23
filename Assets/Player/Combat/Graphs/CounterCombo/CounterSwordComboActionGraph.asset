@@ -99,6 +99,7 @@ MonoBehaviour:
         children:
         - rid: 819370114258000009
         - rid: 819370114258000014
+        - rid: 819370114258000018
     - rid: 819370114258000008
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
@@ -127,6 +128,8 @@ MonoBehaviour:
         - queuedCountKey: QueuedAttackCount
           completedCountKey: CompletedAttackCount
           comboStepKey: ComboStep
+          additionalIntegerKeys:
+          - ProjectileCueCount
           animatorParameterName: QueuedAttackCount
     - rid: 819370114258000011
       type: {class: CombatComboInputAcceptedCondition, ns: , asm: Assembly-CSharp}
@@ -140,6 +143,8 @@ MonoBehaviour:
         - queuedCountKey: QueuedAttackCount
           completedCountKey: CompletedAttackCount
           comboStepKey: ComboStep
+          additionalIntegerKeys:
+          - ProjectileCueCount
           animatorParameterName: QueuedAttackCount
     - rid: 819370114258000013
       type: {class: CombatComboBeginCurrentAttackProvider, ns: , asm: Assembly-CSharp}
@@ -183,3 +188,63 @@ MonoBehaviour:
         useSingleValue: 1
         data:
         - completedCountKey: CompletedAttackCount
+    - rid: 819370114258000018
+      type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: Fire projectile at the animation cue
+        editorPosition: {x: 1500, y: 1190.6666}
+        editorSize: {x: 280, y: 240}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        type: 0
+        children:
+        - rid: 819370114258000019
+        - rid: 819370114258000020
+    - rid: 819370114258000019
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: Wait for Projectile cue
+        editorPosition: {x: 1500, y: 1510}
+        editorSize: {x: 300, y: 280}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000021
+    - rid: 819370114258000020
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: Assign a projectile pool for each attack
+        editorPosition: {x: 1840, y: 1510}
+        editorSize: {x: 420, y: 520}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 819370114258000022
+    - rid: 819370114258000021
+      type: {class: WeaponWaitForAnimationCueProvider, ns: SAS.ActionGraph.WeaponSystem, asm: Assembly-CSharp}
+      data:
+        useSingleValue: 1
+        data:
+        - cueCountKey: ProjectileCueCount
+          timeoutSeconds: 2
+          throwOnTimeout: 1
+    - rid: 819370114258000022
+      type: {class: WeaponPooledProjectileProvider, ns: SAS.ActionGraph.WeaponSystem, asm: Assembly-CSharp}
+      data:
+        useSingleValue: 0
+        data:
+        - objectPool: {fileID: 0}
+          spawnInfos:
+          - <Offset>k__BackingField: {x: 0, y: 1, z: 1}
+            <Direction>k__BackingField: {x: 0, y: 0, z: 0}
+          prewarmCount: 4
+        - objectPool: {fileID: 0}
+          spawnInfos:
+          - <Offset>k__BackingField: {x: 0, y: 1, z: 1}
+            <Direction>k__BackingField: {x: 0, y: 0, z: 0}
+          prewarmCount: 4
+        - objectPool: {fileID: 0}
+          spawnInfos:
+          - <Offset>k__BackingField: {x: 0, y: 1, z: 1}
+            <Direction>k__BackingField: {x: 0, y: 0, z: 0}
+          prewarmCount: 4
