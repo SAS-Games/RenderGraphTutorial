@@ -158,8 +158,8 @@ MonoBehaviour:
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
         editorDescription: Wait for tagged state completion
-        editorPosition: {x: 1200.6666, y: 1190.6666}
-        editorSize: {x: 237.33337, y: 298}
+        editorPosition: {x: 698.6667, y: 1190.6666}
+        editorSize: {x: 274.66663, y: 298}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         dataProvider:
@@ -192,14 +192,14 @@ MonoBehaviour:
       type: {class: FlowNodeConfig, ns: , asm: AssemblyCore}
       data:
         editorDescription: Fire projectile at the animation cue
-        editorPosition: {x: 1500, y: 1190.6666}
-        editorSize: {x: 280, y: 240}
+        editorPosition: {x: 1046, y: 1203.3333}
+        editorSize: {x: 248.66663, y: 274}
         editorCollapsed: 0
         editorChildrenListCollapsed: 0
         type: 0
         children:
         - rid: 819370114258000019
-        - rid: 819370114258000020
+        - rid: 3845317073316610133
     - rid: 819370114258000019
       type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
       data:
@@ -210,16 +210,6 @@ MonoBehaviour:
         editorChildrenListCollapsed: 0
         dataProvider:
           rid: 819370114258000021
-    - rid: 819370114258000020
-      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
-      data:
-        editorDescription: Assign a projectile pool for each attack
-        editorPosition: {x: 1840, y: 1510}
-        editorSize: {x: 420, y: 520}
-        editorCollapsed: 0
-        editorChildrenListCollapsed: 0
-        dataProvider:
-          rid: 819370114258000022
     - rid: 819370114258000021
       type: {class: WeaponWaitForAnimationCueProvider, ns: SAS.ActionGraph.WeaponSystem, asm: Assembly-CSharp}
       data:
@@ -228,23 +218,21 @@ MonoBehaviour:
         - cueCountKey: ProjectileCueCount
           timeoutSeconds: 2
           throwOnTimeout: 1
-    - rid: 819370114258000022
+    - rid: 3845317073316610133
+      type: {class: ActionNodeConfig, ns: , asm: AssemblyCore}
+      data:
+        editorDescription: 
+        editorPosition: {x: 1916, y: 1510}
+        editorSize: {x: 523.33325, y: 298}
+        editorCollapsed: 0
+        editorChildrenListCollapsed: 0
+        dataProvider:
+          rid: 3845317073316610134
+    - rid: 3845317073316610134
       type: {class: WeaponPooledProjectileProvider, ns: SAS.ActionGraph.WeaponSystem, asm: Assembly-CSharp}
       data:
-        useSingleValue: 0
+        useSingleValue: 1
         data:
         - objectPool: {fileID: 0}
-          spawnInfos:
-          - <Offset>k__BackingField: {x: 0, y: 1, z: 1}
-            <Direction>k__BackingField: {x: 0, y: 0, z: 0}
-          prewarmCount: 4
-        - objectPool: {fileID: 0}
-          spawnInfos:
-          - <Offset>k__BackingField: {x: 0, y: 1, z: 1}
-            <Direction>k__BackingField: {x: 0, y: 0, z: 0}
-          prewarmCount: 4
-        - objectPool: {fileID: 0}
-          spawnInfos:
-          - <Offset>k__BackingField: {x: 0, y: 1, z: 1}
-            <Direction>k__BackingField: {x: 0, y: 0, z: 0}
+          spawnInfos: []
           prewarmCount: 4

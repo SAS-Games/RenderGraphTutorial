@@ -41,6 +41,15 @@ conditionally advance, and repeat.
 
 Only broadly reusable ActionGraph primitives remain in `SASPackages-Core`.
 
+Supporting runtime code is kept outside the graph-node folders:
+
+- `Damage/` contains damage payloads and receiver contracts.
+- `Projectile/` contains projectile spawn data and pooled projectile behaviour.
+- `Pooling/` contains reusable pool and factory ScriptableObjects.
+- `Nodes/Common/` contains shared selection and context utilities for nodes.
+- `Nodes/Effects/` contains ParticleSystem and VFX Graph action nodes.
+- `Nodes/Projectile/` contains projectile action nodes.
+
 ## Standalone counter combo
 
 To reuse `CounterSwordComboActionGraph` in another project, copy:
@@ -51,6 +60,17 @@ To reuse `CounterSwordComboActionGraph` in another project, copy:
 - `Input/CombatInputBinding.cs`
 - `Animation/CombatActionGraphAnimationRelay.cs`
 - `Nodes/Input/CollectBufferedInputCountActionNode.cs`
+- `Nodes/Animation/WaitForAnimationCueNode.cs`
+- `Nodes/Common/WeaponAttackDataSelector.cs`
+- `Nodes/Common/WeaponNodeUtility.cs`
+- `Nodes/Projectile/SpawnPooledProjectilesNode.cs`
+- `Nodes/Effects/PlayPooledVfxNode.cs`
+- `Nodes/Effects/PlayPooledVisualEffectNode.cs`
+- `Damage/DamageInfo.cs`
+- `Projectile/ProjectileSpawnInfo.cs`
+- `Projectile/PooledDamageProjectile.cs`
+- `Pooling/VisualEffectFactorySO.cs`
+- `Pooling/VisualEffectPoolSO.cs`
 - `Graphs/CounterCombo/CounterSwordComboActionGraph.asset`
 
 The host GameObject needs `CombatActionGraphController`,
@@ -77,19 +97,42 @@ The counter graph has no dependency on `SwordAndShieldCombatSignals` or
 
 ## Projectile cue branch
 
-Each sword state uses `CombatAnimationCueStateMachineTrigger`, derived from
+Each sword state uses `TaggedObservableStateMachineCueTrigger`, derived from
 `TaggedObservableStateMachineTrigger`. Its `Projectile` cue is currently set
 to normalized time `0.35`. The animation relay publishes that cue as
 `ProjectileCueCount` values 1, 2, and 3.
 
 Inside each combo iteration, the graph runs a third parallel branch:
-`Wait For Animation Cue -> Spawn Pooled Projectiles`. The projectile provider
+`Wait For Animation Cue -> Parallel(Spawn Pooled Projectiles, Play Pooled VFX, Play Pooled Visual Effect)`.
+The projectile provider
 contains three indexed data entries selected through
 `CombatActionContext.CurrentAttackIndex`. Assign a
 `ComponentPoolSO<Poolable>` to each entry in the graph inspector before
 testing actual projectile spawning. The configured spawn offset currently
-defaults to `(0, 1, 1)`.
+defaults to `(0, 1, 1)`, and the three attacks default to 10, 15, and 20
+damage. Assign a `ParticleSystemPoolSO` to each VFX entry to enable the matching
+per-attack muzzle effect.
+
+`Play Pooled VFX` targets Unity's `ParticleSystem`. `Play Pooled Visual
+Effect` is the separate VFX Graph node targeting `UnityEngine.VFX.VisualEffect`.
+Create a `VisualEffectFactorySO`, assign its VisualEffect prefab, then assign
+that factory to a `VisualEffectPoolSO`. The graph has three indexed VisualEffect
+entries with a configurable return delay; their pool references are empty by
+default.
+
+`ProjectileSpawnInfo` carries the origin, instigator, and configured damage
+through the pool's `ISpawnable.OnSpawn` payload. Add `PooledDamageProjectile`
+to a projectile prefab (alongside `Poolable` and a collider); it delivers a
+`DamageInfo` to the first parent component implementing `IDamageReceiver`, then
+returns itself to its pool. Movement speed, lifetime, hit layers, and optional
+Rigidbody are configured on that prefab.
 
 `CombatActionGraphController.m_ActionOrigin` can optionally reference a weapon
 or fire-point transform. If it is unassigned, projectile offsets are relative
 to the action owner's root transform.
+
+Every ActionGraph action node now has a `C#` button in its title bar. It opens
+the source file containing the runtime node type. New nodes should keep their
+provider and data types in that node's same-named source file; a declaration
+search keeps the button compatible with older files that contain multiple
+nodes.
